@@ -11,3 +11,9 @@ Next.js + TypeScript + Tailwind. 루트 지침과 관련 명세를 읽는다.
 - UI는 제공 이미지와 최신 정정을 우선한다. 삭제된 공실·침대 번호·QR 이력을 디자인 그대로 복구하지 않는다.
 - 오프라인은 실모델 실행이 검증되기 전 가능하다고 표시하지 않는다.
 - 생성한 실제 빌드/타입/컴포넌트/브라우저 테스트 명령을 docs/verification.md에 등록한다.
+
+## 폴더 구조
+
+- `src/app`: 라우트·레이아웃. `src/components`: 공용 UI. `src/features`: 기능별 코드(화면·훅·API 호출).
+- `src/hooks`, `src/lib`, `src/types`: 공용 훅·유틸·타입. 테스트는 대상 옆 `*.test.ts(x)`.
+- 검사는 `npm run check` (lint·typecheck·format·test·build).

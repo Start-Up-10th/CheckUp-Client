@@ -30,11 +30,12 @@ npm ci
 npm run lint
 npm run typecheck
 npm run format:check
+npm run test    # Vitest + Testing Library
 npm run build
-npm run check   # 위 넷을 한 번에
+npm run check   # 위 다섯을 한 번에
 ```
 
-컴포넌트·브라우저 테스트 명령은 해당 테스트를 만들 때 등록한다. 현재는 정적 빌드까지만 검증되며 화면·카메라 동작은 미검증이다.
+컴포넌트 테스트는 Vitest로 실행한다. 브라우저(E2E) 테스트 도구는 카메라·화면 동선 검증을 시작할 때 정해 등록한다. 현재 화면·카메라 동작은 미검증이다.
 
 ## 제품 단계별 검사
 
