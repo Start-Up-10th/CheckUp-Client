@@ -21,6 +21,21 @@ npm run harness:sync
 이 검사기는 명세 문장의 의미 전체, 제품 구현, 실제 학교 API, 카메라 정확도를 자동 증명하지 않는다.
 REQ 연결의 완전성은 파일 내 정의된 REQ를 기준으로 한다. 인터뷰 누락 여부는 출처와 별도 대조한다.
 
+## 웹 검사 (web/)
+
+`web/`에서 Node.js 22 이상으로 실행한다. CI는 [web.yml](../.github/workflows/web.yml)이 `web/` 변경 시 같은 명령을 돈다.
+
+```text
+npm ci
+npm run lint
+npm run typecheck
+npm run format:check
+npm run build
+npm run check   # 위 넷을 한 번에
+```
+
+컴포넌트·브라우저 테스트 명령은 해당 테스트를 만들 때 등록한다. 현재는 정적 빌드까지만 검증되며 화면·카메라 동작은 미검증이다.
+
 ## 제품 단계별 검사
 
 | 영역 | 구현 시 필요한 검증 |
