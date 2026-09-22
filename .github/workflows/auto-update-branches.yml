@@ -1,0 +1,27 @@
+name: Auto-update PR branches
+
+on:
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-update-${{ github.ref }}
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update PR branches behind ${{ github.ref_name }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          for pr in $(gh pr list --repo "$REPO" --base "$BASE" --state open --json number --jq '.[].number'); do
+            echo "Updating PR #$pr against $BASE"
+            gh api --method PUT "repos/$REPO/pulls/$pr/update-branch" || echo "Skip PR #$pr (already up to date or conflict)"
+          done
