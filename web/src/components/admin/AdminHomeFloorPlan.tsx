@@ -59,13 +59,14 @@ export function AdminHomeFloorPlan() {
   }
 
   return (
-    <div className="flex h-full w-full min-h-0 flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
-      <div className="flex w-full items-end justify-between">
-        <div className="flex flex-col gap-1">
-          <p className="font-mono text-[11px] leading-[15px] tracking-[1.98px] text-admin-textFaint">
-            FLOOR PLAN
+    <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
+      <div className="flex w-full items-center justify-between md:items-end">
+        <div className="flex flex-col gap-0.5 md:gap-1">
+          <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:text-[11px] md:leading-[15px] md:tracking-[1.98px]">
+            <span className="md:hidden">ADMIN</span>
+            <span className="hidden md:inline">FLOOR PLAN</span>
           </p>
-          <h1 className="text-[30px] font-bold leading-[36px] tracking-[-0.9px] text-admin-text">
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-[36px] md:tracking-[-0.9px]">
             {selectedFloor}층 전개도
           </h1>
         </div>
