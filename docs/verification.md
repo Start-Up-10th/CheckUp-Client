@@ -35,7 +35,30 @@ npm run build
 npm run check   # 위 다섯을 한 번에
 ```
 
-컴포넌트 테스트는 Vitest로 실행한다. 브라우저(E2E) 테스트 도구는 카메라·화면 동선 검증을 시작할 때 정해 등록한다. 현재 화면·카메라 동작은 미검증이다.
+컴포넌트 테스트는 Vitest로 실행한다. 브라우저(E2E) 테스트 도구는 카메라·화면 동선 검증을 시작할 때 정해 등록한다.
+
+2026-09-23 기준 관리자 컴퓨터 화면(이슈 #5, REQ-UI-001/002, REQ-ATT-003/004/006, REQ-FACE-004/007, REQ-COM-001/002)은
+`npm run lint`/`typecheck`/`build` 통과 후 Playwright(Chromium) 헤드리스로 실제 렌더링을 검증했다:
+관리자 홈 전개도를 Figma node 16:404와 픽셀 단위로 대조해 통계 카드·범례 스와치 라운드 불일치를 찾아 수정했고,
+호실 상세 다이얼로그(node 540:1003)는 클릭→토글→저장까지 실제 상호작용을 실행해 호실 카드와 층 통계가
+갱신되는 것을 확인했다(출석 76/미출석 5 → 저장 후 75/6).
+
+QR 코드 생성 화면(`/admin/qr`)은 자습실/기숙사 탭 전환 시 새 QR과 15:00 리셋을 Playwright로 확인했다.
+최초 구현은 Math.random 기반 세션을 초기 렌더에서 바로 만들어 hydration mismatch를 냈는데, 세션 발급을
+마운트 이후로 옮기고 스켈레톤을 보여주도록 고친 뒤 재확인해 경고가 사라졌다.
+
+호실 상세/수정 다이얼로그는 Figma가 렌더링한 스크린샷을 PNG 헤더 단위로 직접 비교해 재검증했다(33px
+오차를 발견해 Actions 영역 높이와 line-height를 맞춰 최종 1px 이내로 수렴).
+
+얼굴 인식 생성 화면(`/admin/face`)은 Playwright를 `--use-fake-device-for-media-stream`
+`--use-fake-ui-for-media-stream` 플래그와 `permissions: ["camera"]`로 띄워 실제 `getUserMedia` 카메라
+권한·스트림·LIVE 표시·전체화면 진입/종료까지 실행했다. 전체화면 전/후 스크린샷에서 가짜 카메라의 내장
+타임스탬프 오버레이가 끊기지 않고 이어지는 것으로 전체화면 전환이 카메라 세션을 재시작하지 않음을 확인했다.
+실제 얼굴 인식 결과는 AI/Spring 연동이 없어 검증 대상이 아니며 mock 데이터로만 화면을 채웠다.
+
+봉사자 관리/추가 화면(REQ-COM-001/002)은 1920×1080(컴퓨터)·1024×768(패드)·390×844(폰) 3개 뷰포트에서
+Playwright 스크린샷과 `main.scrollHeight===clientHeight`·`documentElement.scrollWidth===clientWidth`로
+스크롤/오버플로 없음을 확인했다. 실제 카메라·조명 환경, 실기기 설치(PWA), Lighthouse 감사는 미실행이다.
 
 ## 제품 단계별 검사
 
