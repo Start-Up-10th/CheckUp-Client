@@ -59,7 +59,7 @@ export function AdminHomeFloorPlan() {
   }
 
   return (
-    <div className="flex h-full w-full min-h-0 flex-col gap-5 px-8 py-7">
+    <div className="flex h-full w-full min-h-0 flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
       <div className="flex w-full items-end justify-between">
         <div className="flex flex-col gap-1">
           <p className="font-mono text-[11px] leading-[15px] tracking-[1.98px] text-admin-textFaint">

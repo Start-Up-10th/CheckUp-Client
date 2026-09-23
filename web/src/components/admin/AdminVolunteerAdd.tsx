@@ -57,7 +57,7 @@ export function AdminVolunteerAdd() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col gap-5 px-8 py-7">
+    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
       {toast && (
         <div className="pointer-events-none fixed inset-x-4 top-6 z-50 flex justify-center md:inset-x-auto md:right-8 md:justify-end">
           <div className="pointer-events-auto w-full max-w-sm">
