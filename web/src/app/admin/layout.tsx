@@ -11,7 +11,7 @@ import { AdminMobileLogoutButton } from "@/components/admin/AdminMobileLogoutBut
  * 관리자 인증 가드는 서버 세션이 준비되는 P2에서 연결한다 (현재는 UI만 구현).
  */
 export const metadata: Metadata = {
-  // /admin 전용 manifest로 덮어써 관리자를 학생용 앱과 별도로 설치할 수 있게 한다(DEC-023).
+  // /admin 전용 manifest로 덮어써 관리자를 학생용 앱과 별도로 설치할 수 있게 한다(DEC-025).
   manifest: "/admin/manifest.webmanifest",
   appleWebApp: {
     capable: true,

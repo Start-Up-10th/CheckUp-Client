@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import type { MetadataRoute } from "next";
 
 /**
- * 관리자 전용 manifest(DEC-023). Next.js의 manifest.ts 파일 컨벤션은 앱 루트에서만
+ * 관리자 전용 manifest(DEC-025). Next.js의 manifest.ts 파일 컨벤션은 앱 루트에서만
  * 라우트로 인식되고 하위 세그먼트(app/admin/manifest.ts)에서는 동작하지 않아
  * (빌드는 되지만 404) route handler로 직접 만들었다. `/admin` 레이아웃 metadata의
  * `manifest` 필드가 이 경로를 가리킨다.
  *
  * 학생용 manifest(app/manifest.ts)와 아이콘 이미지는 같지만(실제 로고 없는 placeholder,
- * DEC-022) 이름·시작 경로·scope로 서로 다른 설치 항목임을 구분한다.
+ * DEC-024) 이름·시작 경로·scope로 서로 다른 설치 항목임을 구분한다.
  */
 const manifest: MetadataRoute.Manifest = {
   name: "기숙사 출석 관리 · 관리자",

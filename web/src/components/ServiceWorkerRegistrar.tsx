@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-/** 설치 가능한 앱 셸(DEC-022)을 위해 정적 자산 캐시용 서비스워커만 등록한다. */
+/** 설치 가능한 앱 셸(DEC-024)을 위해 정적 자산 캐시용 서비스워커만 등록한다. */
 export function ServiceWorkerRegistrar() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
