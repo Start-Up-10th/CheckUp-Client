@@ -32,6 +32,7 @@
 | SRC-NOTION-CHECKUPZIP | `check_Up_Notion2.zip`; 사용자가 2026-09-24에 일부 항목만 채택 | [승인 발췌](notion-checkup-accepted.md). 얼굴 등록 자동 촬영, 관리자 모바일 5탭, 봉사 `+ / −`만 최신 결정으로 반영. ZIP의 나머지 내용 전체를 승인한 것은 아님. |
 | SRC-HANDOFF | 이 작업 직전 assistant의 16개 절 전체 명세 + AGENTS 제안 | 통합 기준으로 유지하되 assistant 추론은 직접 사용자 결정과 구분 |
 | SRC-CORRECTIONS | 아래 정정 목록 | 구안 복구 방지 |
+| SRC-FIGMA-ADMIN-PHONE | 사용자가 준 Figma `관리자-핸드폰` 페이지(278:5, 390×844 화면) 링크. 조회 중 디자이너가 하단 탭바에 로그아웃 탭을 추가한 것을 노드 비교로 확인(2026-09-23) | REQ-UI-005, DEC-026 |
 | SRC-PWA-DECISION | 사용자 채팅 "우리 프로젝트는 PWA로 할거임" + 뒤이은 AskUserQuestion 확인(설치 가능한 앱 셸만 / 역할별로 따로 설치, 2026-09-23) | REQ-UI-007, DEC-024/023 |
 
 ## SRC-CORRECTIONS — 원문과 다른 현재 정책
