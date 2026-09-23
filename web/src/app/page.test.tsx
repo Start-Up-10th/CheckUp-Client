@@ -1,11 +1,14 @@
 import { render, screen } from "@testing-library/react";
-import Home from "./page";
+import RootPage from "./page";
 
-describe("Home", () => {
-  it("서비스 제목을 보여준다", () => {
-    render(<Home />);
+describe("RootPage", () => {
+  it("로그인 미구현 안내와 관리자 홈 진입 링크를 보여준다", () => {
+    render(<RootPage />);
     expect(
-      screen.getByRole("heading", { name: "기숙사 출석 관리" }),
+      screen.getByText("개발용 진입 화면 (로그인 미구현)"),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "관리자 홈으로 이동" }),
+    ).toHaveAttribute("href", "/admin");
   });
 });

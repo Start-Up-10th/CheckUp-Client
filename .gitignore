@@ -19,6 +19,7 @@ node_modules/
 dist/
 build/
 target/
+*.tsbuildinfo
 .gradle/
 .venv/
 __pycache__/
