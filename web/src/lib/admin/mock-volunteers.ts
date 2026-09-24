@@ -6,6 +6,8 @@ export type Volunteer = {
   count: number;
   /** 현재 봉사자 명단 소속 여부. count와 독립적이다. */
   isMember: boolean;
+  /** 최근 봉사 날짜 문자열 (ex. "9월 12일"). 아직 없으면 undefined로 "−" 표시. */
+  lastActivityDate?: string;
 };
 
 /**
@@ -23,6 +25,7 @@ export const MOCK_VOLUNTEERS: Volunteer[] = [
     room: "412호",
     count: 5,
     isMember: true,
+    lastActivityDate: "9월 12일",
   },
   {
     studentId: "2412",
@@ -30,6 +33,7 @@ export const MOCK_VOLUNTEERS: Volunteer[] = [
     room: "412호",
     count: 3,
     isMember: true,
+    lastActivityDate: "9월 10일",
   },
   {
     studentId: "2408",
@@ -37,6 +41,7 @@ export const MOCK_VOLUNTEERS: Volunteer[] = [
     room: "412호",
     count: 2,
     isMember: true,
+    lastActivityDate: "9월 8일",
   },
   {
     studentId: "2401",
@@ -44,6 +49,7 @@ export const MOCK_VOLUNTEERS: Volunteer[] = [
     room: "412호",
     count: 1,
     isMember: true,
+    lastActivityDate: "8월 30일",
   },
   {
     studentId: "2417",
@@ -51,6 +57,7 @@ export const MOCK_VOLUNTEERS: Volunteer[] = [
     room: "415호",
     count: 6,
     isMember: true,
+    lastActivityDate: "9월 13일",
   },
   {
     studentId: "2409",
@@ -65,6 +72,7 @@ export const MOCK_VOLUNTEERS: Volunteer[] = [
     room: "407호",
     count: 4,
     isMember: true,
+    lastActivityDate: "9월 11일",
   },
   {
     studentId: "2406",
@@ -72,6 +80,7 @@ export const MOCK_VOLUNTEERS: Volunteer[] = [
     room: "407호",
     count: 2,
     isMember: true,
+    lastActivityDate: "9월 7일",
   },
   {
     studentId: "2414",
@@ -79,6 +88,7 @@ export const MOCK_VOLUNTEERS: Volunteer[] = [
     room: "408호",
     count: 3,
     isMember: false,
+    lastActivityDate: "9월 5일",
   },
   {
     studentId: "2420",
