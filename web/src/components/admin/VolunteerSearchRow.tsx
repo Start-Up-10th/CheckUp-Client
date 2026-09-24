@@ -18,7 +18,7 @@ export function VolunteerSearchRow({
         <p className="text-[13px] font-bold leading-4 text-admin-text md:text-[15px] md:leading-normal">
           {volunteer.name}
         </p>
-        <p className="font-mono text-[10px] leading-3 text-admin-textMuted md:text-xs">
+        <p className="font-mono text-[10px] leading-[13px] text-admin-textMuted md:text-xs">
           {volunteer.studentId} · {volunteer.room}
         </p>
       </div>
