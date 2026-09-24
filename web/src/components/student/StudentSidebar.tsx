@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useLogout } from "@/lib/student/use-logout";
 import { MaskIcon } from "./MaskIcon";
 import { StudentSidebarLink } from "./StudentSidebarLink";
 
@@ -21,7 +22,7 @@ type StudentSidebarProps = {
  * REQ-UI-004: 학생 노트북(md 이상) 좌측 사이드바 — 프로필·홈·QR 출석·마이페이지·알림·하단 로그아웃.
  * Figma 사용자-노트북 227:6(폭 240px). 알림을 읽은 상태의 종(bell.svg)은 Figma에 없어
  * bell-unread.svg에서 빨간 점만 뺐다.
- * 로그아웃은 확인 없이 로그인 화면으로 간다(REQ-AUTH-005) — 세션 정리는 서버 연동 후.
+ * 로그아웃 동작은 핸드폰 로그아웃 버튼과 같은 useLogout()을 쓴다(REQ-AUTH-005).
  */
 export function StudentSidebar({
   name,
@@ -30,7 +31,7 @@ export function StudentSidebar({
   hasUnreadNotice,
 }: StudentSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
+  const logout = useLogout();
   const onNotice = pathname === "/notice";
 
   return (
@@ -95,7 +96,7 @@ export function StudentSidebar({
       <div className="flex-1" />
       <button
         type="button"
-        onClick={() => router.push("/login")}
+        onClick={logout}
         className="flex items-center gap-2.5 rounded-control bg-admin-danger-bg px-3 py-[11px] text-sm leading-normal text-admin-danger-text"
       >
         <MaskIcon src="/icons/student-nav/logout.svg" className="size-[18px]" />
