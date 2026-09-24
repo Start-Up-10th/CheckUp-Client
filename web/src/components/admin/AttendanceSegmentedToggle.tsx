@@ -14,7 +14,7 @@ export function AttendanceSegmentedToggle({
         type="button"
         onClick={() => onChange(true)}
         aria-pressed={present}
-        className={`flex h-[26px] w-[58px] items-center justify-center rounded-full text-xs ${
+        className={`flex h-[22px] w-12 items-center justify-center rounded-full text-[11px] md:h-[26px] md:w-[58px] md:text-xs ${
           present
             ? "bg-admin-accent-bg font-bold text-admin-accent-text"
             : "font-normal text-admin-textFaint"
@@ -26,7 +26,7 @@ export function AttendanceSegmentedToggle({
         type="button"
         onClick={() => onChange(false)}
         aria-pressed={!present}
-        className={`flex h-[26px] w-[58px] items-center justify-center rounded-full text-xs ${
+        className={`flex h-[22px] w-12 items-center justify-center rounded-full text-[11px] md:h-[26px] md:w-[58px] md:text-xs ${
           !present
             ? "bg-admin-surface font-bold text-admin-ghost-text"
             : "font-normal text-admin-textFaint"

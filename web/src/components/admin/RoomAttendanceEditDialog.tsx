@@ -52,16 +52,16 @@ export function RoomAttendanceEditDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={`room-edit-dialog-title-${room.number}`}
-        className="z-50 flex w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-[16px] bg-admin-surface p-[22px] md:w-[400px] xl:w-[460px]"
+        className="z-50 flex w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-[16px] bg-admin-surface p-4 md:w-[400px] md:p-[22px] xl:w-[460px]"
         onClick={(event) => event.stopPropagation()}
       >
         <h2
           id={`room-edit-dialog-title-${room.number}`}
-          className="text-xl font-bold leading-[24px] text-admin-text"
+          className="text-[17px] font-bold leading-5 text-admin-text md:text-xl md:leading-[24px]"
         >
           {room.number}호
         </h2>
-        <p className="text-sm leading-[17px] text-admin-textMuted">
+        <p className="text-[13px] leading-4 text-admin-textMuted md:text-sm md:leading-[17px]">
           {assigned}인실 · {present}명 출석
         </p>
 
@@ -73,10 +73,10 @@ export function RoomAttendanceEditDialog({
                 className="flex w-full items-center justify-between rounded-xl bg-admin-rowSurface py-2.5 pl-3.5 pr-2.5"
               >
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[13px] text-admin-textFaint">
+                  <span className="font-mono text-[12px] text-admin-textFaint md:text-[13px]">
                     {index + 1}번
                   </span>
-                  <span className="text-sm font-bold text-admin-text">
+                  <span className="text-[13px] font-bold leading-4 text-admin-text md:text-sm md:leading-5">
                     {student.name}
                   </span>
                 </div>
@@ -95,14 +95,14 @@ export function RoomAttendanceEditDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[13px] bg-admin-ghost-bg px-[22px] py-[13px] text-sm font-bold text-admin-ghost-text"
+            className="rounded-[13px] bg-admin-ghost-bg px-[18px] py-[11px] text-[13px] font-bold leading-4 text-admin-ghost-text md:px-[22px] md:py-[13px] md:text-sm md:leading-5"
           >
             닫기
           </button>
           <button
             type="button"
             onClick={() => onSave(room.number, pendingStudents)}
-            className="rounded-[13px] bg-admin-accent-bg px-[22px] py-[13px] text-sm font-bold text-admin-accent-text"
+            className="rounded-[13px] bg-admin-accent-bg px-[18px] py-[11px] text-[13px] font-bold leading-4 text-admin-accent-text md:px-[22px] md:py-[13px] md:text-sm md:leading-5"
           >
             저장
           </button>
