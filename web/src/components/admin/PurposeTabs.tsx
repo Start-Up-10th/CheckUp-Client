@@ -17,7 +17,7 @@ export function PurposeTabs({ selected, onSelect, labels }: PurposeTabsProps) {
   const resolvedLabels = { ...DEFAULT_LABELS, ...labels };
 
   return (
-    <div className="flex items-start gap-1 rounded-[14px] bg-[#e6e6e8] p-[5px]">
+    <div className="flex items-start gap-[3px] rounded-[10px] bg-[#e6e6e8] p-[3px] md:gap-1 md:rounded-[14px] md:p-[5px]">
       {(Object.keys(resolvedLabels) as Purpose[]).map((value) => {
         const active = value === selected;
         return (
@@ -26,7 +26,7 @@ export function PurposeTabs({ selected, onSelect, labels }: PurposeTabsProps) {
             type="button"
             aria-pressed={active}
             onClick={() => onSelect(value)}
-            className={`rounded-[10px] px-[22px] py-[9px] text-sm ${
+            className={`rounded-lg px-2.5 py-1.5 text-[11px] leading-[13px] md:rounded-[10px] md:px-[22px] md:py-[9px] md:text-sm ${
               active
                 ? "bg-admin-surface font-bold text-admin-text"
                 : "font-normal text-admin-textSecondary"

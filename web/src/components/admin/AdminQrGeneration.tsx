@@ -65,12 +65,12 @@ export function AdminQrGeneration() {
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
-      <div className="flex w-full items-end justify-between">
+      <div className="flex w-full items-center justify-between md:items-end">
         <div className="flex flex-col gap-1">
-          <p className="font-mono text-[11px] tracking-[1.98px] text-admin-textFaint">
+          <p className="hidden font-mono text-[11px] tracking-[1.98px] text-admin-textFaint md:block">
             QR ISSUE
           </p>
-          <h1 className="text-[30px] font-bold tracking-[-0.9px] text-admin-text">
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-[normal] md:tracking-[-0.9px]">
             QR 코드 생성
           </h1>
         </div>
