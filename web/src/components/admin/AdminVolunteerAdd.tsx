@@ -83,7 +83,7 @@ export function AdminVolunteerAdd() {
       />
 
       <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:gap-0 md:overflow-y-auto md:rounded-panel md:p-[22px]">
-        <p className="text-[11px] leading-[13px] text-admin-textSecondary md:hidden">
+        <p className="text-[11px] leading-[13px] text-admin-textSecondary">
           전체 학생
         </p>
         {filtered.length === 0 ? (
