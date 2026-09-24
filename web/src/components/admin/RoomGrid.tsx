@@ -16,7 +16,7 @@ type RoomGridProps = {
  */
 export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
   return (
-    <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-4 md:rounded-panel md:p-[22px] xl:min-h-0 xl:flex-1 xl:pb-0">
+    <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-1 md:overflow-y-auto md:gap-4 md:rounded-panel md:p-[22px] xl:min-h-0 xl:overflow-visible xl:pb-0">
       <div className="flex w-full items-center gap-2.5 md:h-[100px] md:gap-[18px]">
         <div className="flex items-center gap-[5px] md:gap-1.5">
           <span className="size-2 rounded-[3px] border border-admin-attendance-border bg-admin-attendance-bg md:size-[9px]" />
