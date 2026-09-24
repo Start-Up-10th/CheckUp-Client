@@ -67,7 +67,10 @@ export function AdminVolunteerManagement({
         {/* 패드+: 알림 벨 placeholder */}
         <div className="relative hidden md:block">
           <BellIcon className="size-[22px] text-admin-textSecondary" />
-          <span aria-hidden="true" className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text" />
+          <span
+            aria-hidden="true"
+            className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text"
+          />
         </div>
       </div>
 

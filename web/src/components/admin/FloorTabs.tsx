@@ -13,7 +13,9 @@ type FloorTabsProps = {
  */
 export function FloorTabs({ selected, onSelect, className }: FloorTabsProps) {
   return (
-    <div className={`flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 md:gap-2 md:rounded-none md:bg-transparent md:p-0 ${className ?? ""}`}>
+    <div
+      className={`flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 md:gap-2 md:rounded-none md:bg-transparent md:p-0 ${className ?? ""}`}
+    >
       {FLOORS.map((floor) => {
         const active = floor === selected;
         return (

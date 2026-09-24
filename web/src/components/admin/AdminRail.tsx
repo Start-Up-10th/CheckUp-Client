@@ -27,7 +27,9 @@ export function AdminRail() {
               }`}
             >
               <Icon className="size-[18px] shrink-0" />
-              <span className="text-[10px] font-medium leading-3">{shortLabel}</span>
+              <span className="text-[10px] font-medium leading-3">
+                {shortLabel}
+              </span>
             </Link>
           );
         })}
