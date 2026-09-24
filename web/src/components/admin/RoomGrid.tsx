@@ -16,7 +16,7 @@ type RoomGridProps = {
  */
 export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
   return (
-    <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-1 md:min-h-0 md:gap-[14px] md:rounded-[18px] md:p-[20px] xl:overflow-visible xl:pb-0 xl:rounded-panel">
+    <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-[14px] md:rounded-[18px] md:p-[20px] xl:flex-1 xl:min-h-0 xl:overflow-visible xl:pb-0 xl:rounded-panel">
       {/* 폰: 한 행. 패드: 범례 아래에 안내 텍스트 2행. 데스크톱: 한 행 100px. */}
       <div className="flex w-full flex-col gap-1.5 xl:h-[100px] xl:flex-row xl:items-center xl:gap-[18px]">
         <div className="flex items-center gap-2.5 md:gap-[14px]">
