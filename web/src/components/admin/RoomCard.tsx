@@ -17,19 +17,19 @@ export function RoomCard({ room, onClick }: RoomCardProps) {
     <button
       type="button"
       onClick={onClick ? () => onClick(room) : undefined}
-      className={`flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-[10px] border py-2.5 text-center md:items-start md:justify-between md:rounded-card md:p-4 md:text-left xl:aspect-auto xl:h-full ${
+      className={`flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-[10px] border py-2.5 text-center md:items-start md:justify-between md:rounded-[12px] md:p-3 md:text-left xl:aspect-auto xl:h-full xl:rounded-card xl:p-4 ${
         fullyPresent
           ? "border-admin-attendance-border bg-admin-attendance-bg"
           : "border-admin-absence-border bg-admin-absence-bg"
       }`}
     >
       <span
-        className={`font-mono text-[13px] md:text-[17px] ${fullyPresent ? "text-admin-attendance-text" : "text-admin-textMuted"}`}
+        className={`font-mono text-[13px] md:text-[14px] xl:text-[17px] ${fullyPresent ? "text-admin-attendance-text" : "text-admin-textMuted"}`}
       >
         {room.number}
       </span>
       <span
-        className={`hidden text-xs md:block ${fullyPresent ? "text-admin-attendance-textMuted" : "text-admin-textFaint"}`}
+        className={`hidden text-[10px] md:block xl:text-xs ${fullyPresent ? "text-admin-attendance-textMuted" : "text-admin-textFaint"}`}
       >
         {present}/{assigned}명
       </span>

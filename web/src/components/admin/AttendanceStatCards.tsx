@@ -10,19 +10,19 @@ export function AttendanceStatCards({
 }: AttendanceStatCardsProps) {
   return (
     <div className="flex w-full items-start gap-2 md:gap-3.5">
-      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-admin-attendance-border bg-admin-attendance-bg p-[11px] md:flex-row md:items-center md:justify-between md:rounded-[16px] md:px-[18px] md:py-[15px]">
+      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-admin-attendance-border bg-admin-attendance-bg p-[11px] md:flex-row md:items-baseline md:justify-between md:rounded-card md:px-[16px] md:py-[14px]">
         <p className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs md:leading-[14px]">
           출석
         </p>
-        <p className="text-lg font-bold leading-[22px] text-admin-attendance-text md:text-2xl md:leading-[29px] md:text-admin-text">
+        <p className="text-lg font-bold leading-[22px] text-admin-attendance-text md:text-[22px] md:leading-normal md:text-admin-text">
           {present}
         </p>
       </div>
-      <div className="flex flex-1 flex-col gap-1 rounded-xl bg-admin-surface p-3 md:flex-row md:items-center md:justify-between md:rounded-[16px] md:px-[18px] md:py-4">
+      <div className="flex flex-1 flex-col gap-1 rounded-xl bg-admin-surface p-3 md:flex-row md:items-baseline md:justify-between md:rounded-card md:px-[16px] md:py-[14px]">
         <p className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs md:leading-[14px]">
           미출석
         </p>
-        <p className="text-lg font-bold leading-[22px] text-admin-text md:text-2xl md:leading-[29px]">
+        <p className="text-lg font-bold leading-[22px] text-admin-text md:text-[22px] md:leading-normal">
           {absent}
         </p>
       </div>
