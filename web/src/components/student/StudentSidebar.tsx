@@ -4,10 +4,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { MaskIcon } from "./MaskIcon";
 import { StudentSidebarLink } from "./StudentSidebarLink";
 
+// subPaths: 그 메뉴 안에서 들어가는 하위 화면. 거기 있을 때도 메뉴를 초록으로 강조한다
+// (Figma 노트북 봉사 활동 322:341에서 마이페이지가 강조됨).
 const NAV_ITEMS = [
   { href: "/main", label: "홈", iconSrc: "/icons/student-nav/home.svg" },
   { href: "/qr", label: "QR 출석", iconSrc: "/icons/student-nav/qr.svg" },
-  { href: "/my", label: "마이페이지", iconSrc: "/icons/student-nav/my.svg" },
+  {
+    href: "/my",
+    label: "마이페이지",
+    iconSrc: "/icons/student-nav/my.svg",
+    subPaths: ["/volunteer"],
+  },
 ];
 
 type StudentSidebarProps = {
@@ -44,20 +51,21 @@ export function StudentSidebar({
         </div>
       </div>
       <nav className="flex flex-col gap-0.5">
-        {NAV_ITEMS.map(({ href, label, iconSrc }) => {
+        {NAV_ITEMS.map(({ href, label, iconSrc, subPaths }) => {
           const current = pathname === href;
+          const highlighted = current || !!subPaths?.includes(pathname);
           return (
             <StudentSidebarLink
               key={href}
               href={href}
               label={label}
               current={current}
-              highlighted={current}
+              highlighted={highlighted}
               icon={
                 <MaskIcon
                   src={iconSrc}
                   className={`size-[19px] ${
-                    current
+                    highlighted
                       ? "text-admin-attendance-text"
                       : "text-admin-textMuted"
                   }`}

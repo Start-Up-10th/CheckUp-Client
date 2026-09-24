@@ -7,6 +7,8 @@ export type StudentProfile = {
   roomNumber: string;
   /** 읽지 않은 알림이 있는지(REQ-COM-005). 노트북 사이드바 알림 강조에 쓴다. */
   hasUnreadNotice: boolean;
+  /** 본인 누적 봉사 횟수(REQ-COM-003). 학생은 횟수만 보고 활동별 내역은 없다(DEC-014). */
+  volunteerCount: number;
 };
 
 /**
@@ -22,4 +24,6 @@ export const MOCK_STUDENT: StudentProfile = {
   floor: 4,
   roomNumber: "412",
   hasUnreadNotice: true,
+  // 관리자 봉사 mock(mock-volunteers.ts)의 김도현 누적 횟수와 같게 둔다.
+  volunteerCount: 5,
 };
