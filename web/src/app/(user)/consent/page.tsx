@@ -1,4 +1,6 @@
-// 개인정보 동의 화면 — docs/spec/identity.md
+// 개인정보 동의 화면 — docs/spec/identity.md REQ-AUTH-004
+import { StudentConsent } from "@/components/student/StudentConsent";
+
 export default function Page() {
-  return <main className="p-6">동의 화면 (준비 중)</main>;
+  return <StudentConsent />;
 }

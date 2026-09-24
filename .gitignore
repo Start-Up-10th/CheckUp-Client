@@ -13,6 +13,9 @@
 .codex/sessions/
 .codex/log/
 
+# IDE
+.idea/
+
 # Application outputs
 node_modules/
 .next/
