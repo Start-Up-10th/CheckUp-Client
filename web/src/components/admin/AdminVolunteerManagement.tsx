@@ -10,7 +10,7 @@ const TOAST_DURATION_MS = 2500;
 
 /**
  * REQ-COM-001/002: 명단(소속 학생)만 보여주고, 각 행 "+"/"−"로 즉시 1회 적립/차감한다(차감은 0회 미만 불가).
- * "명단 편집" 버튼은 07 화면(봉사자 명단 편집)으로 이동한다(2026-09-23 Figma 갱신, DEC-021).
+ * "명단 편집" 버튼은 07 화면(봉사자 명단 편집)으로 이동한다(2026-09-23 Figma 갱신, DEC-023).
  */
 export function AdminVolunteerManagement() {
   const [volunteers, setVolunteers] = useState(MOCK_VOLUNTEERS);

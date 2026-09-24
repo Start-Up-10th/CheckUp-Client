@@ -10,7 +10,7 @@ const TOAST_DURATION_MS = 2500;
 
 /**
  * REQ-COM-001: 전체 학생을 검색해 명단에 추가/제외한다. 제외는 확인 다이얼로그를 거친다.
- * 화면 이름은 "봉사자 명단 편집"이다(2026-09-23 Figma 갱신, 이전 "봉사자 추가"에서 변경, DEC-021).
+ * 화면 이름은 "봉사자 명단 편집"이다(2026-09-23 Figma 갱신, 이전 "봉사자 추가"에서 변경, DEC-023).
  */
 export function AdminVolunteerAdd() {
   const [volunteers, setVolunteers] = useState(MOCK_VOLUNTEERS);

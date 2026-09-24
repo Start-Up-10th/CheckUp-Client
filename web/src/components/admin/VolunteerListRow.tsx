@@ -8,7 +8,7 @@ type VolunteerListRowProps = {
 
 /**
  * REQ-COM-002: 이름/최근 활동/횟수 표시. "+"는 확인 없이 즉시 1회 적립,
- * "−"는 확인 없이 즉시 1회 차감하며 0회에서는 비활성화된다(2026-09-23 Figma 갱신, DEC-021).
+ * "−"는 확인 없이 즉시 1회 차감하며 0회에서는 비활성화된다(2026-09-23 Figma 갱신, DEC-023).
  */
 export function VolunteerListRow({
   volunteer,
