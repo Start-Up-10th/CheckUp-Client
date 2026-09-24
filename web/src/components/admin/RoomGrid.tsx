@@ -36,8 +36,8 @@ export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
         </p>
       </div>
 
-      <div className="flex w-full flex-1 flex-col md:min-h-0 xl:min-h-0">
-        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:grid-cols-4 md:gap-2.5 xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
+      <div className="flex w-full flex-1 flex-col xl:min-h-0">
+        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-auto md:grid-cols-4 md:gap-2.5 xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
           {rooms.map((room) => (
             <RoomCard key={room.number} room={room} onClick={onRoomClick} />
           ))}
