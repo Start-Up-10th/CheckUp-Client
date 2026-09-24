@@ -16,28 +16,34 @@ type RoomGridProps = {
  */
 export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
   return (
-    <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-4 md:rounded-panel md:p-[22px] xl:min-h-0 xl:flex-1 xl:pb-0">
-      <div className="flex w-full items-center gap-2.5 md:h-[100px] md:gap-[18px]">
-        <div className="flex items-center gap-[5px] md:gap-1.5">
-          <span className="size-2 rounded-[3px] border border-admin-attendance-border bg-admin-attendance-bg md:size-[9px]" />
-          <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs">
-            출석
-          </span>
+    <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-[14px] md:rounded-[18px] md:p-[20px] xl:flex-1 xl:min-h-0 xl:overflow-visible xl:pb-0 xl:rounded-panel">
+      {/* 폰: 한 행. 패드: 범례 아래에 안내 텍스트 2행. 데스크톱: 한 행 100px. */}
+      <div className="flex w-full flex-col gap-1.5 xl:h-[100px] xl:flex-row xl:items-center xl:gap-[18px]">
+        <div className="flex items-center gap-2.5 md:gap-[14px]">
+          <div className="flex items-center gap-[5px] md:gap-1.5">
+            <span className="size-2 rounded-[3px] border border-admin-attendance-border bg-admin-attendance-bg md:size-[9px]" />
+            <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs">
+              출석
+            </span>
+          </div>
+          <div className="flex items-center gap-[5px] md:gap-1.5">
+            <span className="size-2 rounded-[3px] border border-admin-absence-border bg-admin-absence-bg md:size-[9px]" />
+            <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs">
+              미출석
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-[5px] md:gap-1.5">
-          <span className="size-2 rounded-[3px] border border-admin-absence-border bg-admin-absence-bg md:size-[9px]" />
-          <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs">
-            미출석
-          </span>
-        </div>
-        <div className="hidden flex-1 md:block" />
-        <p className="hidden text-xs text-admin-textMuted md:block">
+        <div className="hidden xl:block xl:flex-1" />
+        <p className="hidden text-xs text-admin-textMuted md:block xl:hidden">
+          호실을 탭하면 출석을 변경할 수 있어요
+        </p>
+        <p className="hidden text-xs text-admin-textMuted xl:block">
           호실 클릭 시 출석 변경
         </p>
       </div>
 
       <div className="flex w-full flex-1 flex-col xl:min-h-0">
-        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-auto md:grid-cols-4 md:gap-2.5 lg:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
+        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-[78px] md:grid-cols-4 md:gap-2 xl:auto-rows-auto xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
           {rooms.map((room) => (
             <RoomCard key={room.number} room={room} onClick={onRoomClick} />
           ))}

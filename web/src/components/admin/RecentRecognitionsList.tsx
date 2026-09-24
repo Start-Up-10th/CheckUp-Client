@@ -77,7 +77,7 @@ export function RecentRecognitionsList({
 
   return (
     <div
-      className={`flex w-full flex-col gap-2 rounded-[16px] bg-admin-surface p-3.5 md:h-full md:w-auto md:min-w-[280px] md:flex-[626] md:gap-2.5 md:rounded-panel md:p-[22px] ${
+      className={`flex w-full flex-col gap-2 rounded-[16px] bg-admin-surface p-3.5 md:gap-2.5 md:rounded-panel md:p-[22px] xl:h-full xl:w-auto xl:min-w-[280px] xl:flex-[626] ${
         fillsHeight
           ? "flex-1"
           : status === "loading"
