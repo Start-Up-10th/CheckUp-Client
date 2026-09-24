@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { StatusBanner } from "@/components/admin/StatusBanner";
 import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { CameraPanel } from "@/components/admin/CameraPanel";
 import {
@@ -21,7 +22,10 @@ const DEFAULT_PURPOSE: Purpose = "dorm";
 export function AdminFaceRecognition({
   recentStatus = "ready",
   onRetryRecent,
+  notice,
 }: {
+  /** 인식 결과 안내(예: 3회 연속 실패). 인식 결과가 연결되기 전까지 표시할 것이 없어 기본은 없음이다. */
+  notice?: { variant: "success" | "error" | "neutral"; message: string };
   /** 최근 인식 목록의 불러오기 상태. 실제 조회 연결 전까지 기본은 "ready"다. */
   recentStatus?: RecentRecognitionsStatus;
   onRetryRecent?: () => void;
@@ -71,6 +75,10 @@ export function AdminFaceRecognition({
           compactLabels={{ dorm: "기숙사" }}
         />
       </div>
+
+      {notice && (
+        <StatusBanner variant={notice.variant} message={notice.message} />
+      )}
 
       <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:flex-row md:gap-5">
         <div

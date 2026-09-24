@@ -5,7 +5,7 @@ type StatusBannerProps = {
 
 const VARIANT_STYLES = {
   success: {
-    box: "border-admin-attendance-border bg-admin-attendance-bg",
+    box: "border-admin-danger-border bg-admin-attendance-bg",
     dot: "bg-admin-attendance-text",
     text: "text-admin-attendance-text",
   },
@@ -15,7 +15,7 @@ const VARIANT_STYLES = {
     text: "text-admin-danger-text",
   },
   neutral: {
-    box: "border-admin-border bg-admin-rowSurface",
+    box: "border-admin-danger-border bg-admin-rowSurface",
     dot: "bg-admin-textMuted",
     text: "text-admin-textMuted",
   },

@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { RemoveVolunteerDialog } from "@/components/admin/RemoveVolunteerDialog";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerSearchRow } from "@/components/admin/VolunteerSearchRow";
 import { MOCK_VOLUNTEERS, type Volunteer } from "@/lib/admin/mock-volunteers";
-
-const TOAST_DURATION_MS = 2500;
 
 /**
  * REQ-COM-001: 전체 학생을 검색해 명단에 추가/제외한다. 제외는 확인 다이얼로그를 거친다.
@@ -16,23 +14,21 @@ export function AdminVolunteerAdd() {
   const [volunteers, setVolunteers] = useState(MOCK_VOLUNTEERS);
   const [query, setQuery] = useState("");
   const [removeTarget, setRemoveTarget] = useState<Volunteer | null>(null);
-  const [toast, setToast] = useState<{
-    variant: "success" | "neutral";
-    message: string;
-  } | null>(null);
+  const { toast, showToast } = useToast();
 
   const filtered = volunteers.filter(
     (volunteer) =>
       volunteer.name.includes(query) || volunteer.studentId.includes(query),
   );
 
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), TOAST_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [toast]);
-
   function handleAdd(studentId: string) {
+    if (volunteers.some((v) => v.studentId === studentId && v.isMember)) {
+      showToast({
+        variant: "neutral",
+        message: "이미 명단에 등록된 학생입니다.",
+      });
+      return;
+    }
     setVolunteers((prev) =>
       prev.map((volunteer) =>
         volunteer.studentId === studentId
@@ -40,7 +36,7 @@ export function AdminVolunteerAdd() {
           : volunteer,
       ),
     );
-    setToast({ variant: "success", message: "봉사자 명단에 추가했습니다." });
+    showToast({ variant: "success", message: "봉사자 명단에 추가했습니다." });
   }
 
   function handleConfirmRemove() {
@@ -53,18 +49,12 @@ export function AdminVolunteerAdd() {
       ),
     );
     setRemoveTarget(null);
-    setToast({ variant: "neutral", message: "명단에서 제외했습니다." });
+    showToast({ variant: "neutral", message: "명단에서 제외했습니다." });
   }
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
-      {toast && (
-        <div className="pointer-events-none fixed inset-x-4 top-6 z-50 flex justify-center md:inset-x-auto md:right-8 md:justify-end">
-          <div className="pointer-events-auto w-full max-w-sm">
-            <StatusBanner variant={toast.variant} message={toast.message} />
-          </div>
-        </div>
-      )}
+      <ToastLayer toast={toast} />
 
       <div className="flex flex-col gap-0.5 md:gap-1">
         <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:text-[11px] md:leading-normal md:tracking-[1.98px]">

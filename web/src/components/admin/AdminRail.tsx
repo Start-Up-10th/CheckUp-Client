@@ -10,7 +10,7 @@ export function AdminRail() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden h-full w-[88px] shrink-0 flex-col items-center border-r border-admin-border bg-admin-surface py-6 md:flex xl:hidden">
+    <aside className="hidden h-full w-[96px] shrink-0 flex-col items-center border-r border-admin-border bg-admin-surface py-6 md:flex xl:hidden">
       <nav className="flex flex-col items-center gap-1">
         {ADMIN_NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = isAdminNavActive(pathname, href);
