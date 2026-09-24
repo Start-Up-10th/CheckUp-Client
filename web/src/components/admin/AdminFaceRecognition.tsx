@@ -80,7 +80,7 @@ export function AdminFaceRecognition({
         <StatusBanner variant={notice.variant} message={notice.message} />
       )}
 
-      <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:flex-row md:gap-5">
+      <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:gap-5 xl:flex-row">
         <div
           ref={panelWrapperRef}
           className={`flex min-h-[240px] w-full flex-1 md:block md:h-auto md:min-h-0 md:min-w-0 md:flex-[910] ${
