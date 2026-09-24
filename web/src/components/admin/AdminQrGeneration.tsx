@@ -5,6 +5,7 @@ import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel";
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
 import { StatusBanner } from "@/components/admin/StatusBanner";
+import { BellIcon } from "@/components/icons/AdminNavIcons";
 import {
   createMockQrSession,
   formatCountdown,
@@ -81,7 +82,14 @@ export function AdminQrGeneration() {
             QR 코드 생성
           </h1>
         </div>
-        <PurposeTabs selected={purpose} onSelect={handleSelectPurpose} />
+        <div className="flex items-center gap-3">
+          {/* 패드+: 알림 벨 placeholder */}
+          <div className="relative hidden md:block">
+            <BellIcon className="size-[22px] text-admin-textSecondary" />
+            <span aria-hidden="true" className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text" />
+          </div>
+          <PurposeTabs selected={purpose} onSelect={handleSelectPurpose} />
+        </div>
       </div>
 
       {sessionError && (

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { StatusBanner } from "@/components/admin/StatusBanner";
+import { BellIcon } from "@/components/icons/AdminNavIcons";
 import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { CameraPanel } from "@/components/admin/CameraPanel";
 import {
@@ -68,12 +69,19 @@ export function AdminFaceRecognition({
             얼굴 인식 생성
           </h1>
         </div>
-        <PurposeTabs
-          selected={purpose}
-          onSelect={setPurpose}
-          labels={{ dorm: "기숙사 입소" }}
-          compactLabels={{ dorm: "기숙사" }}
-        />
+        <div className="flex items-center gap-3">
+          {/* 패드+: 알림 벨 placeholder */}
+          <div className="relative hidden md:block">
+            <BellIcon className="size-[22px] text-admin-textSecondary" />
+            <span aria-hidden="true" className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text" />
+          </div>
+          <PurposeTabs
+            selected={purpose}
+            onSelect={setPurpose}
+            labels={{ dorm: "기숙사 입소" }}
+            compactLabels={{ dorm: "기숙사" }}
+          />
+        </div>
       </div>
 
       {notice && (

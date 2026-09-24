@@ -4,6 +4,7 @@ import { useState } from "react";
 import { RemoveVolunteerDialog } from "@/components/admin/RemoveVolunteerDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerSearchRow } from "@/components/admin/VolunteerSearchRow";
+import { BellIcon } from "@/components/icons/AdminNavIcons";
 import { MOCK_VOLUNTEERS, type Volunteer } from "@/lib/admin/mock-volunteers";
 
 /**
@@ -56,14 +57,21 @@ export function AdminVolunteerAdd() {
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
       <ToastLayer toast={toast} />
 
-      <div className="flex flex-col gap-0.5 md:gap-1">
-        <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:text-[11px] md:leading-normal md:tracking-[1.98px]">
-          <span className="md:hidden">ADMIN</span>
-          <span className="hidden md:inline">VOLUNTEER</span>
-        </p>
-        <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-normal md:tracking-[-0.9px]">
-          봉사자 명단 편집
-        </h1>
+      <div className="flex w-full items-center justify-between md:items-end">
+        <div className="flex flex-col gap-0.5 md:gap-1">
+          <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:text-[11px] md:leading-normal md:tracking-[1.98px]">
+            <span className="md:hidden">ADMIN</span>
+            <span className="hidden md:inline">VOLUNTEER</span>
+          </p>
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-normal md:tracking-[-0.9px]">
+            봉사자 명단 편집
+          </h1>
+        </div>
+        {/* 패드+: 알림 벨 placeholder */}
+        <div className="relative hidden md:block">
+          <BellIcon className="size-[22px] text-admin-textSecondary" />
+          <span aria-hidden="true" className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text" />
+        </div>
       </div>
 
       <input
