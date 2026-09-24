@@ -18,18 +18,18 @@ export function VolunteerListRow({
   const hasCredit = volunteer.count > 0;
 
   return (
-    <div className="flex w-full items-center justify-between rounded-[14px] bg-admin-rowSurface px-5 py-3.5">
+    <div className="flex w-full items-center justify-between rounded-[11px] bg-admin-rowSurface px-3.5 py-[11px] md:rounded-[14px] md:px-5 md:py-3.5">
       <div className="flex flex-col gap-0.5">
-        <p className="text-[15px] font-bold text-admin-text">
+        <p className="text-[13px] font-bold leading-4 text-admin-text md:text-[15px] md:leading-normal">
           {volunteer.name}
         </p>
-        <p className="font-mono text-xs text-admin-textMuted">
+        <p className="font-mono text-[10px] leading-3 text-admin-textMuted md:text-xs">
           {volunteer.studentId} · {volunteer.room}
         </p>
       </div>
       <div className="flex items-center gap-1.5">
         <span
-          className={`flex items-center justify-center rounded-[10px] px-4 py-[7px] text-[13px] font-bold ${
+          className={`flex items-center justify-center rounded-lg px-2.5 py-[5px] text-[11px] font-bold leading-[13px] md:rounded-[10px] md:px-4 md:py-[7px] md:text-[13px] md:leading-normal ${
             hasCredit
               ? "bg-admin-attendance-bg text-admin-attendance-text"
               : "border border-admin-border bg-admin-surface text-admin-textMuted"
@@ -41,7 +41,7 @@ export function VolunteerListRow({
           type="button"
           aria-label={`${volunteer.name} 봉사 1회 추가`}
           onClick={() => onAddCredit(volunteer.studentId)}
-          className="flex size-[30px] items-center justify-center rounded-full border border-[#c7c7ca] text-[15px] font-bold text-admin-ghost-text"
+          className="flex size-6 items-center justify-center rounded-full border border-[#c7c7ca] text-[13px] font-bold leading-4 text-admin-ghost-text md:size-[30px] md:text-[15px] md:leading-normal"
         >
           +
         </button>
@@ -50,7 +50,7 @@ export function VolunteerListRow({
           aria-label={`${volunteer.name} 봉사 1회 차감`}
           disabled={!hasCredit}
           onClick={() => onRemoveCredit(volunteer.studentId)}
-          className={`flex size-[30px] items-center justify-center rounded-full border text-[15px] font-bold ${
+          className={`flex size-6 items-center justify-center rounded-full border text-[13px] font-bold leading-4 md:size-[30px] md:text-[15px] md:leading-normal ${
             hasCredit
               ? "border-admin-border text-admin-textMuted"
               : "border-admin-divider text-[#d5d5d8]"
