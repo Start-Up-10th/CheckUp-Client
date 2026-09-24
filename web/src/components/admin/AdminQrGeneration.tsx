@@ -14,6 +14,11 @@ import {
 
 const DEFAULT_PURPOSE: QrPurpose = "dorm";
 
+const SESSION_ERROR_MESSAGES = {
+  failed: "QR 자동 생성에 실패했습니다. 새로고침해 주세요.",
+  expired: "유효 시간이 만료되었습니다.",
+} as const;
+
 /**
  * REQ-ATT-003: 페이지 진입/목적 전환마다 새 QR 세션을 즉시 발급한다. 생성/종료 버튼은 없다.
  * REQ-ATT-004: 15분마다 갱신하고 "남은 유효 시간" mm:ss를 보여준다.
@@ -27,11 +32,13 @@ export function AdminQrGeneration() {
   const [purpose, setPurpose] = useState<QrPurpose>(DEFAULT_PURPOSE);
   const [session, setSession] = useState<QrSession | null>(null);
   const [now, setNow] = useState<number | null>(null);
-  const [sessionError, setSessionError] = useState(false);
+  const [sessionError, setSessionError] = useState<
+    keyof typeof SESSION_ERROR_MESSAGES | null
+  >(null);
 
   function handleSelectPurpose(nextPurpose: QrPurpose) {
     setPurpose(nextPurpose);
-    setSessionError(false);
+    setSessionError(null);
     const fresh = createMockQrSession(nextPurpose);
     setSession(fresh);
     setNow(fresh.issuedAt);
@@ -50,7 +57,7 @@ export function AdminQrGeneration() {
       setNow(tick);
       setSession((prev) => {
         if (!prev || tick < prev.expiresAt) return prev;
-        // TODO(REQ-ATT-004): 실제 갱신 API 호출로 교체한다. 실패 시에만 setSessionError(true)로
+        // TODO(REQ-ATT-004): 실제 갱신 API 호출로 교체한다. 실패 시에만 setSessionError("expired")로
         // "유효 시간이 만료되었습니다."를 보여주고, 갱신 재시도 전까지 만료된 토큰은 유효 처리하지 않는다.
         return createMockQrSession(prev.purpose, tick);
       });
@@ -59,7 +66,7 @@ export function AdminQrGeneration() {
   }, []);
 
   const countdownLabel =
-    sessionError || !session || now === null
+    sessionError !== null || !session || now === null
       ? undefined
       : formatCountdown(session.expiresAt - now);
 
@@ -80,7 +87,7 @@ export function AdminQrGeneration() {
       {sessionError && (
         <StatusBanner
           variant="error"
-          message="QR 자동 생성에 실패했습니다. 새로고침해 주세요."
+          message={SESSION_ERROR_MESSAGES[sessionError]}
         />
       )}
 

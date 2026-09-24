@@ -1,27 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerListRow } from "@/components/admin/VolunteerListRow";
 import { MOCK_VOLUNTEERS } from "@/lib/admin/mock-volunteers";
-
-const TOAST_DURATION_MS = 2500;
 
 /**
  * REQ-COM-001/002: 명단(소속 학생)만 보여주고, 각 행 "+"/"−"로 즉시 1회 적립/차감한다(차감은 0회 미만 불가).
  * "명단 편집" 버튼은 07 화면(봉사자 명단 편집)으로 이동한다(2026-09-23 Figma 갱신, DEC-023).
  */
-export function AdminVolunteerManagement() {
+export function AdminVolunteerManagement({
+  listLoadFailed = false,
+}: {
+  /** 학생 목록 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
+  listLoadFailed?: boolean;
+}) {
   const [volunteers, setVolunteers] = useState(MOCK_VOLUNTEERS);
-  const [toast, setToast] = useState<string | null>(null);
+  const { toast, showToast } = useToast();
   const members = volunteers.filter((volunteer) => volunteer.isMember);
-
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(null), TOAST_DURATION_MS);
-    return () => clearTimeout(timer);
-  }, [toast]);
 
   function handleAddCredit(studentId: string) {
     setVolunteers((prev) =>
@@ -31,7 +29,7 @@ export function AdminVolunteerManagement() {
           : volunteer,
       ),
     );
-    setToast("봉사 1회를 적립했습니다.");
+    showToast({ variant: "success", message: "봉사 1회를 적립했습니다." });
   }
 
   function handleRemoveCredit(studentId: string) {
@@ -46,13 +44,7 @@ export function AdminVolunteerManagement() {
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
-      {toast && (
-        <div className="pointer-events-none fixed inset-x-4 top-6 z-50 flex justify-center md:inset-x-auto md:right-8 md:justify-end">
-          <div className="pointer-events-auto w-full max-w-sm">
-            <StatusBanner variant="success" message={toast} />
-          </div>
-        </div>
-      )}
+      <ToastLayer toast={toast} />
 
       <div className="flex w-full items-center justify-between md:items-end">
         <div className="flex flex-col gap-0.5 md:gap-1">
@@ -85,7 +77,12 @@ export function AdminVolunteerManagement() {
         <p className="text-[11px] leading-[13px] text-admin-textSecondary md:hidden">
           학생 목록
         </p>
-        {members.length === 0 ? (
+        {listLoadFailed ? (
+          <StatusBanner
+            variant="error"
+            message="학생 목록을 불러오지 못했습니다. 다시 시도해 주세요."
+          />
+        ) : members.length === 0 ? (
           <p className="text-sm text-admin-textMuted">아직 데이터가 없어요</p>
         ) : (
           <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto md:flex-none md:overflow-visible">

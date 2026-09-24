@@ -5,6 +5,7 @@ import { FloorTabs } from "@/components/admin/FloorTabs";
 import { AttendanceStatCards } from "@/components/admin/AttendanceStatCards";
 import { RoomGrid } from "@/components/admin/RoomGrid";
 import { RoomDetailDialog } from "@/components/admin/RoomDetailDialog";
+import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { RoomAttendanceEditDialog } from "@/components/admin/RoomAttendanceEditDialog";
 import {
   MOCK_FLOOR_ROOMS,
@@ -24,6 +25,7 @@ export function AdminHomeFloorPlan() {
   const [roomsByFloor, setRoomsByFloor] = useState(MOCK_FLOOR_ROOMS);
   const [dialogRoomNumber, setDialogRoomNumber] = useState<string | null>(null);
   const [dialogStage, setDialogStage] = useState<DialogStage>("view");
+  const { toast, showToast } = useToast();
 
   const rooms = roomsByFloor[selectedFloor];
   const { present, absent } = useMemo(
@@ -49,6 +51,15 @@ export function AdminHomeFloorPlan() {
   }
 
   function handleSaveRoom(roomNumber: string, students: Student[]) {
+    const current = rooms.find((room) => room.number === roomNumber);
+    const unchanged = current?.students.every(
+      (student, index) => student.present === students[index]?.present,
+    );
+    if (unchanged) {
+      closeDialog();
+      showToast({ variant: "neutral", message: "변경된 내용이 없습니다." });
+      return;
+    }
     setRoomsByFloor((prev) => ({
       ...prev,
       [selectedFloor]: prev[selectedFloor].map((room): Room =>
@@ -56,10 +67,13 @@ export function AdminHomeFloorPlan() {
       ),
     }));
     closeDialog();
+    showToast({ variant: "success", message: "출석 상태를 저장했습니다." });
   }
 
   return (
     <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
+      <ToastLayer toast={toast} />
+
       <div className="flex w-full items-center justify-between md:items-end">
         <div className="flex flex-col gap-0.5 md:gap-1">
           <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:text-[11px] md:leading-[15px] md:tracking-[1.98px]">
