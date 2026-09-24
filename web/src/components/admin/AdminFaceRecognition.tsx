@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { CameraPanel } from "@/components/admin/CameraPanel";
-import { RecentRecognitionsList } from "@/components/admin/RecentRecognitionsList";
+import {
+  RecentRecognitionsList,
+  type RecentRecognitionsStatus,
+} from "@/components/admin/RecentRecognitionsList";
 import { useCameraStream } from "@/lib/admin/use-camera-stream";
 import { MOCK_RECENT_RECOGNITIONS } from "@/lib/admin/mock-recent-recognitions";
 import type { Purpose } from "@/lib/admin/purpose";
@@ -15,7 +18,19 @@ const DEFAULT_PURPOSE: Purpose = "dorm";
  * REQ-FACE-007: 전체화면 전환은 표시 모드 변경일 뿐이다 — useCameraStream을 이 컨테이너에서 한 번만
  * 불러서 같은 video 엘리먼트를 정상/전체화면 모두에서 그대로 재사용한다.
  */
-export function AdminFaceRecognition() {
+export function AdminFaceRecognition({
+  recentStatus = "ready",
+  onRetryRecent,
+}: {
+  /** 최근 인식 목록의 불러오기 상태. 실제 조회 연결 전까지 기본은 "ready"다. */
+  recentStatus?: RecentRecognitionsStatus;
+  onRetryRecent?: () => void;
+}) {
+  const recentEntries = MOCK_RECENT_RECOGNITIONS;
+  // 폰은 빈·오류 상태에서 카메라 패널을 숨기고 최근 인식 패널이 전체 높이를 쓴다(Figma 관리자-핸드폰).
+  const recentFillsScreen =
+    recentStatus === "error" ||
+    (recentStatus === "ready" && recentEntries.length === 0);
   const [purpose, setPurpose] = useState<Purpose>(DEFAULT_PURPOSE);
   const { videoRef, status } = useCameraStream();
   const panelWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -60,7 +75,9 @@ export function AdminFaceRecognition() {
       <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:flex-row md:gap-5">
         <div
           ref={panelWrapperRef}
-          className="flex min-h-[240px] w-full flex-1 md:block md:h-auto md:min-h-0 md:min-w-0 md:flex-[910]"
+          className={`flex min-h-[240px] w-full flex-1 md:block md:h-auto md:min-h-0 md:min-w-0 md:flex-[910] ${
+            recentFillsScreen ? "max-md:hidden" : ""
+          }`}
         >
           <CameraPanel
             videoRef={videoRef}
@@ -70,7 +87,11 @@ export function AdminFaceRecognition() {
             onExitFullscreen={exitFullscreen}
           />
         </div>
-        <RecentRecognitionsList entries={MOCK_RECENT_RECOGNITIONS} />
+        <RecentRecognitionsList
+          entries={recentEntries}
+          status={recentStatus}
+          onRetry={onRetryRecent}
+        />
       </div>
     </div>
   );
