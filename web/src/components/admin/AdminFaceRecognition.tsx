@@ -91,7 +91,7 @@ export function AdminFaceRecognition({
       <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:gap-5 xl:flex-row">
         <div
           ref={panelWrapperRef}
-          className={`flex min-h-[240px] w-full flex-1 md:block md:h-auto md:min-h-0 md:min-w-0 md:flex-[910] ${
+          className={`flex min-h-[240px] w-full flex-1 md:min-h-0 xl:block xl:h-auto xl:min-w-0 xl:flex-[910] ${
             recentFillsScreen ? "max-md:hidden" : ""
           }`}
         >
