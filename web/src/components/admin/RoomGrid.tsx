@@ -16,7 +16,7 @@ type RoomGridProps = {
  */
 export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
   return (
-    <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-1 md:overflow-y-auto md:gap-4 md:rounded-panel md:p-[22px] xl:min-h-0 xl:overflow-visible xl:pb-0">
+    <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-1 md:min-h-0 md:gap-4 md:rounded-panel md:p-[22px] xl:overflow-visible xl:pb-0">
       <div className="flex w-full items-center gap-2.5 md:h-[100px] md:gap-[18px]">
         <div className="flex items-center gap-[5px] md:gap-1.5">
           <span className="size-2 rounded-[3px] border border-admin-attendance-border bg-admin-attendance-bg md:size-[9px]" />
@@ -36,8 +36,8 @@ export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
         </p>
       </div>
 
-      <div className="flex w-full flex-1 flex-col xl:min-h-0">
-        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-auto md:grid-cols-4 md:gap-2.5 xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
+      <div className="flex w-full flex-1 flex-col md:min-h-0 xl:min-h-0">
+        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:grid-cols-4 md:gap-2.5 xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
           {rooms.map((room) => (
             <RoomCard key={room.number} room={room} onClick={onRoomClick} />
           ))}
