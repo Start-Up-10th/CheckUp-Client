@@ -108,6 +108,33 @@ export function VolunteerIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Figma icon/bell (469:1055) — 알림 벨. 뱃지 점은 사용 측에서 overlay로 추가한다. */
+export function BellIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 22 22"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M11 2.75C7.55 2.75 4.75 5.55 4.75 9V14.5L3 16.25H19L17.25 14.5V9C17.25 5.55 14.45 2.75 11 2.75Z"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 16.25C9 17.355 9.895 18.25 11 18.25C12.105 18.25 13 17.355 13 16.25"
+        stroke="currentColor"
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function LogoutIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg

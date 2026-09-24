@@ -7,6 +7,7 @@ import { RoomGrid } from "@/components/admin/RoomGrid";
 import { RoomDetailDialog } from "@/components/admin/RoomDetailDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { RoomAttendanceEditDialog } from "@/components/admin/RoomAttendanceEditDialog";
+import { BellIcon } from "@/components/icons/AdminNavIcons";
 import {
   MOCK_FLOOR_ROOMS,
   summarizeAttendance,
@@ -74,6 +75,7 @@ export function AdminHomeFloorPlan() {
     <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
       <ToastLayer toast={toast} />
 
+      {/* 헤더: 폰=제목+탭, 패드+=제목+벨 */}
       <div className="flex w-full items-center justify-between md:items-end">
         <div className="flex flex-col gap-0.5 md:gap-1">
           <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:text-[11px] md:leading-[15px] md:tracking-[1.98px]">
@@ -84,7 +86,31 @@ export function AdminHomeFloorPlan() {
             {selectedFloor}층 전개도
           </h1>
         </div>
+        {/* 폰: 탭이 헤더 우측 */}
+        <FloorTabs
+          selected={selectedFloor}
+          onSelect={handleSelectFloor}
+          className="md:hidden"
+        />
+        {/* 패드+: 알림 벨 (REQ-미구현 placeholder) */}
+        <div className="relative hidden md:block">
+          <BellIcon className="size-[22px] text-admin-textSecondary" />
+          <span
+            aria-hidden="true"
+            className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text"
+          />
+        </div>
+      </div>
+
+      {/* 탭+검색: 패드+ 전용 두 번째 행 */}
+      <div className="hidden items-center gap-4 md:flex">
         <FloorTabs selected={selectedFloor} onSelect={handleSelectFloor} />
+        <input
+          type="text"
+          placeholder="학번·이름 검색"
+          disabled
+          className="h-11 flex-1 rounded-control border border-admin-border bg-admin-rowSurface px-4 text-sm text-admin-text placeholder:text-admin-textMuted"
+        />
       </div>
 
       <AttendanceStatCards present={present} absent={absent} />
