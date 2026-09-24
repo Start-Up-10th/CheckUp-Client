@@ -72,13 +72,13 @@ export function AdminQrGeneration() {
       : formatCountdown(session.expiresAt - now);
 
   return (
-    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
+    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6">
       <div className="flex w-full items-center justify-between md:items-end">
         <div className="flex flex-col gap-1">
-          <p className="hidden font-mono text-[11px] tracking-[1.98px] text-admin-textFaint md:block">
+          <p className="hidden font-mono text-[10px] tracking-[1.8px] text-admin-textFaint md:block xl:text-[11px] xl:tracking-[1.98px]">
             QR ISSUE
           </p>
-          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-normal md:tracking-[-0.9px]">
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-normal md:tracking-[-0.78px] xl:text-[30px] xl:tracking-[-0.9px]">
             QR 코드 생성
           </h1>
         </div>
