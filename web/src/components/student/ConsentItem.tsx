@@ -30,11 +30,11 @@ export function ConsentItem({
       <ConsentCheckbox checked={checked} />
       <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
         <span className="flex items-center gap-1.5">
-          <span className="text-[13px] font-bold leading-normal text-admin-text">
+          <span className="text-[13px] font-bold leading-normal text-admin-text md:text-[15px]">
             {title}
           </span>
           <span
-            className={`rounded-full px-[7px] py-0.5 text-[10px] font-bold leading-normal ${
+            className={`rounded-full px-[7px] py-0.5 text-[10px] font-bold leading-normal md:text-xs ${
               required
                 ? "bg-admin-attendance-bg text-admin-attendance-text"
                 : "bg-admin-absence-bg text-admin-absence-text"
@@ -43,7 +43,7 @@ export function ConsentItem({
             {required ? "필수" : "선택"}
           </span>
         </span>
-        <span className="text-[11px] leading-normal text-admin-textMuted">
+        <span className="text-[11px] leading-normal text-admin-textMuted md:text-[13px]">
           {description}
         </span>
       </span>

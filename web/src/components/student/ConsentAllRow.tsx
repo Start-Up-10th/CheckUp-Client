@@ -16,10 +16,10 @@ export function ConsentAllRow({ checked, onToggle }: ConsentAllRowProps) {
       role="checkbox"
       aria-checked={checked}
       onClick={onToggle}
-      className="flex w-full items-center gap-3 px-3.5 pb-3.5 pt-4 text-left"
+      className="flex w-full items-center gap-3 px-3.5 pb-3.5 pt-4 text-left md:pb-4 md:pt-[18px]"
     >
       <ConsentCheckbox checked={checked} />
-      <span className="text-[15px] font-bold leading-normal text-admin-text">
+      <span className="text-[15px] font-bold leading-normal text-admin-text md:text-base">
         전체 동의
       </span>
     </button>
