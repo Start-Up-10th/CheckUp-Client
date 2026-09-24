@@ -70,7 +70,7 @@ export function AdminQrGeneration() {
           <p className="hidden font-mono text-[11px] tracking-[1.98px] text-admin-textFaint md:block">
             QR ISSUE
           </p>
-          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-[normal] md:tracking-[-0.9px]">
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-normal md:tracking-[-0.9px]">
             QR 코드 생성
           </h1>
         </div>

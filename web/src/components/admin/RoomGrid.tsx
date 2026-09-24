@@ -20,13 +20,13 @@ export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
       <div className="flex w-full items-center gap-2.5 md:h-[100px] md:gap-[18px]">
         <div className="flex items-center gap-[5px] md:gap-1.5">
           <span className="size-2 rounded-[3px] border border-admin-attendance-border bg-admin-attendance-bg md:size-[9px]" />
-          <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs md:leading-[normal]">
+          <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs">
             출석
           </span>
         </div>
         <div className="flex items-center gap-[5px] md:gap-1.5">
           <span className="size-2 rounded-[3px] border border-admin-absence-border bg-admin-absence-bg md:size-[9px]" />
-          <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs md:leading-[normal]">
+          <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs">
             미출석
           </span>
         </div>

@@ -39,13 +39,13 @@ export function AdminFaceRecognition() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
-      <div className="flex w-full items-end justify-between">
+    <div className="flex min-h-full w-full flex-col gap-3.5 px-4 py-3.5 md:h-full md:gap-5 md:px-8 md:py-7">
+      <div className="flex w-full items-center justify-between md:items-end">
         <div className="flex flex-col gap-1">
-          <p className="font-mono text-[11px] tracking-[1.98px] text-admin-textFaint">
+          <p className="hidden font-mono text-[11px] tracking-[1.98px] text-admin-textFaint md:block">
             FACE RECOGNITION
           </p>
-          <h1 className="text-[30px] font-bold tracking-[-0.9px] text-admin-text">
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-normal md:tracking-[-0.9px]">
             얼굴 인식 생성
           </h1>
         </div>
@@ -53,13 +53,14 @@ export function AdminFaceRecognition() {
           selected={purpose}
           onSelect={setPurpose}
           labels={{ dorm: "기숙사 입소" }}
+          compactLabels={{ dorm: "기숙사" }}
         />
       </div>
 
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-5 md:flex-row">
+      <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:flex-row md:gap-5">
         <div
           ref={panelWrapperRef}
-          className="h-[320px] w-full shrink-0 md:h-auto md:min-w-0 md:flex-[910]"
+          className="flex min-h-[240px] w-full flex-1 md:block md:h-auto md:min-h-0 md:min-w-0 md:flex-[910]"
         >
           <CameraPanel
             videoRef={videoRef}
