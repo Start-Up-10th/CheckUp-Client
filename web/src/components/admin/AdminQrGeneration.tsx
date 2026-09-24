@@ -5,6 +5,7 @@ import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel";
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
 import { StatusBanner } from "@/components/admin/StatusBanner";
+import { BellIcon } from "@/components/icons/AdminNavIcons";
 import {
   createMockQrSession,
   formatCountdown,
@@ -71,17 +72,27 @@ export function AdminQrGeneration() {
       : formatCountdown(session.expiresAt - now);
 
   return (
-    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
+    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6">
       <div className="flex w-full items-center justify-between md:items-end">
         <div className="flex flex-col gap-1">
-          <p className="hidden font-mono text-[11px] tracking-[1.98px] text-admin-textFaint md:block">
+          <p className="hidden font-mono text-[10px] tracking-[1.8px] text-admin-textFaint md:block xl:text-[11px] xl:tracking-[1.98px]">
             QR ISSUE
           </p>
-          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-normal md:tracking-[-0.9px]">
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-normal md:tracking-[-0.78px] xl:text-[30px] xl:tracking-[-0.9px]">
             QR 코드 생성
           </h1>
         </div>
-        <PurposeTabs selected={purpose} onSelect={handleSelectPurpose} />
+        <div className="flex items-center gap-3">
+          {/* 패드+: 알림 벨 placeholder */}
+          <div className="relative hidden md:block">
+            <BellIcon className="size-[22px] text-admin-textSecondary" />
+            <span
+              aria-hidden="true"
+              className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text"
+            />
+          </div>
+          <PurposeTabs selected={purpose} onSelect={handleSelectPurpose} />
+        </div>
       </div>
 
       {sessionError && (

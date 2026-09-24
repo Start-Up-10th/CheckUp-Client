@@ -27,6 +27,10 @@ export function VolunteerListRow({
           {volunteer.studentId} · {volunteer.room}
         </p>
       </div>
+      {/* 패드+: 최근 봉사 날짜 */}
+      <p className="hidden text-sm text-admin-textMuted md:block">
+        {volunteer.lastActivityDate ?? "−"}
+      </p>
       <div className="flex items-center gap-1.5">
         <span
           className={`flex items-center justify-center rounded-lg px-2.5 py-[5px] text-[11px] font-bold leading-[13px] md:rounded-[10px] md:px-4 md:py-[7px] md:text-[13px] md:leading-normal ${

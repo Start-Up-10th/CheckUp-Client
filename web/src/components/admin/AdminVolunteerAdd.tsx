@@ -4,6 +4,7 @@ import { useState } from "react";
 import { RemoveVolunteerDialog } from "@/components/admin/RemoveVolunteerDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerSearchRow } from "@/components/admin/VolunteerSearchRow";
+import { BellIcon } from "@/components/icons/AdminNavIcons";
 import { MOCK_VOLUNTEERS, type Volunteer } from "@/lib/admin/mock-volunteers";
 
 /**
@@ -53,17 +54,27 @@ export function AdminVolunteerAdd() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
+    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6">
       <ToastLayer toast={toast} />
 
-      <div className="flex flex-col gap-0.5 md:gap-1">
-        <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:text-[11px] md:leading-normal md:tracking-[1.98px]">
-          <span className="md:hidden">ADMIN</span>
-          <span className="hidden md:inline">VOLUNTEER</span>
-        </p>
-        <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-normal md:tracking-[-0.9px]">
-          봉사자 명단 편집
-        </h1>
+      <div className="flex w-full items-center justify-between md:items-end">
+        <div className="flex flex-col gap-0.5 md:gap-1">
+          <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:tracking-[1.8px] xl:text-[11px] xl:leading-normal xl:tracking-[1.98px]">
+            <span className="md:hidden">ADMIN</span>
+            <span className="hidden md:inline">VOLUNTEER</span>
+          </p>
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-normal md:tracking-[-0.78px] xl:text-[30px] xl:tracking-[-0.9px]">
+            봉사자 명단 편집
+          </h1>
+        </div>
+        {/* 패드+: 알림 벨 placeholder */}
+        <div className="relative hidden md:block">
+          <BellIcon className="size-[22px] text-admin-textSecondary" />
+          <span
+            aria-hidden="true"
+            className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text"
+          />
+        </div>
       </div>
 
       <input
@@ -71,11 +82,11 @@ export function AdminVolunteerAdd() {
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="이름 또는 학번으로 검색"
-        className="h-11 w-full max-w-[168px] rounded-control border border-admin-border bg-admin-rowSurface px-3.5 text-sm md:h-[46px] md:max-w-[173px] md:px-4 text-admin-text placeholder:text-admin-textMuted focus:outline-none"
+        className="h-11 w-full max-w-[168px] rounded-control border border-admin-border bg-admin-rowSurface px-3.5 text-sm md:h-[44px] md:max-w-none md:px-4 text-admin-text placeholder:text-admin-textMuted focus:outline-none"
       />
 
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:gap-0 md:overflow-y-auto md:rounded-panel md:p-[22px]">
-        <p className="text-[11px] leading-[13px] text-admin-textSecondary md:hidden">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:gap-0 md:overflow-y-auto md:rounded-[18px] md:p-[20px] xl:rounded-panel">
+        <p className="text-[11px] leading-[13px] text-admin-textSecondary">
           전체 학생
         </p>
         {filtered.length === 0 ? (
