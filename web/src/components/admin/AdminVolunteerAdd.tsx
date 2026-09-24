@@ -57,7 +57,7 @@ export function AdminVolunteerAdd() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col gap-5 px-8 py-7">
+    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-5 md:px-8 md:py-7">
       {toast && (
         <div className="pointer-events-none fixed inset-x-4 top-6 z-50 flex justify-center md:inset-x-auto md:right-8 md:justify-end">
           <div className="pointer-events-auto w-full max-w-sm">
@@ -66,11 +66,12 @@ export function AdminVolunteerAdd() {
         </div>
       )}
 
-      <div className="flex flex-col gap-1">
-        <p className="font-mono text-[11px] tracking-[1.98px] text-admin-textFaint">
-          VOLUNTEER
+      <div className="flex flex-col gap-0.5 md:gap-1">
+        <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:text-[11px] md:leading-normal md:tracking-[1.98px]">
+          <span className="md:hidden">ADMIN</span>
+          <span className="hidden md:inline">VOLUNTEER</span>
         </p>
-        <h1 className="text-[30px] font-bold tracking-[-0.9px] text-admin-text">
+        <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[30px] md:leading-normal md:tracking-[-0.9px]">
           봉사자 명단 편집
         </h1>
       </div>
@@ -80,14 +81,17 @@ export function AdminVolunteerAdd() {
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="이름 또는 학번으로 검색"
-        className="h-[46px] w-full max-w-[173px] rounded-control border border-admin-border bg-admin-rowSurface px-4 text-sm text-admin-text placeholder:text-admin-textMuted focus:outline-none"
+        className="h-11 w-full max-w-[168px] rounded-control border border-admin-border bg-admin-rowSurface px-3.5 text-sm md:h-[46px] md:max-w-[173px] md:px-4 text-admin-text placeholder:text-admin-textMuted focus:outline-none"
       />
 
-      <div className="flex w-full flex-1 flex-col overflow-y-auto rounded-panel bg-admin-surface p-[22px]">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:gap-0 md:overflow-y-auto md:rounded-panel md:p-[22px]">
+        <p className="text-[11px] leading-[13px] text-admin-textSecondary md:hidden">
+          전체 학생
+        </p>
         {filtered.length === 0 ? (
           <p className="text-sm text-admin-textMuted">검색 결과가 없습니다.</p>
         ) : (
-          <div className="flex w-full flex-col gap-2">
+          <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto md:flex-none md:overflow-visible">
             {filtered.map((volunteer) => (
               <VolunteerSearchRow
                 key={volunteer.studentId}

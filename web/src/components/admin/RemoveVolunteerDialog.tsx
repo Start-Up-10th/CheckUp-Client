@@ -25,19 +25,19 @@ export function RemoveVolunteerDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="remove-volunteer-dialog-title"
-        className="z-50 flex w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1.5 rounded-[16px] bg-admin-surface p-5 md:w-[400px] xl:w-[460px]"
+        className="z-50 flex w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1.5 rounded-[16px] bg-admin-surface p-4 md:w-[400px] xl:w-[460px]"
         onClick={(event) => event.stopPropagation()}
       >
         <h2
           id="remove-volunteer-dialog-title"
-          className="text-[18px] font-bold text-admin-text"
+          className="text-base font-bold leading-[19px] text-admin-text md:text-[18px] md:leading-normal"
         >
           봉사자 명단에서 제외할까요?
         </h2>
-        <p className="text-sm text-admin-ghost-text">
+        <p className="text-[13px] leading-4 text-admin-ghost-text md:text-sm md:leading-5">
           {volunteer.name} · {volunteer.studentId} · {volunteer.room}
         </p>
-        <p className="text-sm text-admin-textMuted">
+        <p className="text-[13px] leading-4 text-admin-textMuted md:text-sm md:leading-5">
           적립된 봉사 횟수는 그대로 유지됩니다.
         </p>
 
@@ -45,14 +45,14 @@ export function RemoveVolunteerDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-[13px] bg-admin-ghost-bg px-[22px] py-[13px] text-sm font-bold text-admin-ghost-text"
+            className="rounded-[13px] bg-admin-ghost-bg px-[18px] py-[11px] text-[13px] font-bold leading-4 text-admin-ghost-text md:px-[22px] md:py-[13px] md:text-sm md:leading-5"
           >
             취소
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-[13px] bg-admin-danger-bg px-[22px] py-[13px] text-sm font-bold text-admin-danger-text"
+            className="rounded-[13px] bg-admin-danger-bg px-[18px] py-[11px] text-[13px] font-bold leading-4 text-admin-danger-text md:px-[22px] md:py-[13px] md:text-sm md:leading-5"
           >
             제외
           </button>
