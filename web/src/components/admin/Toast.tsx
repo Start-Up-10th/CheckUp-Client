@@ -32,7 +32,7 @@ export function useToast() {
 
 /**
  * 위치 규칙(디자이너 결정):
- * - 폰(<md): 탭바(60px) 바로 위 16px = bottom-[76px], 좌우 18px 여백으로 화면 폭 채움
+ * - 폰(<md): 탭바(60px) 바로 위 18px = bottom-[78px], 좌우 18px 여백으로 화면 폭 채움 (Figma 783:218)
  * - 패드(md): 하단 24px, 레일(88px) 오른쪽 콘텐츠 영역 중앙, 최대 480px
  * - 컴퓨터(xl): 하단 28px, 사이드바(300px) 오른쪽 콘텐츠 영역 중앙, 최대 500px
  * 모달(z-40) 위에 표시되도록 z-50 유지.
@@ -43,7 +43,7 @@ export function ToastLayer({ toast }: { toast: ToastMessage | null }) {
   return (
     <div
       className="pointer-events-none fixed z-50 flex justify-center
-        bottom-[76px] inset-x-[18px]
+        bottom-[78px] inset-x-[18px]
         md:bottom-6 md:inset-x-0 md:left-[88px]
         xl:bottom-7 xl:left-[300px]"
     >
