@@ -17,20 +17,23 @@ type RoomGridProps = {
 export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
   return (
     <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-1 md:min-h-0 md:gap-4 md:rounded-panel md:p-[22px] xl:overflow-visible xl:pb-0">
-      <div className="flex w-full items-center gap-2.5 md:h-[100px] md:gap-[18px]">
-        <div className="flex items-center gap-[5px] md:gap-1.5">
-          <span className="size-2 rounded-[3px] border border-admin-attendance-border bg-admin-attendance-bg md:size-[9px]" />
-          <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs">
-            출석
-          </span>
+      {/* 폰: 한 행. 패드: 범례 아래에 안내 텍스트 2행. 데스크톱: 한 행 100px. */}
+      <div className="flex w-full flex-col gap-1.5 xl:h-[100px] xl:flex-row xl:items-center xl:gap-[18px]">
+        <div className="flex items-center gap-2.5 md:gap-[18px]">
+          <div className="flex items-center gap-[5px] md:gap-1.5">
+            <span className="size-2 rounded-[3px] border border-admin-attendance-border bg-admin-attendance-bg md:size-[9px]" />
+            <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs">
+              출석
+            </span>
+          </div>
+          <div className="flex items-center gap-[5px] md:gap-1.5">
+            <span className="size-2 rounded-[3px] border border-admin-absence-border bg-admin-absence-bg md:size-[9px]" />
+            <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs">
+              미출석
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-[5px] md:gap-1.5">
-          <span className="size-2 rounded-[3px] border border-admin-absence-border bg-admin-absence-bg md:size-[9px]" />
-          <span className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs">
-            미출석
-          </span>
-        </div>
-        <div className="hidden flex-1 md:block" />
+        <div className="hidden xl:block xl:flex-1" />
         <p className="hidden text-xs text-admin-textMuted md:block">
           호실 클릭 시 출석 변경
         </p>
