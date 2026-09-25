@@ -1,11 +1,14 @@
 import { MOCK_STUDENT } from "@/lib/student/mock-student";
 import { StudentBottomTabBar } from "./StudentBottomTabBar";
 import { StudentSidebar } from "./StudentSidebar";
+import type { SidebarTone } from "./StudentSidebarLink";
 
 type StudentShellProps = {
   children: React.ReactNode;
   /** 핸드폰 하단 탭(홈/마이)을 보일지. QR·봉사·알림 화면은 숨긴다(REQ-UI-004). */
   showTabBar?: boolean;
+  /** 노트북 사이드바 색. QR 카메라 화면만 어두운 사이드바를 쓴다. */
+  sidebarTone?: SidebarTone;
 };
 
 /**
@@ -16,6 +19,7 @@ type StudentShellProps = {
 export function StudentShell({
   children,
   showTabBar = true,
+  sidebarTone = "light",
 }: StudentShellProps) {
   const student = MOCK_STUDENT;
 
@@ -26,6 +30,7 @@ export function StudentShell({
         studentNumber={student.studentNumber}
         room={`${student.roomNumber}호`}
         hasUnreadNotification={student.hasUnreadNotification}
+        tone={sidebarTone}
       />
       <div
         className={`flex min-w-0 flex-1 flex-col ${
