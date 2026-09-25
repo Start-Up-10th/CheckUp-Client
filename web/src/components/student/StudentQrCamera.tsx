@@ -24,9 +24,9 @@ const RESULT_MESSAGES: Record<
     message: "만료된 QR입니다. 다시 스캔해 주세요.",
   },
   duplicate: { variant: "neutral", message: "이미 출석 처리된 QR입니다." },
-  // Figma에 없는 명세 문구 — 담담한 안내라 "이미 출석"과 같은 회색으로 둔다.
+  // Figma 04·메인 state messages(205:263)에서 이 문구가 빨간 메시지라 그대로 따른다.
   closed: {
-    variant: "neutral",
+    variant: "error",
     message: "지금은 출석 인증을 받고 있지 않습니다.",
   },
   invalid: { variant: "error", message: "유효하지 않은 QR입니다." },
