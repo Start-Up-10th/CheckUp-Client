@@ -27,8 +27,9 @@ type StudentSidebarProps = {
 
 /**
  * REQ-UI-004: 학생 노트북(md 이상) 좌측 사이드바 — 프로필·홈·QR 출석·마이페이지·알림·하단 로그아웃.
- * Figma 사용자-노트북 227:6(폭 240px). 알림을 읽은 상태의 종(bell.svg)은 Figma에 없어
- * bell-unread.svg에서 빨간 점만 뺐다.
+ * Figma 사용자-노트북 227:6(폭 240px). 읽지 않은 알림은 종 안의 빨간 점(수정된 Figma 889:11)으로만
+ * 알리고, 알림 항목의 초록 강조는 알림 화면에 있을 때만 쓴다(REQ-COM-005, 2026-09-25 변경).
+ * 알림을 읽은 상태의 종(bell.svg)은 Figma에 없어 bell-unread.svg에서 빨간 점만 뺐다.
  * 로그아웃 동작은 핸드폰 로그아웃 버튼과 같은 useLogout()을 쓴다(REQ-AUTH-005).
  */
 export function StudentSidebar({
@@ -80,7 +81,7 @@ export function StudentSidebar({
           label="알림"
           srHint={hasUnreadNotification ? "읽지 않은 알림 있음" : undefined}
           current={onNotifications}
-          highlighted={hasUnreadNotification || onNotifications}
+          highlighted={onNotifications}
           icon={
             hasUnreadNotification ? (
               // eslint-disable-next-line @next/next/no-img-element -- 빨간 점 색을 유지해야 해서 mask 대신 원본 SVG를 그대로 쓴다
