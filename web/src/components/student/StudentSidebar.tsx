@@ -4,17 +4,24 @@ import { usePathname, useRouter } from "next/navigation";
 import { MaskIcon } from "./MaskIcon";
 import { StudentSidebarLink } from "./StudentSidebarLink";
 
+// subPaths: 그 메뉴 안에서 들어가는 하위 화면. 거기 있을 때도 메뉴를 초록으로 강조한다
+// (Figma 노트북 봉사 활동 322:341에서 마이페이지가 강조됨).
 const NAV_ITEMS = [
   { href: "/main", label: "홈", iconSrc: "/icons/student-nav/home.svg" },
   { href: "/qr", label: "QR 출석", iconSrc: "/icons/student-nav/qr.svg" },
-  { href: "/my", label: "마이페이지", iconSrc: "/icons/student-nav/my.svg" },
+  {
+    href: "/my",
+    label: "마이페이지",
+    iconSrc: "/icons/student-nav/my.svg",
+    subPaths: ["/volunteer"],
+  },
 ];
 
 type StudentSidebarProps = {
   name: string;
   studentNumber: string;
   room: string;
-  hasUnreadNotice: boolean;
+  hasUnreadNotification: boolean;
 };
 
 /**
@@ -27,11 +34,11 @@ export function StudentSidebar({
   name,
   studentNumber,
   room,
-  hasUnreadNotice,
+  hasUnreadNotification,
 }: StudentSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const onNotice = pathname === "/notice";
+  const onNotifications = pathname === "/notifications";
 
   return (
     <aside className="hidden h-dvh w-60 shrink-0 flex-col gap-1 border-r border-admin-border bg-admin-surface px-5 pb-6 pt-7 md:sticky md:top-0 md:flex">
@@ -44,20 +51,21 @@ export function StudentSidebar({
         </div>
       </div>
       <nav className="flex flex-col gap-0.5">
-        {NAV_ITEMS.map(({ href, label, iconSrc }) => {
+        {NAV_ITEMS.map(({ href, label, iconSrc, subPaths }) => {
           const current = pathname === href;
+          const highlighted = current || !!subPaths?.includes(pathname);
           return (
             <StudentSidebarLink
               key={href}
               href={href}
               label={label}
               current={current}
-              highlighted={current}
+              highlighted={highlighted}
               icon={
                 <MaskIcon
                   src={iconSrc}
                   className={`size-[19px] ${
-                    current
+                    highlighted
                       ? "text-admin-attendance-text"
                       : "text-admin-textMuted"
                   }`}
@@ -67,13 +75,13 @@ export function StudentSidebar({
           );
         })}
         <StudentSidebarLink
-          href="/notice"
+          href="/notifications"
           label="알림"
-          srHint={hasUnreadNotice ? "읽지 않은 알림 있음" : undefined}
-          current={onNotice}
-          highlighted={hasUnreadNotice || onNotice}
+          srHint={hasUnreadNotification ? "읽지 않은 알림 있음" : undefined}
+          current={onNotifications}
+          highlighted={hasUnreadNotification || onNotifications}
           icon={
-            hasUnreadNotice ? (
+            hasUnreadNotification ? (
               // eslint-disable-next-line @next/next/no-img-element -- 빨간 점 색을 유지해야 해서 mask 대신 원본 SVG를 그대로 쓴다
               <img
                 src="/icons/student-nav/bell-unread.svg"
