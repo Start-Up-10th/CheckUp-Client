@@ -6,9 +6,10 @@ import { ConsentAllRow } from "./ConsentAllRow";
 import { ConsentItem } from "./ConsentItem";
 import { PrimaryButton } from "./PrimaryButton";
 
-type ConsentKey = "privacy" | "face" | "notice";
+type ConsentKey = "privacy" | "face";
 
 // REQ-AUTH-004 항목표. 문구는 화면 예시이며 최종 전문은 학교 제공 문안에 연결한다.
+// Figma의 선택 항목 `기숙사 공지 알림 수신`은 공지 기능 제거(2026-09-26, REQ-SCOPE-003)로 두지 않는다.
 const CONSENT_ITEMS: {
   key: ConsentKey;
   title: string;
@@ -29,12 +30,6 @@ const CONSENT_ITEMS: {
       "등록한 얼굴 정보는 출석 인증에만 사용되며 졸업 시 파기됩니다.",
     required: true,
   },
-  {
-    key: "notice",
-    title: "기숙사 공지 알림 수신",
-    description: "공지사항과 출석 관련 알림을 받아볼 수 있습니다.",
-    required: false,
-  },
 ];
 
 /**
@@ -48,7 +43,6 @@ export function StudentConsent() {
   const [checked, setChecked] = useState<Record<ConsentKey, boolean>>({
     privacy: false,
     face: false,
-    notice: false,
   });
 
   const allChecked = CONSENT_ITEMS.every((item) => checked[item.key]);
@@ -58,7 +52,7 @@ export function StudentConsent() {
 
   const toggleAll = () => {
     const next = !allChecked;
-    setChecked({ privacy: next, face: next, notice: next });
+    setChecked({ privacy: next, face: next });
   };
 
   const toggleItem = (key: ConsentKey) => {
