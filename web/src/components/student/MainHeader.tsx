@@ -11,8 +11,9 @@ type MainHeaderProps = {
  * REQ-UI-003 학생 홈 머리: `학번 · 이름`, `기숙사 N층` 제목, 알림 진입점(REQ-COM-005 — 읽지 않은
  * 알림이 있으면 종에 빨간 점, 숫자 배지 없음).
  * 핸드폰(Figma 5:4)은 흰 헤더, 위 여백은 상태바 56px+4px=60px(보이는 위치 그대로), 종 22px.
- * 노트북(224:41)은 배경 없이 제목 28px, 회색 원 배경의 42px 종 버튼. 빨간 점 없는 종은 Figma에
- * 없어 원본에서 점만 뺐고, 핸드폰 종의 clip 밖 찌꺼기 원은 사이드바 종(#16)처럼 지웠다.
+ * 노트북(224:41)은 배경 없이 제목 28px이고 종 버튼이 없다 — 알림은 사이드바 "알림"으로 들어간다
+ * (팀원이 수정한 Figma, 2026-09-25, #29). 빨간 점 없는 종은 Figma에 없어 원본에서 점만 뺐고,
+ * 핸드폰 종의 clip 밖 찌꺼기 원은 사이드바 종(#16)처럼 지웠다.
  */
 export function MainHeader({
   name,
@@ -36,7 +37,7 @@ export function MainHeader({
         aria-label={
           hasUnreadNotification ? "알림 (읽지 않은 알림 있음)" : "알림"
         }
-        className="-m-2 p-2 md:m-0 md:p-0"
+        className="-m-2 p-2 md:hidden"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- 빨간 점 색을 유지해야 해서 원본 SVG를 그대로 쓴다 */}
         <img
@@ -44,15 +45,7 @@ export function MainHeader({
           alt=""
           width={22}
           height={22}
-          className="size-[22px] md:hidden"
-        />
-        {/* eslint-disable-next-line @next/next/no-img-element -- 회색 원 배경과 빨간 점이 함께 그려진 원본 SVG */}
-        <img
-          src={`/icons/student-main/bell-button${suffix}.svg`}
-          alt=""
-          width={42}
-          height={42}
-          className="hidden size-[42px] md:block"
+          className="size-[22px]"
         />
       </Link>
     </header>
