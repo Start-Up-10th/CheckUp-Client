@@ -9,7 +9,7 @@
 | 인증 | [identity.md](identity.md) | DataGSM·권한·동의·프로필 |
 | 얼굴 | [face.md](face.md) | 등록·벡터·다수 인식·화면·오프라인 |
 | 출석·QR | [attendance.md](attendance.md) | 세션·중복·갱신·수동 수정·08시 |
-| 화면 | [screens.md](screens.md) | 관리자 전개도·학생 홈·반응형·문구 |
+| 화면 | [screens.md](screens.md) | 관리자 전개도·학생 홈·반응형·문구·설치(PWA) |
 | 공지·봉사 | [community.md](community.md) | 봉사 관리·공지·알림 |
 | 운영 | [operations.md](operations.md) | GSM SV·배포·백업·삭제 |
 
