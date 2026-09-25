@@ -5,7 +5,6 @@ import Link from "next/link";
 import { StatusBanner } from "@/components/admin/StatusBanner";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerListRow } from "@/components/admin/VolunteerListRow";
-import { BellIcon } from "@/components/icons/AdminNavIcons";
 import { MOCK_VOLUNTEERS } from "@/lib/admin/mock-volunteers";
 
 /**
@@ -57,27 +56,17 @@ export function AdminVolunteerManagement({
             봉사자 관리
           </h1>
         </div>
-        {/* 폰: 명단 편집 버튼 */}
+        {/* 폰·패드: 명단 편집 버튼 */}
         <Link
           href="/admin/volunteers/add"
-          className="flex items-center justify-center rounded-[13px] bg-admin-accent-bg px-4 py-2.5 text-[13px] font-bold leading-4 text-admin-accent-text md:hidden"
+          className="flex items-center justify-center rounded-[13px] bg-admin-accent-bg px-4 py-2.5 text-[13px] font-bold leading-4 text-admin-accent-text xl:hidden"
         >
           명단 편집
         </Link>
-        {/* 패드+: 알림 벨 placeholder */}
-        <div className="relative hidden md:block">
-          <BellIcon className="size-[22px] text-admin-textSecondary" />
-          <span
-            aria-hidden="true"
-            className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text"
-          />
-        </div>
-      </div>
-
-      <div className="hidden w-full items-center justify-end md:flex">
+        {/* 컴퓨터: 명단 편집 버튼 (더 큰 스타일) */}
         <Link
           href="/admin/volunteers/add"
-          className="flex items-center justify-center rounded-[13px] bg-admin-accent-bg px-[20px] py-[12px] text-sm font-bold text-admin-accent-text"
+          className="hidden items-center justify-center rounded-[13px] bg-admin-accent-bg px-[20px] py-[12px] text-sm font-bold text-admin-accent-text xl:flex"
         >
           명단 편집
         </Link>
