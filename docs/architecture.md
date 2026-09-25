@@ -30,14 +30,14 @@ Claude와 Codex의 차이는 진입 파일/스킬 검색 경로에 한정한다.
 | 개념 | 필수 의미 |
 | --- | --- |
 | Student | 검증된 DataGSM 식별자·이름·학년·호실 |
-| Consent | 필수 두 항목과 동의 버전/시각 |
+| Consent | 필수 두 항목, 공지 알림 선택과 동의 버전/시각 |
 | FaceTemplate | 학생별 약 20개 대표 임베딩, 모델 버전; 원본 없음 |
 | RecognitionSession | 관리자·기기·페이지·용도·수명 |
 | QrSession / QrToken | 독립 페이지 세션과 15분 교체 토큰; 발급 이력 아님 |
 | Attendance | 학생·용도·운영일별 현재 상태, 최초 유효 인증 시각 |
 | RecognitionAttempt | 당일 임시 성공/실패; 실패 시 학생 식별자가 없을 수 있음 |
 | VolunteerMembership / Credit | 명단 소속과 누적 적립을 분리 |
-| Notification | 출석 완료·봉사 등록 웹 내부 알림 |
+| Notification | 출석 완료·봉사 등록·공지 등록 웹 내부 알림(공지 게시판은 없음) |
 
 위 이름은 의미를 설명하는 설계 용어다. 테이블명·enum·필드명을 외부 계약으로 확정한 것은 아니다.
 
