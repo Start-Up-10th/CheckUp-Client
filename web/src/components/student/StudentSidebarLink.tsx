@@ -12,7 +12,7 @@ type StudentSidebarLinkProps = {
 
 /**
  * 학생 사이드바 메뉴 한 줄(Figma 227:16). `highlighted`면 초록 배경·굵은 초록 글씨다 —
- * 지금 화면이거나, 알림 항목에 읽지 않은 알림이 있을 때(REQ-COM-005).
+ * 지금 화면(또는 그 하위 화면)일 때다. 읽지 않은 알림은 강조가 아니라 종의 빨간 점으로 알린다(REQ-COM-005).
  */
 export function StudentSidebarLink({
   href,
