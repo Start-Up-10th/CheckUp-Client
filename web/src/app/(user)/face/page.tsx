@@ -1,4 +1,6 @@
-// 학생 얼굴 등록 화면 — docs/spec/face.md
+// 학생 얼굴 등록 화면 — docs/spec/face.md REQ-FACE-001
+import { StudentFaceCapture } from "@/components/student/StudentFaceCapture";
+
 export default function Page() {
-  return <main className="p-6">얼굴 등록 (준비 중)</main>;
+  return <StudentFaceCapture />;
 }
