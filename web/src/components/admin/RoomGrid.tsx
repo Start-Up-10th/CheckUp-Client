@@ -34,7 +34,9 @@ export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
           </div>
         </div>
         <div className="hidden xl:block xl:flex-1" />
-        <p className="hidden text-xs text-admin-textMuted xl:block">호실 클릭 시 출석 변경</p>
+        <p className="hidden text-xs text-admin-textMuted xl:block">
+          호실 클릭 시 출석 변경
+        </p>
       </div>
 
       <div className="flex w-full flex-1 flex-col xl:min-h-0">
