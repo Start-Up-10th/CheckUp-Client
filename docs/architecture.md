@@ -11,7 +11,7 @@
 Spring API ── DataGSM OAuth / 확인된 학교 데이터 API
    │    │
    │    └── Redis: 만료 세션·QR·일시 처리 상태
-   ├── PostgreSQL: 학생·동의·벡터 참조·현재 출석·공지·봉사
+   ├── PostgreSQL: 학생·동의·벡터 참조·현재 출석·봉사
    └── FastAPI: MediaPipe 검출/정렬 + 검증된 신원 임베딩 모델
 ```
 
@@ -21,7 +21,7 @@ Spring API ── DataGSM OAuth / 확인된 학교 데이터 API
 ## 저장소 구성 이유
 
 200명 규모와 공유 출석 정책을 고려해 한 저장소에 web/server/ai/infra를 둔다.
-Spring 안에서 출석·공지·봉사 도메인을 모듈로 구분하고 이를 별도 마이크로서비스로 미리 쪼개지 않는다.
+Spring 안에서 출석·봉사 도메인을 모듈로 구분하고 이를 별도 마이크로서비스로 미리 쪼개지 않는다.
 AI는 Python 실행 환경 때문에 분리하되 DB의 권위 있는 출석 상태는 Spring이 관리한다.
 Claude와 Codex의 차이는 진입 파일/스킬 검색 경로에 한정한다. 제품 정책은 docs/spec 하나로 유지한다.
 
@@ -37,7 +37,7 @@ Claude와 Codex의 차이는 진입 파일/스킬 검색 경로에 한정한다.
 | Attendance | 학생·용도·운영일별 현재 상태, 최초 유효 인증 시각 |
 | RecognitionAttempt | 당일 임시 성공/실패; 실패 시 학생 식별자가 없을 수 있음 |
 | VolunteerMembership / Credit | 명단 소속과 누적 적립을 분리 |
-| Notice / Notification | 공지 본문과 학생에게 보이는 알림을 구분 |
+| Notification | 출석 완료·봉사 등록·공지 등록 웹 내부 알림(공지 게시판은 없음) |
 
 위 이름은 의미를 설명하는 설계 용어다. 테이블명·enum·필드명을 외부 계약으로 확정한 것은 아니다.
 
