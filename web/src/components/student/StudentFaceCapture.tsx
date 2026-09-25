@@ -7,7 +7,6 @@ import { useFaceCamera } from "@/lib/student/use-face-camera";
 import { useIsLaptop } from "@/lib/student/use-is-laptop";
 import { FaceCaptureActions } from "./FaceCaptureActions";
 import { FaceCaptureStatus } from "./FaceCaptureStatus";
-import { FaceGuideFrame } from "./FaceGuideFrame";
 import { FaceLaptopNotice } from "./FaceLaptopNotice";
 import { StudentErrorState } from "./StudentErrorState";
 
@@ -30,8 +29,9 @@ const CAPTURE_MS = 3000;
  * "촬영 중" 단계에서 프레임을 메모리로만 모아 보내고, 성공·실패·다시 찍기·이탈 때 즉시 버린다.
  * 실패 문구(얼굴 인식 실패·조명 어두움·등록 실패)는 그 서버 결과가 생길 때 연결한다.
  *
- * 영상은 셀카처럼 좌우 반전하고, 코너 가이드와 "얼굴을 화면 안에 맞춰 주세요"는 Figma에 없어
- * 명세대로 추가했다(사용자 결정). 위 56px 흰 띠는 Figma 상태바 자리(보이는 위치 그대로 기준).
+ * 화면은 Figma 그대로다(카운트다운 숫자와 아래 단계 안내만, 코너 가이드·"얼굴을 화면 안에 맞춰 주세요"
+ * 없음 — 사용자 결정 2026-09-25). 영상은 셀카처럼 좌우 반전한다. 위 56px 흰 띠는 Figma 상태바
+ * 자리(보이는 위치 그대로 기준).
  */
 export function StudentFaceCapture() {
   const router = useRouter();
@@ -95,19 +95,14 @@ export function StudentFaceCapture() {
                 aria-label="얼굴 촬영 카메라 화면"
                 className="absolute inset-0 size-full -scale-x-100 object-cover"
               />
-              <p className="relative mb-5 rounded-full bg-admin-ghost-bg px-4 py-2.5 text-[13px] leading-normal text-admin-ghost-text">
-                얼굴을 화면 안에 맞춰 주세요
-              </p>
-              <FaceGuideFrame>
-                {phase === "countdown" && status === "ready" && (
-                  <span
-                    aria-hidden="true"
-                    className={`${countdownFont.className} text-8xl font-semibold leading-normal text-admin-text`}
-                  >
-                    {count}
-                  </span>
-                )}
-              </FaceGuideFrame>
+              {phase === "countdown" && status === "ready" && (
+                <span
+                  aria-hidden="true"
+                  className={`${countdownFont.className} relative text-8xl font-semibold leading-normal text-admin-text`}
+                >
+                  {count}
+                </span>
+              )}
               <div
                 className={`absolute inset-x-0 flex justify-center ${
                   done ? "bottom-[34px]" : "bottom-[116px]"
