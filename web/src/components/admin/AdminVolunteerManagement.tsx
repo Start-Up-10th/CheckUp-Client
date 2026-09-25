@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { AdminContentState } from "@/components/admin/AdminContentState";
+import { AdminListSkeleton } from "@/components/admin/AdminListSkeleton";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerListRow } from "@/components/admin/VolunteerListRow";
 import { MOCK_VOLUNTEERS } from "@/lib/admin/mock-volunteers";
@@ -12,14 +13,19 @@ import { MOCK_VOLUNTEERS } from "@/lib/admin/mock-volunteers";
  * "명단 편집" 버튼은 07 화면(봉사자 명단 편집)으로 이동한다(2026-09-23 Figma 갱신, DEC-023).
  */
 export function AdminVolunteerManagement({
+  isLoading = false,
   listLoadFailed = false,
 }: {
+  /** 학생 목록 로딩 중. 실제 조회 연결 전까지 기본은 false다. */
+  isLoading?: boolean;
   /** 학생 목록 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
   listLoadFailed?: boolean;
 }) {
   const [volunteers, setVolunteers] = useState(MOCK_VOLUNTEERS);
   const { toast, showToast } = useToast();
   const members = volunteers.filter((volunteer) => volunteer.isMember);
+
+  if (isLoading) return <AdminListSkeleton />;
 
   function handleAddCredit(studentId: string) {
     setVolunteers((prev) =>
@@ -77,12 +83,9 @@ export function AdminVolunteerManagement({
           학생 목록
         </p>
         {listLoadFailed ? (
-          <StatusBanner
-            variant="error"
-            message="학생 목록을 불러오지 못했습니다. 다시 시도해 주세요."
-          />
+          <AdminContentState variant="error" onRetry={() => {}} />
         ) : members.length === 0 ? (
-          <p className="text-sm text-admin-textMuted">아직 데이터가 없어요</p>
+          <AdminContentState variant="empty" />
         ) : (
           <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto md:flex-none md:overflow-visible">
             {members.map((volunteer) => (
