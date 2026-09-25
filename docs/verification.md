@@ -87,7 +87,7 @@ Playwright 스크린샷과 `main.scrollHeight===clientHeight`·`documentElement.
 
 서비스가 아직 없으면 해당 작업의 미준비·비활성·건너뜀 이유를 명시하고 검증 완료로 집계하지 않는다.
 이미 활성화한 서비스에서 필수 파일이나 명령이 없어지면 검사를 실패시킨다. 파일 존재 조건만으로 조용히 건너뛰지 않는다.
-GitHub Actions의 조건부 건너뜀은 required check에서도 성공 상태로 취급될 수 있으므로, 서비스 검증 여부는 실행 결과를 확인해야 한다. [GitHub 공식 문서](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-jobs-with-conditions)
+GitHub Actions의 조건부 건너뜀은 required check에서도 성공 상태로 취급될 수 있으므로, 서비스 검증 여부는 실행 결과를 확인해야 한다. [ai-review.yml](../.github/workflows/ai-review.yml)(DEC-028)의 AI 리뷰는 참고 의견이며 required check·검증 통과 근거로 집계하지 않는다. `ANTHROPIC_API_KEY`가 없으면 경고를 남기고 건너뛴다. [GitHub 공식 문서](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-jobs-with-conditions)
 
 ## 수용 시나리오 상태
 
