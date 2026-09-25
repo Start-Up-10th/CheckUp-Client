@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useLogout } from "@/lib/student/use-logout";
 import { MaskIcon } from "./MaskIcon";
 import { StudentSidebarLink, type SidebarTone } from "./StudentSidebarLink";
 
@@ -31,7 +32,7 @@ type StudentSidebarProps = {
  * Figma 사용자-노트북 227:6(폭 240px). 읽지 않은 알림은 종 안의 빨간 점(수정된 Figma 889:11)으로만
  * 알리고, 알림 항목의 초록 강조는 알림 화면에 있을 때만 쓴다(REQ-COM-005, 2026-09-25 변경).
  * 알림을 읽은 상태의 종(bell.svg)은 Figma에 없어 bell-unread.svg에서 빨간 점만 뺐다.
- * 로그아웃은 확인 없이 로그인 화면으로 간다(REQ-AUTH-005) — 세션 정리는 서버 연동 후.
+ * 로그아웃 동작은 핸드폰 로그아웃 버튼과 같은 useLogout()을 쓴다(REQ-AUTH-005).
  * 어두운 사이드바(QR 카메라, Figma 228:6)는 Figma 그대로다: 테두리 없음, 프로필 카드 흰 6%.
  * 종은 수정된 Figma(889:5)대로 회색 선에 빨간 점이라 어두운 배경에서도 보인다(bell-unread-dark.svg).
  */
@@ -44,7 +45,7 @@ export function StudentSidebar({
 }: StudentSidebarProps) {
   const dark = tone === "dark";
   const pathname = usePathname();
-  const router = useRouter();
+  const logout = useLogout();
   const onNotifications = pathname === "/notifications";
 
   return (
@@ -130,7 +131,7 @@ export function StudentSidebar({
       <div className="flex-1" />
       <button
         type="button"
-        onClick={() => router.push("/login")}
+        onClick={logout}
         className="flex items-center gap-2.5 rounded-control bg-admin-danger-bg px-3 py-[11px] text-sm leading-normal text-admin-danger-text"
       >
         <MaskIcon src="/icons/student-nav/logout.svg" className="size-[18px]" />
