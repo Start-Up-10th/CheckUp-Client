@@ -3,7 +3,7 @@
  * 막대 높이 52px·모서리 12px·#e7e7e9, 간격은 핸드폰 16px·노트북 20px로 Figma 값 그대로다.
  * 화면 낭독기에는 바깥 `role="status"`로 "불러오는 중"을 알린다(봉사 횟수 로딩과 같은 방식).
  */
-export function NoticeListSkeleton() {
+export function NotificationListSkeleton() {
   return (
     <div role="status" aria-label="알림을 불러오는 중">
       <div aria-hidden="true" className="flex flex-col gap-4 md:gap-5">

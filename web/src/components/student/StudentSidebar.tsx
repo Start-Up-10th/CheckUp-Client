@@ -21,7 +21,7 @@ type StudentSidebarProps = {
   name: string;
   studentNumber: string;
   room: string;
-  hasUnreadNotice: boolean;
+  hasUnreadNotification: boolean;
 };
 
 /**
@@ -34,11 +34,11 @@ export function StudentSidebar({
   name,
   studentNumber,
   room,
-  hasUnreadNotice,
+  hasUnreadNotification,
 }: StudentSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const onNotice = pathname === "/notice";
+  const onNotifications = pathname === "/notifications";
 
   return (
     <aside className="hidden h-dvh w-60 shrink-0 flex-col gap-1 border-r border-admin-border bg-admin-surface px-5 pb-6 pt-7 md:sticky md:top-0 md:flex">
@@ -75,13 +75,13 @@ export function StudentSidebar({
           );
         })}
         <StudentSidebarLink
-          href="/notice"
+          href="/notifications"
           label="알림"
-          srHint={hasUnreadNotice ? "읽지 않은 알림 있음" : undefined}
-          current={onNotice}
-          highlighted={hasUnreadNotice || onNotice}
+          srHint={hasUnreadNotification ? "읽지 않은 알림 있음" : undefined}
+          current={onNotifications}
+          highlighted={hasUnreadNotification || onNotifications}
           icon={
-            hasUnreadNotice ? (
+            hasUnreadNotification ? (
               // eslint-disable-next-line @next/next/no-img-element -- 빨간 점 색을 유지해야 해서 mask 대신 원본 SVG를 그대로 쓴다
               <img
                 src="/icons/student-nav/bell-unread.svg"
