@@ -1,0 +1,68 @@
+name: AI code review
+
+# PR이 열리거나 새 커밋이 올라오면 Claude가 코드를 읽고 리뷰 댓글을 남긴다(DEC-028).
+# 사람 리뷰를 돕는 참고 의견이며 required check가 아니다. 승인·머지 규칙은 그대로다.
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # 초안 PR과 Dependabot PR(Secrets를 받지 못함)은 리뷰하지 않는다.
+    if: github.event.pull_request.draft == false && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    env:
+      HAS_ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    steps:
+      # 키가 없으면 조용히 성공 처리하지 않고 경고를 남긴다(docs/verification.md 조건부 건너뜀 규칙).
+      - name: API 키 확인
+        if: env.HAS_ANTHROPIC_KEY != 'true'
+        run: |
+          echo "::warning::ANTHROPIC_API_KEY Secret이 없어 AI 리뷰를 실행하지 않았습니다. 저장소 관리자가 Settings > Secrets and variables > Actions에 등록해야 합니다."
+          echo "### AI 리뷰 건너뜀: ANTHROPIC_API_KEY 미등록" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/checkout@v7
+        if: env.HAS_ANTHROPIC_KEY == 'true'
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        if: env.HAS_ANTHROPIC_KEY == 'true'
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            이 PR을 한국어로 리뷰해 주세요. PR 브랜치가 현재 작업 디렉터리에 체크아웃돼 있습니다.
+
+            먼저 읽을 것:
+            - 루트 `AGENTS.md`와 바뀐 폴더의 `AGENTS.md`(예: `web/AGENTS.md`)
+            - PR 본문에 적힌 REQ·DEC가 있으면 `docs/spec/`, `docs/decisions.md`의 해당 항목
+
+            아래 이 프로젝트의 우선 확인 항목(AGENTS.md Code Review Rules)부터 봐 주세요:
+            - 권한 우회(관리자 권한·학생 데이터 범위를 서버가 아닌 곳에서 판정)
+            - 다른 용도(자습실/기숙사) 출석의 합침
+            - QR 세션 간 종료 전파, 만료 QR 연장
+            - 다수 얼굴 결과 혼합
+            - 개인정보 원본(얼굴 영상·프레임)의 영속 저장, OAuth Secret·얼굴 벡터의 번들·로그·fixture 포함
+            - 삭제 후 오래된 오프라인 기록 부활
+            - 근거 없는 외부 API·DataGSM 필드 가정
+            그다음 버그, 명세(REQ)와 다른 동작, 보안, 접근성, 불필요하게 복잡한 코드를 봐 주세요.
+
+            규칙:
+            - 확실한 문제만 지적하고, 추측이면 추측이라고 적어 주세요. 스타일 취향은 적지 않습니다.
+            - 코드의 특정 줄 문제는 `mcp__github_inline_comment__create_inline_comment`(confirmed: true)로 인라인 댓글을 답니다.
+            - 전체 요약은 `gh pr comment`로 한 번만 남깁니다. 요약 첫 줄에 "AI 리뷰(참고용)"라고 적고, 막아야 할 문제 수를 적어 주세요.
+            - GitHub 댓글만 남기고, 코드를 수정하거나 커밋하지 않습니다.
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
