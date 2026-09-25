@@ -4,7 +4,6 @@ import { useState } from "react";
 import { RemoveVolunteerDialog } from "@/components/admin/RemoveVolunteerDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerSearchRow } from "@/components/admin/VolunteerSearchRow";
-import { BellIcon } from "@/components/icons/AdminNavIcons";
 import { MOCK_VOLUNTEERS, type Volunteer } from "@/lib/admin/mock-volunteers";
 
 /**
@@ -67,14 +66,6 @@ export function AdminVolunteerAdd() {
             봉사자 명단 편집
           </h1>
         </div>
-        {/* 패드+: 알림 벨 placeholder */}
-        <div className="relative hidden md:block">
-          <BellIcon className="size-[22px] text-admin-textSecondary" />
-          <span
-            aria-hidden="true"
-            className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text"
-          />
-        </div>
       </div>
 
       <input
@@ -82,11 +73,11 @@ export function AdminVolunteerAdd() {
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="이름 또는 학번으로 검색"
-        className="h-11 w-full max-w-[168px] rounded-control border border-admin-border bg-admin-rowSurface px-3.5 text-sm md:h-[44px] md:max-w-none md:px-4 text-admin-text placeholder:text-admin-textMuted focus:outline-none"
+        className="h-11 w-full rounded-control border border-admin-border bg-admin-rowSurface px-3.5 text-sm md:h-[44px] md:w-auto md:self-start md:px-4 text-admin-text placeholder:text-admin-textMuted focus:outline-none"
       />
 
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:gap-0 md:overflow-y-auto md:rounded-[18px] md:p-[20px] xl:rounded-panel">
-        <p className="text-[11px] leading-[13px] text-admin-textSecondary">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-3.5 md:overflow-y-auto md:rounded-[18px] md:p-[20px] xl:rounded-panel">
+        <p className="text-[11px] leading-[13px] text-admin-textSecondary md:text-xs md:leading-normal">
           전체 학생
         </p>
         {filtered.length === 0 ? (

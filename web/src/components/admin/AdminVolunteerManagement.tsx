@@ -59,7 +59,7 @@ export function AdminVolunteerManagement({
         {/* 폰·패드: 명단 편집 버튼 */}
         <Link
           href="/admin/volunteers/add"
-          className="flex items-center justify-center rounded-[13px] bg-admin-accent-bg px-4 py-2.5 text-[13px] font-bold leading-4 text-admin-accent-text xl:hidden"
+          className="flex items-center justify-center rounded-[13px] bg-admin-accent-bg px-5 py-3 text-[14px] font-bold leading-4 text-admin-accent-text xl:hidden"
         >
           명단 편집
         </Link>
@@ -72,7 +72,7 @@ export function AdminVolunteerManagement({
         </Link>
       </div>
 
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:gap-0 md:overflow-y-auto md:rounded-[18px] md:p-[20px] xl:rounded-panel">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:overflow-y-auto md:rounded-[18px] md:p-[20px] xl:rounded-panel">
         <p className="text-[11px] leading-[13px] text-admin-textSecondary">
           학생 목록
         </p>
