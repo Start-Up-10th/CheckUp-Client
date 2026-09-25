@@ -33,17 +33,10 @@ export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
             </span>
           </div>
         </div>
-        <div className="hidden xl:block xl:flex-1" />
-        <p className="hidden text-xs text-admin-textMuted md:block xl:hidden">
-          호실을 탭하면 출석을 변경할 수 있어요
-        </p>
-        <p className="hidden text-xs text-admin-textMuted xl:block">
-          호실 클릭 시 출석 변경
-        </p>
       </div>
 
       <div className="flex w-full flex-1 flex-col xl:min-h-0">
-        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-[78px] md:grid-cols-3 md:gap-2 xl:auto-rows-auto xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
+        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-[96px] md:grid-cols-3 md:gap-[14px] xl:auto-rows-auto xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
           {rooms.map((room) => (
             <RoomCard key={room.number} room={room} onClick={onRoomClick} />
           ))}
