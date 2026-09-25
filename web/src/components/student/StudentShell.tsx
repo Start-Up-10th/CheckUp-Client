@@ -25,7 +25,7 @@ export function StudentShell({
         name={student.name}
         studentNumber={student.studentNumber}
         room={`${student.roomNumber}호`}
-        hasUnreadNotice={student.hasUnreadNotice}
+        hasUnreadNotification={student.hasUnreadNotification}
       />
       <div
         className={`flex min-w-0 flex-1 flex-col ${
