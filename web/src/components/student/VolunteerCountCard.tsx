@@ -18,16 +18,19 @@ export function VolunteerCountCard({ count }: { count: number }) {
 /**
  * 불러오는 동안 카드 자리에 보이는 회색 막대. 색은 Figma 로딩 막대(459:943, #e7e7e9) 그대로이고,
  * 모양은 활동 목록을 빼면서 카드 하나와 같게 했다(사용자 결정). 높이가 카드와 똑같도록
- * 같은 글자를 투명하게 넣어 둔다.
+ * 같은 글자를 투명하게 넣어 둔다. 화면 낭독기에는 바깥 `role="status"`로 "불러오는 중"을
+ * 알리고, 투명 글자는 안쪽 `aria-hidden`으로 가린다(관리자 RecentRecognitionsList와 같은 방식).
  */
 export function VolunteerCountCardSkeleton() {
   return (
-    <div
-      aria-hidden="true"
-      className="flex w-full flex-col items-center gap-1.5 rounded-[18px] border border-transparent bg-[#e7e7e9] py-6 leading-normal text-transparent"
-    >
-      <p className="text-[13px]">누적 봉사 횟수</p>
-      <p className="text-[34px] font-bold">0회</p>
+    <div role="status" aria-label="봉사 횟수를 불러오는 중">
+      <div
+        aria-hidden="true"
+        className="flex w-full flex-col items-center gap-1.5 rounded-[18px] border border-transparent bg-[#e7e7e9] py-6 leading-normal text-transparent"
+      >
+        <p className="text-[13px]">누적 봉사 횟수</p>
+        <p className="text-[34px] font-bold">0회</p>
+      </div>
     </div>
   );
 }
