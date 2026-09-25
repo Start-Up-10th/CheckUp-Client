@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { FloorTabs } from "@/components/admin/FloorTabs";
 import { AttendanceStatCards } from "@/components/admin/AttendanceStatCards";
-import { RoomGrid } from "@/components/admin/RoomGrid";
+import { RoomCardGrid } from "@/features/admin/room-card/RoomCardGrid";
 import { RoomDetailDialog } from "@/components/admin/RoomDetailDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { RoomAttendanceEditDialog } from "@/components/admin/RoomAttendanceEditDialog";
@@ -115,7 +115,7 @@ export function AdminHomeFloorPlan() {
 
       <AttendanceStatCards present={present} absent={absent} />
 
-      <RoomGrid rooms={rooms} onRoomClick={openRoomDetail} />
+      <RoomCardGrid rooms={rooms} onRoomClick={openRoomDetail} />
 
       {dialogRoom && dialogStage === "view" && (
         <RoomDetailDialog

@@ -19,8 +19,16 @@ export function AdminVolunteerManagement({
   listLoadFailed?: boolean;
 }) {
   const [volunteers, setVolunteers] = useState(MOCK_VOLUNTEERS);
+  const [query, setQuery] = useState("");
   const { toast, showToast } = useToast();
   const members = volunteers.filter((volunteer) => volunteer.isMember);
+  const filtered =
+    query.trim() === ""
+      ? members
+      : members.filter(
+          (v) =>
+            v.name.includes(query.trim()) || v.studentId.includes(query.trim()),
+        );
 
   function handleAddCredit(studentId: string) {
     setVolunteers((prev) =>
@@ -74,13 +82,31 @@ export function AdminVolunteerManagement({
         </div>
       </div>
 
-      <div className="hidden w-full items-center justify-end md:flex">
+      <div className="hidden w-full items-center justify-between gap-4 md:flex">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="이름 또는 학번으로 검색"
+          className="h-[46px] flex-1 rounded-control border border-admin-border bg-admin-rowSurface px-4 text-sm text-admin-text placeholder:text-admin-textMuted"
+        />
         <Link
           href="/admin/volunteers/add"
-          className="flex items-center justify-center rounded-[13px] bg-admin-accent-bg px-[20px] py-[12px] text-sm font-bold text-admin-accent-text"
+          className="flex shrink-0 items-center justify-center rounded-[13px] bg-admin-accent-bg px-[20px] py-[12px] text-sm font-bold text-admin-accent-text"
         >
           명단 편집
         </Link>
+      </div>
+
+      {/* 폰: 검색창 */}
+      <div className="flex w-full md:hidden">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="이름 또는 학번으로 검색"
+          className="h-[44px] w-full rounded-control border border-admin-border bg-admin-rowSurface px-4 text-sm text-admin-text placeholder:text-admin-textMuted"
+        />
       </div>
 
       <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:gap-0 md:overflow-y-auto md:rounded-[18px] md:p-[20px] xl:rounded-panel">
@@ -92,11 +118,13 @@ export function AdminVolunteerManagement({
             variant="error"
             message="학생 목록을 불러오지 못했습니다. 다시 시도해 주세요."
           />
+        ) : filtered.length === 0 && query.trim() !== "" ? (
+          <p className="text-sm text-admin-textMuted">검색 결과가 없습니다.</p>
         ) : members.length === 0 ? (
           <p className="text-sm text-admin-textMuted">아직 데이터가 없어요</p>
         ) : (
           <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto md:flex-none md:overflow-visible">
-            {members.map((volunteer) => (
+            {filtered.map((volunteer) => (
               <VolunteerListRow
                 key={volunteer.studentId}
                 volunteer={volunteer}
