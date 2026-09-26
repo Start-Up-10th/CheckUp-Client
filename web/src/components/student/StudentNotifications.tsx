@@ -50,7 +50,7 @@ export function StudentNotifications({
             )}
             {status === "ready" && notifications.length > 0 && (
               <section className="flex flex-col gap-4 md:gap-5">
-                <h2 className="text-[13px] leading-normal text-admin-textMuted">
+                <h2 className="text-[13px] leading-4 text-admin-textMuted">
                   최근 알림
                 </h2>
                 <ul className="flex flex-col gap-4 md:gap-5">
