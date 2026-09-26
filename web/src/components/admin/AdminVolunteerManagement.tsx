@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { AdminContentState } from "@/components/admin/AdminContentState";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerListRow } from "@/components/admin/VolunteerListRow";
 import { MOCK_VOLUNTEERS } from "@/lib/admin/mock-volunteers";
@@ -77,12 +77,9 @@ export function AdminVolunteerManagement({
           학생 목록
         </p>
         {listLoadFailed ? (
-          <StatusBanner
-            variant="error"
-            message="학생 목록을 불러오지 못했습니다. 다시 시도해 주세요."
-          />
+          <AdminContentState variant="error" onRetry={() => {}} />
         ) : members.length === 0 ? (
-          <p className="text-sm text-admin-textMuted">아직 데이터가 없어요</p>
+          <AdminContentState variant="empty" />
         ) : (
           <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto md:flex-none md:overflow-visible">
             {members.map((volunteer) => (
