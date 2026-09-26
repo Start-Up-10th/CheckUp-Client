@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
-import { AdminListSkeleton } from "@/components/admin/AdminListSkeleton";
 import { RemoveVolunteerDialog } from "@/components/admin/RemoveVolunteerDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerSearchRow } from "@/components/admin/VolunteerSearchRow";
@@ -13,11 +12,8 @@ import { MOCK_VOLUNTEERS, type Volunteer } from "@/lib/admin/mock-volunteers";
  * 화면 이름은 "봉사자 명단 편집"이다(2026-09-23 Figma 갱신, 이전 "봉사자 추가"에서 변경, DEC-023).
  */
 export function AdminVolunteerAdd({
-  isLoading = false,
   listLoadFailed = false,
 }: {
-  /** 학생 목록 로딩 중. 실제 조회 연결 전까지 기본은 false다. */
-  isLoading?: boolean;
   /** 학생 목록 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
   listLoadFailed?: boolean;
 }) {
@@ -25,8 +21,6 @@ export function AdminVolunteerAdd({
   const [query, setQuery] = useState("");
   const [removeTarget, setRemoveTarget] = useState<Volunteer | null>(null);
   const { toast, showToast } = useToast();
-
-  if (isLoading) return <AdminListSkeleton />;
 
   const filtered = volunteers.filter(
     (volunteer) =>
