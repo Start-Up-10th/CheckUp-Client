@@ -1,14 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { redirect } from "next/navigation";
 import RootPage from "./page";
 
+vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
+
 describe("RootPage", () => {
-  it("로그인 미구현 안내와 관리자 홈 진입 링크를 보여준다", () => {
-    render(<RootPage />);
-    expect(
-      screen.getByText("개발용 진입 화면 (로그인 미구현)"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "관리자 홈으로 이동" }),
-    ).toHaveAttribute("href", "/admin");
+  it("/admin/login으로 리다이렉트한다", () => {
+    RootPage();
+    expect(redirect).toHaveBeenCalledWith("/admin/login");
   });
 });
