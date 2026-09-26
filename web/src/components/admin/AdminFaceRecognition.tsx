@@ -9,7 +9,10 @@ import {
   type RecentRecognitionsStatus,
 } from "@/components/admin/RecentRecognitionsList";
 import { useCameraStream } from "@/lib/admin/use-camera-stream";
-import { MOCK_RECENT_RECOGNITIONS } from "@/lib/admin/mock-recent-recognitions";
+import {
+  countLeadingFailures,
+  MOCK_RECENT_RECOGNITIONS,
+} from "@/lib/admin/mock-recent-recognitions";
 import type { Purpose } from "@/lib/admin/purpose";
 
 const DEFAULT_PURPOSE: Purpose = "dorm";
@@ -31,6 +34,15 @@ export function AdminFaceRecognition({
   onRetryRecent?: () => void;
 }) {
   const recentEntries = MOCK_RECENT_RECOGNITIONS;
+  // REQ-FACE-007: 최신 항목부터 3회 연속 실패면 QR 안내 배너를 표시한다.
+  const consecutiveFailures = countLeadingFailures(recentEntries);
+  const failureNotice =
+    consecutiveFailures >= 3
+      ? ({
+          variant: "error" as const,
+          message: "3회 연속 인식 실패 · QR로 출석해 주세요.",
+        } satisfies NonNullable<typeof notice>)
+      : null;
   // 폰은 빈·오류 상태에서 카메라 패널을 숨기고 최근 인식 패널이 전체 높이를 쓴다(Figma 관리자-핸드폰).
   const recentFillsScreen =
     recentStatus === "error" ||
@@ -76,8 +88,11 @@ export function AdminFaceRecognition({
         />
       </div>
 
-      {notice && (
-        <StatusBanner variant={notice.variant} message={notice.message} />
+      {(notice ?? failureNotice) && (
+        <StatusBanner
+          variant={(notice ?? failureNotice)!.variant}
+          message={(notice ?? failureNotice)!.message}
+        />
       )}
 
       <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:gap-4 xl:flex-row">
