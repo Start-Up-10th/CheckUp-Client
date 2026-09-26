@@ -2,36 +2,34 @@ import Image from "next/image";
 
 /**
  * REQ-AUTH-001: 관리자 DataGSM OAuth 로그인.
- * Figma 관리자-패드 01번 (node 51:6), 768×1024 기준.
  *
- * 수치 근거:
- *   로고: left=291 top=520 w=200.948 h=53 → top 50.78%, 가로 중앙
- *   버튼: left=241 top=735 w=300 h=48   → top 71.78%, 가로 중앙
- *   버튼 내부: bg=#f8fafc, border=#e2e8f0 1px, radius=6px
- *   D 아이콘: size=14×14, left=20px (6.67% of 300), 세로 중앙
- *   텍스트: Pretendard Medium 14px, #0f172a, 버튼 중앙
+ * 수치 근거 (Figma node 278:6 핸드폰 / 51:6 패드):
+ *   로고: 폰 w=171 h=45 top=394/740=53.2%  | 패드 w=201 h=53 top=520/1024=50.78%
+ *   버튼: 폰 w=300 h=48 top=601/740=81.2%  | 패드 w=300 h=48 top=735/1024=71.78%
+ *   버튼: bg=#f8fafc border=#e2e8f0 1px radius=6px
+ *   D 아이콘: size=14×14 left=20px(6.67%) 세로 중앙 | 텍스트: Pretendard Medium 14px #0f172a
  */
 export default function AdminLoginPage() {
   return (
     <>
-      {/* CHECKUP 로고: top=520/1024=50.78%, 가로 중앙 */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-[50.78%]">
+      {/* CHECKUP 로고 */}
+      <div className="absolute left-1/2 top-[53.2%] -translate-x-1/2 md:top-[50.78%]">
         <Image
           src="/icons/admin-login/checkup-logo.png"
           alt="CHECKUP"
           width={201}
           height={53}
+          className="h-[45px] w-auto md:h-[53px]"
           priority
         />
       </div>
 
-      {/* DataGSM 로그인 버튼: top=735/1024=71.78%, 가로 중앙, w=300 h=48 */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-[71.78%]">
+      {/* DataGSM 로그인 버튼 */}
+      <div className="absolute left-1/2 top-[81.2%] -translate-x-1/2 md:top-[71.78%]">
         <button
           type="button"
           className="relative flex h-12 w-[300px] items-center justify-center rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc]"
         >
-          {/* D 아이콘: left=20px(6.67%), 세로 중앙 */}
           <Image
             src="/icons/admin-login/datagsm-icon.svg"
             alt="DataGSM"
