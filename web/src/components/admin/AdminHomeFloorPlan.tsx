@@ -37,13 +37,13 @@ export function AdminHomeFloorPlan({
   const [dialogStage, setDialogStage] = useState<DialogStage>("view");
   const { toast, showToast } = useToast();
 
-  if (isLoading) return <AdminFloorPlanSkeleton />;
-
   const rooms = roomsByFloor[selectedFloor];
   const { present, absent } = useMemo(
     () => summarizeAttendance(rooms),
     [rooms],
   );
+
+  if (isLoading) return <AdminFloorPlanSkeleton />;
   const dialogRoom =
     rooms.find((room) => room.number === dialogRoomNumber) ?? null;
 
