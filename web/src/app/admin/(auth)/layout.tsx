@@ -3,5 +3,9 @@ export default function AdminAuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="relative h-screen w-full bg-admin-bg">{children}</div>;
+  return (
+    <div className="relative h-screen w-full bg-[#f5f5f7] md:bg-admin-bg">
+      {children}
+    </div>
+  );
 }
