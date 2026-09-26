@@ -40,7 +40,7 @@ export function AdminFaceRecognition({
     consecutiveFailures >= 3
       ? ({
           variant: "error" as const,
-          message: "3회 연속 인식 실패 · QR로 출석해 주세요.",
+          message: "인식 실패 · 3회 초과 시 QR로 출석",
         } satisfies NonNullable<typeof notice>)
       : null;
   // 폰은 빈·오류 상태에서 카메라 패널을 숨기고 최근 인식 패널이 전체 높이를 쓴다(Figma 관리자-핸드폰).
@@ -92,6 +92,7 @@ export function AdminFaceRecognition({
         <StatusBanner
           variant={(notice ?? failureNotice)!.variant}
           message={(notice ?? failureNotice)!.message}
+          className="w-fit"
         />
       )}
 
