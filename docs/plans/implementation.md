@@ -113,6 +113,7 @@ CI/CD 구성·정적 검사는 서비스 개발 전에 준비할 수 있고, 테
 | 2026-09-25 | 팀원의 Figma 사용자-노트북 수정에 맞춰 REQ-COM-005 변경: 노트북 읽지 않은 알림은 사이드바 벨의 빨간 점으로 표시하고, 알림 항목 배경 강조는 알림 화면에서만. ACC-COM-005·SRC-CORRECTIONS 갱신(#29) | `npm run harness:check`, 사이드바 코드는 `fix/user-sidebar-notification` |
 | 2026-09-26 | 백엔드 기능이 아직 없어 사용자 결정으로 학생 로그인 화면(`/login`, Figma 사용자-핸드폰 3:21·사용자-노트북 222:2)을 OAuth 연동 전에 UI만 먼저 구현(#32). 버튼 동작·콜백·세션은 OAuth 연동 때 연결. 로그인 실패 문구는 비밀번호 입력이 없는 REQ-AUTH-001에 맞춰 핸드폰 Figma 문구로 통일 | 화면은 `feature/user-login`에서 구현 |
 | 2026-09-26 | 공지 게시판(구 REQ-COM-004: 관리자 공지 CRUD·학생 공지 목록)이 기능명세서·Figma에 없고 인터뷰 한 줄에서만 나온 것을 확인 → 팀원 의견으로 사용자가 공지 게시판을 없애기로 결정(#40). 처음엔 동의 `기숙사 공지 알림 수신`과 `기숙사 공지사항 등록` 알림까지 뺐다가, 사용자 정정("원래 있던 건 다시 넣고 공지 기능으로 추가된 것만 빼라")으로 둘은 기능명세서·Figma대로 유지. REQ-COM-004 삭제 후 REQ-SCOPE-003에 기록, REQ-COM-005·REQ-UI-004/005·architecture·operations·ACC 시나리오·DEC-012·SRC-CORRECTIONS 갱신, 웹은 `/notice` 틀만 삭제. 공지 알림을 만드는 경로는 미정(서버 연동 때 확인) | `npm run harness:check`, `web/` `npm run check` |
+| 2026-09-26 | 사용자가 로컬 화면 확인 중 봉사 활동 내역이 Figma·기능명세서에는 있는데 화면에 없다고 지적 → 인터뷰 `자기 봉사 횟수만 확인`을 내역 제외로 해석했던 REQ-COM-003을 본인 활동 내역 포함으로 복구(#42). 활동명은 Figma대로 표시하기로 해 REQ-COM-002에 적립 시 활동명 기록 추가(입력 UI는 관리자 담당). REQ-SCOPE-003·DEC-014·SRC-CORRECTIONS·ACC-COM-002/003 갱신 | `npm run harness:check`, 화면은 `feature/user-volunteer-history` |
 
 현재 변경은 계획 문서뿐이며 제품 API·웹·AI·배포 구현은 수행하지 않았다.
 
