@@ -17,7 +17,7 @@ import { VolunteerHistorySkeleton } from "./VolunteerHistorySkeleton";
 export type VolunteerLoadStatus = "ready" | "loading" | "error";
 
 /**
- * 학생 봉사 활동(REQ-COM-003) — 본인 누적 횟수 카드와 `활동 내역` 목록(최신순).
+ * 학생 봉사 활동(REQ-COM-003) — 본인 누적 횟수 카드와 `활동 내역` 목록(날짜·횟수, 최신순).
  * 핸드폰(Figma 319:278)은 흰 화면에 `‹ 봉사 활동` 헤더, 하단 탭 숨김(REQ-UI-004), 간격 16px.
  * 노트북(322:341)은 사이드바 오른쪽 가운데 폭 640px, 위 90px, 간격 20px(알림과 같은 배치).
  * 로딩(459:901)은 막대 6개만, 빈 상태(456:986)는 카드 없이 안내만 보인다(Figma 그대로).
@@ -60,7 +60,6 @@ export function StudentVolunteer({
                     {history.map((record) => (
                       <VolunteerHistoryItem
                         key={record.id}
-                        activityName={record.activityName}
                         dateLabel={record.dateLabel}
                         count={record.count}
                       />
