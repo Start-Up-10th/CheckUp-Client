@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AdminContentState } from "@/components/admin/AdminContentState";
 import { RemoveVolunteerDialog } from "@/components/admin/RemoveVolunteerDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerSearchRow } from "@/components/admin/VolunteerSearchRow";
@@ -10,7 +11,12 @@ import { MOCK_VOLUNTEERS, type Volunteer } from "@/lib/admin/mock-volunteers";
  * REQ-COM-001: 전체 학생을 검색해 명단에 추가/제외한다. 제외는 확인 다이얼로그를 거친다.
  * 화면 이름은 "봉사자 명단 편집"이다(2026-09-23 Figma 갱신, 이전 "봉사자 추가"에서 변경, DEC-023).
  */
-export function AdminVolunteerAdd() {
+export function AdminVolunteerAdd({
+  listLoadFailed = false,
+}: {
+  /** 학생 목록 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
+  listLoadFailed?: boolean;
+}) {
   const [volunteers, setVolunteers] = useState(MOCK_VOLUNTEERS);
   const [query, setQuery] = useState("");
   const [removeTarget, setRemoveTarget] = useState<Volunteer | null>(null);
@@ -77,22 +83,30 @@ export function AdminVolunteerAdd() {
       />
 
       <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-3.5 md:overflow-y-auto md:rounded-[18px] md:p-[20px] xl:rounded-panel">
-        <p className="text-[11px] leading-[13px] text-admin-textSecondary md:text-xs md:leading-normal">
-          전체 학생
-        </p>
-        {filtered.length === 0 ? (
-          <p className="text-sm text-admin-textMuted">검색 결과가 없습니다.</p>
+        {listLoadFailed ? (
+          <AdminContentState variant="error" onRetry={() => {}} />
         ) : (
-          <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto md:flex-none md:overflow-visible">
-            {filtered.map((volunteer) => (
-              <VolunteerSearchRow
-                key={volunteer.studentId}
-                volunteer={volunteer}
-                onAdd={handleAdd}
-                onRequestRemove={setRemoveTarget}
-              />
-            ))}
-          </div>
+          <>
+            <p className="text-[11px] leading-[13px] text-admin-textSecondary md:text-xs md:leading-normal">
+              전체 학생
+            </p>
+            {filtered.length === 0 ? (
+              <p className="text-sm text-admin-textMuted">
+                검색 결과가 없습니다.
+              </p>
+            ) : (
+              <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto md:flex-none md:overflow-visible">
+                {filtered.map((volunteer) => (
+                  <VolunteerSearchRow
+                    key={volunteer.studentId}
+                    volunteer={volunteer}
+                    onAdd={handleAdd}
+                    onRequestRemove={setRemoveTarget}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
