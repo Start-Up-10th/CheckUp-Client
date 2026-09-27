@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { submitQrAttendance } from "@/lib/student/mock-qr-attendance";
+import { parseQrToken } from "@/lib/student/parse-qr-token";
 import type { QrAttendanceResult } from "@/lib/student/qr-attendance-result";
 import { useQrScanner } from "@/lib/student/use-qr-scanner";
 import { QrCameraHeader } from "./QrCameraHeader";
@@ -38,7 +39,7 @@ const RESULT_TOAST_MS = 2500;
 /**
  * 학생 웹 QR 카메라(REQ-ATT-005). 핸드폰(Figma 4:43)은 어두운 화면에 `‹ QR 카메라`, 스캔 영역,
  * 안내 문구. 노트북(228:2)은 어두운 사이드바와 가운데 제목·스캔 영역·안내 문구.
- * QR을 읽으면 스캔을 멈추고 서버(지금은 mock)에 보낸다. 승인이면 1.5초 뒤 메인으로 가고,
+ * QR을 읽으면 스캔을 멈추고 `/qr#t=<토큰>` 형식에서 토큰만 꺼내 서버(지금은 mock)에 보낸다. 승인이면 1.5초 뒤 메인으로 가고,
  * 그 밖의 결과는 2.5초 동안 메시지를 보여 준 뒤 다시 스캔한다.
  * 카메라를 쓸 수 없으면(권한 거부·카메라 없음, Figma에 없음) 공통 오류 화면에 카메라 문구를 넣는다.
  */
@@ -47,9 +48,16 @@ export function StudentQrCamera() {
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<QrAttendanceResult | null>(null);
 
+  // 읽은 QR 값에서 `#t=` 토큰만 꺼내 제출한다. 우리 QR 형식이 아니면 서버를 부르지 않고 바로
+  // "유효하지 않은 QR"로 보여 준다(하네스 DEC-018). 토큰은 로그에 남기지 않는다.
   const handleDetect = useCallback((qrText: string) => {
     setProcessing(true);
-    submitQrAttendance(qrText)
+    const token = parseQrToken(qrText);
+    if (!token) {
+      setResult("invalid");
+      return;
+    }
+    submitQrAttendance(token)
       .then(setResult)
       .catch(() => setResult("invalid"));
   }, []);
