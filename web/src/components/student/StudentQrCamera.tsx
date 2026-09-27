@@ -2,10 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import {
-  submitQrAttendance,
-  type QrAttendanceResult,
-} from "@/lib/student/mock-qr-attendance";
+import { submitQrAttendance } from "@/lib/student/mock-qr-attendance";
+import type { QrAttendanceResult } from "@/lib/student/qr-attendance-result";
 import { useQrScanner } from "@/lib/student/use-qr-scanner";
 import { QrCameraHeader } from "./QrCameraHeader";
 import { QrResultToast, type QrResultVariant } from "./QrResultToast";
