@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { submitQrAttendance } from "@/lib/student/mock-qr-attendance";
 import { parseQrToken } from "@/lib/student/parse-qr-token";
 import type { QrAttendanceResult } from "@/lib/student/qr-attendance-result";
@@ -31,6 +31,12 @@ const RESULT_MESSAGES: Record<
   invalid: { variant: "error", message: "유효하지 않은 QR입니다." },
 };
 
+/**
+ * 페이지에 들어온 방법. 주소의 hash는 브라우저에서만 읽을 수 있어서, 확인하기 전(checking)에는
+ * 카메라를 켜지 않는다. 링크(`/qr#t=<토큰>`)로 들어오면 link, 아니면 camera.
+ */
+type QrEntry = "checking" | "link" | "camera";
+
 /** 승인 뒤 메인으로 가기까지(Figma에 없음 — 문구를 읽을 시간). */
 const APPROVED_REDIRECT_MS = 1500;
 /** 승인 외 결과 메시지를 보여 주고 다시 스캔을 시작하기까지. */
@@ -47,6 +53,9 @@ export function StudentQrCamera() {
   const router = useRouter();
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<QrAttendanceResult | null>(null);
+  const [entry, setEntry] = useState<QrEntry>("checking");
+  // React 개발 모드(Strict Mode)에서 effect가 두 번 돌아도 진입 처리는 한 번만 한다.
+  const entryHandled = useRef(false);
 
   // 토큰을 제출한다. 우리 QR 형식이 아니어서 토큰이 없으면(null) 서버를 부르지 않고 바로
   // "유효하지 않은 QR"로 보여 준다(하네스 DEC-018). 토큰은 로그에 남기지 않는다.
@@ -67,9 +76,17 @@ export function StudentQrCamera() {
     [submitToken],
   );
 
+  useEffect(() => {
+    if (entryHandled.current) return;
+    entryHandled.current = true;
+    // 브라우저 주소를 읽은 뒤에야 정할 수 있는 값이라 effect에서 한 번 정한다(파생 상태 아님).
+    setEntry("camera");
+  }, []);
+
   const { videoRef, status } = useQrScanner({
     onDetect: handleDetect,
     paused: processing,
+    enabled: entry === "camera",
   });
 
   useEffect(() => {
