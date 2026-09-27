@@ -48,11 +48,10 @@ export function StudentQrCamera() {
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<QrAttendanceResult | null>(null);
 
-  // 읽은 QR 값에서 `#t=` 토큰만 꺼내 제출한다. 우리 QR 형식이 아니면 서버를 부르지 않고 바로
+  // 토큰을 제출한다. 우리 QR 형식이 아니어서 토큰이 없으면(null) 서버를 부르지 않고 바로
   // "유효하지 않은 QR"로 보여 준다(하네스 DEC-018). 토큰은 로그에 남기지 않는다.
-  const handleDetect = useCallback((qrText: string) => {
+  const submitToken = useCallback((token: string | null) => {
     setProcessing(true);
-    const token = parseQrToken(qrText);
     if (!token) {
       setResult("invalid");
       return;
@@ -61,6 +60,12 @@ export function StudentQrCamera() {
       .then(setResult)
       .catch(() => setResult("invalid"));
   }, []);
+
+  // 웹 내부 카메라로 읽은 QR 값에서 `#t=` 토큰만 꺼내 제출한다.
+  const handleDetect = useCallback(
+    (qrText: string) => submitToken(parseQrToken(qrText)),
+    [submitToken],
+  );
 
   const { videoRef, status } = useQrScanner({
     onDetect: handleDetect,
