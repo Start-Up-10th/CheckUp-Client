@@ -9,6 +9,8 @@ export type StudentProfile = {
   hasUnreadNotification: boolean;
   /** 본인 누적 봉사 횟수(REQ-COM-003). 학생은 횟수만 보고 활동별 내역은 없다(DEC-014). */
   volunteerCount: number;
+  /** 얼굴 등록을 마쳤는지. 미등록이면 학생 홈 대신 얼굴 등록으로 보낸다(REQ-UI-003). */
+  faceRegistered: boolean;
 };
 
 /**
@@ -26,4 +28,5 @@ export const MOCK_STUDENT: StudentProfile = {
   hasUnreadNotification: true,
   // 관리자 봉사 mock(mock-volunteers.ts)의 김도현 누적 횟수와 같게 둔다.
   volunteerCount: 5,
+  faceRegistered: true,
 };
