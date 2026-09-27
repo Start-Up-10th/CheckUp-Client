@@ -5,3 +5,25 @@
  */
 export type QrAttendanceResult =
   "approved" | "duplicate" | "expired" | "closed" | "invalid";
+
+/** 스캔 API 응답 `{ "result": ... }` 값(하네스 DEC-018, docs/plans/qr-attendance.md "스캔 API"). */
+export type QrScanApiResult =
+  "APPROVED" | "DUPLICATE" | "EXPIRED" | "CLOSED" | "INVALID";
+
+const API_RESULTS: Record<QrScanApiResult, QrAttendanceResult> = {
+  APPROVED: "approved",
+  DUPLICATE: "duplicate",
+  EXPIRED: "expired",
+  CLOSED: "closed",
+  INVALID: "invalid",
+};
+
+/**
+ * 서버의 대문자 결과를 화면용 소문자 결과로 바꾼다. 계약에 없는 값이 오면 승인으로 오해하지 않도록
+ * `invalid`로 본다(서버가 새 결과를 추가하면 여기와 계약을 함께 고친다).
+ */
+export function toQrAttendanceResult(apiResult: string): QrAttendanceResult {
+  return Object.hasOwn(API_RESULTS, apiResult)
+    ? API_RESULTS[apiResult as QrScanApiResult]
+    : "invalid";
+}
