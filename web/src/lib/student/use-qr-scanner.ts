@@ -17,13 +17,17 @@ const MAX_SCAN_WIDTH = 640;
  * 페이지를 벗어나면 반복을 멈추고 카메라 트랙을 끈다. React 개발 모드(Strict Mode)에서 effect가
  * 두 번 실행돼도, 먼저 실행된 쪽의 카메라는 정리 단계에서 꺼지고 늦게 도착한 스트림도 바로 꺼진다.
  * `paused`가 true인 동안(결과 처리 중)에는 같은 QR을 반복해서 넘기지 않는다.
+ * `enabled`가 false면 카메라를 켜지 않는다 — `/qr#t=<토큰>` 링크로 들어와 카메라 없이 바로
+ * 제출하는 경우에 쓴다(하네스 DEC-018). 나중에 true가 되면 그때 카메라를 켠다.
  */
 export function useQrScanner({
   onDetect,
   paused,
+  enabled = true,
 }: {
   onDetect: (text: string) => void;
   paused: boolean;
+  enabled?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [status, setStatus] = useState<QrScannerStatus>("requesting");
@@ -37,6 +41,7 @@ export function useQrScanner({
   }, [onDetect, paused]);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!navigator.mediaDevices?.getUserMedia) {
       // 카메라 API가 없는 브라우저 — 즉시 실패로 표시한다(파생 상태 아님).
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -91,7 +96,7 @@ export function useQrScanner({
       if (timer) clearInterval(timer);
       stream?.getTracks().forEach((track) => track.stop());
     };
-  }, []);
+  }, [enabled]);
 
   return { videoRef, status };
 }
