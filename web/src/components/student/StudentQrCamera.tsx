@@ -49,6 +49,7 @@ const RESULT_TOAST_MS = 2500;
  * 그 밖의 결과는 2.5초 동안 메시지를 보여 준 뒤 다시 스캔한다.
  * 카메라를 쓸 수 없으면(권한 거부·카메라 없음, Figma에 없음) 공통 오류 화면에 카메라 문구를 넣는다.
  * 휴대폰 일반 카메라로 찍어 `/qr#t=<토큰>`으로 들어오면 카메라 없이 바로 제출한다(하네스 DEC-018).
+ * 그 결과가 승인이 아니면 메시지를 보여 준 뒤 카메라를 켜서 다시 찍을 수 있게 한다.
  */
 export function StudentQrCamera() {
   const router = useRouter();
@@ -109,6 +110,9 @@ export function StudentQrCamera() {
         : setTimeout(() => {
             setResult(null);
             setProcessing(false);
+            // 링크로 들어와 승인되지 않았으면(만료·중복·종료·형식 오류) 카메라를 켜 다시 찍게 한다
+            // (Figma·계약에 없어 정한 흐름). 이미 카메라로 들어왔으면 그대로다.
+            setEntry("camera");
           }, RESULT_TOAST_MS);
     return () => clearTimeout(timer);
   }, [result, router]);
