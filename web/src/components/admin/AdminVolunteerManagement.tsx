@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { AdminContentState } from "@/components/admin/AdminContentState";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerListRow } from "@/components/admin/VolunteerListRow";
-import { BellIcon } from "@/components/icons/AdminNavIcons";
 import { MOCK_VOLUNTEERS } from "@/lib/admin/mock-volunteers";
 
 /**
@@ -57,43 +56,30 @@ export function AdminVolunteerManagement({
             봉사자 관리
           </h1>
         </div>
-        {/* 폰: 명단 편집 버튼 */}
+        {/* 폰·패드: 명단 편집 버튼 */}
         <Link
           href="/admin/volunteers/add"
-          className="flex items-center justify-center rounded-[13px] bg-admin-accent-bg px-4 py-2.5 text-[13px] font-bold leading-4 text-admin-accent-text md:hidden"
+          className="flex items-center justify-center rounded-[13px] bg-admin-accent-bg px-5 py-3 text-[14px] font-bold leading-4 text-admin-accent-text xl:hidden"
         >
           명단 편집
         </Link>
-        {/* 패드+: 알림 벨 placeholder */}
-        <div className="relative hidden md:block">
-          <BellIcon className="size-[22px] text-admin-textSecondary" />
-          <span
-            aria-hidden="true"
-            className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text"
-          />
-        </div>
-      </div>
-
-      <div className="hidden w-full items-center justify-end md:flex">
+        {/* 컴퓨터: 명단 편집 버튼 (더 큰 스타일) */}
         <Link
           href="/admin/volunteers/add"
-          className="flex items-center justify-center rounded-[13px] bg-admin-accent-bg px-[20px] py-[12px] text-sm font-bold text-admin-accent-text"
+          className="hidden items-center justify-center rounded-[13px] bg-admin-accent-bg px-[20px] py-[12px] text-sm font-bold text-admin-accent-text xl:flex"
         >
           명단 편집
         </Link>
       </div>
 
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:gap-0 md:overflow-y-auto md:rounded-[18px] md:p-[20px] xl:rounded-panel">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-hidden rounded-[16px] bg-admin-surface px-3.5 py-4 md:overflow-y-auto md:rounded-[18px] md:p-[20px] xl:rounded-panel">
         <p className="text-[11px] leading-[13px] text-admin-textSecondary">
           학생 목록
         </p>
         {listLoadFailed ? (
-          <StatusBanner
-            variant="error"
-            message="학생 목록을 불러오지 못했습니다. 다시 시도해 주세요."
-          />
+          <AdminContentState variant="error" onRetry={() => {}} />
         ) : members.length === 0 ? (
-          <p className="text-sm text-admin-textMuted">아직 데이터가 없어요</p>
+          <AdminContentState variant="empty" />
         ) : (
           <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto md:flex-none md:overflow-visible">
             {members.map((volunteer) => (

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ADMIN_NAV_ITEMS, isAdminNavActive } from "@/lib/admin/nav-items";
+import { useAdminLogout } from "@/lib/admin/use-admin-logout";
 
 /**
  * 원본 SVG를 색만 바꿔 쓰기 위해 mask로 그린다 — 활성/비활성/로그아웃 색은 currentColor로 정한다.
@@ -33,6 +34,7 @@ function TabIcon({ src, className }: { src: string; className?: string }) {
  */
 export function AdminBottomTabBar() {
   const pathname = usePathname();
+  const logout = useAdminLogout();
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex h-[60px] items-stretch bg-admin-surface shadow-[inset_0_1px_0_0_#e3e3e5] md:hidden">
@@ -55,6 +57,7 @@ export function AdminBottomTabBar() {
       <button
         type="button"
         aria-label="로그아웃"
+        onClick={logout}
         className="flex flex-1 items-center justify-center text-admin-danger-text"
       >
         <TabIcon src="/icons/tab/logout.svg" className="size-[18px]" />

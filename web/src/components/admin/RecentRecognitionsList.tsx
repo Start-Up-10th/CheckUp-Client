@@ -82,7 +82,7 @@ export function RecentRecognitionsList({
           ? "flex-1"
           : status === "loading"
             ? "flex-none"
-            : "h-[126px] flex-none"
+            : "h-[126px] flex-none md:h-auto"
       }`}
     >
       <p className="text-xs leading-[14px] text-admin-textSecondary md:text-sm">

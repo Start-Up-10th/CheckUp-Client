@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoutIcon } from "@/components/icons/AdminNavIcons";
 import { ADMIN_NAV_ITEMS, isAdminNavActive } from "@/lib/admin/nav-items";
+import { useAdminLogout } from "@/lib/admin/use-admin-logout";
 
 /** 반응형 기준: 1280px 이상(관리자-컴퓨터) — 라벨 있는 좌측 고정 사이드바 300px. */
 export function AdminSidebar() {
   const pathname = usePathname();
+  const logout = useAdminLogout();
 
   return (
     <aside className="hidden h-full w-[300px] shrink-0 flex-col border-r border-admin-border bg-admin-surface px-4 py-6 xl:flex">
@@ -45,6 +47,7 @@ export function AdminSidebar() {
 
       <button
         type="button"
+        onClick={logout}
         className="flex items-center justify-center gap-2.5 rounded-control bg-admin-danger-bg px-3.5 py-3 text-sm font-medium text-admin-danger-text"
       >
         <LogoutIcon className="size-[18px]" />

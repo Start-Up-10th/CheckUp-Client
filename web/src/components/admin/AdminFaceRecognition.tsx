@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { StatusBanner } from "@/components/admin/StatusBanner";
-import { BellIcon } from "@/components/icons/AdminNavIcons";
 import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { CameraPanel } from "@/components/admin/CameraPanel";
 import {
@@ -10,7 +9,10 @@ import {
   type RecentRecognitionsStatus,
 } from "@/components/admin/RecentRecognitionsList";
 import { useCameraStream } from "@/lib/admin/use-camera-stream";
-import { MOCK_RECENT_RECOGNITIONS } from "@/lib/admin/mock-recent-recognitions";
+import {
+  countLeadingFailures,
+  MOCK_RECENT_RECOGNITIONS,
+} from "@/lib/admin/mock-recent-recognitions";
 import type { Purpose } from "@/lib/admin/purpose";
 
 const DEFAULT_PURPOSE: Purpose = "dorm";
@@ -32,6 +34,15 @@ export function AdminFaceRecognition({
   onRetryRecent?: () => void;
 }) {
   const recentEntries = MOCK_RECENT_RECOGNITIONS;
+  // REQ-FACE-007: 최신 항목부터 3회 연속 실패면 QR 안내 배너를 표시한다.
+  const consecutiveFailures = countLeadingFailures(recentEntries);
+  const failureNotice =
+    consecutiveFailures >= 3
+      ? ({
+          variant: "error" as const,
+          message: "인식 실패 · 3회 초과 시 QR로 출석",
+        } satisfies NonNullable<typeof notice>)
+      : null;
   // 폰은 빈·오류 상태에서 카메라 패널을 숨기고 최근 인식 패널이 전체 높이를 쓴다(Figma 관리자-핸드폰).
   const recentFillsScreen =
     recentStatus === "error" ||
@@ -69,26 +80,20 @@ export function AdminFaceRecognition({
             얼굴 인식 생성
           </h1>
         </div>
-        <div className="flex items-center gap-3">
-          {/* 패드+: 알림 벨 placeholder */}
-          <div className="relative hidden md:block">
-            <BellIcon className="size-[22px] text-admin-textSecondary" />
-            <span
-              aria-hidden="true"
-              className="absolute right-0 top-0 size-[7px] rounded-full bg-admin-danger-text"
-            />
-          </div>
-          <PurposeTabs
-            selected={purpose}
-            onSelect={setPurpose}
-            labels={{ dorm: "기숙사 입소" }}
-            compactLabels={{ dorm: "기숙사" }}
-          />
-        </div>
+        <PurposeTabs
+          selected={purpose}
+          onSelect={setPurpose}
+          labels={{ dorm: "기숙사 입소" }}
+          compactLabels={{ dorm: "기숙사" }}
+        />
       </div>
 
-      {notice && (
-        <StatusBanner variant={notice.variant} message={notice.message} />
+      {(notice ?? failureNotice) && (
+        <StatusBanner
+          variant={(notice ?? failureNotice)!.variant}
+          message={(notice ?? failureNotice)!.message}
+          className="w-fit"
+        />
       )}
 
       <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:gap-4 xl:flex-row">

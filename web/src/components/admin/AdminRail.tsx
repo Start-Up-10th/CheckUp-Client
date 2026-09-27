@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogoutIcon } from "@/components/icons/AdminNavIcons";
 import { ADMIN_NAV_ITEMS, isAdminNavActive } from "@/lib/admin/nav-items";
+import { useAdminLogout } from "@/lib/admin/use-admin-logout";
 
 /** 반응형 기준: 768~1279px(관리자-패드) — 좌측 축소형 아이콘 레일, 라벨 없이 아이콘만. */
 export function AdminRail() {
   const pathname = usePathname();
+  const logout = useAdminLogout();
 
   return (
     <aside className="hidden h-full w-[96px] shrink-0 flex-col items-center border-r border-admin-border bg-admin-surface py-6 md:flex xl:hidden">
@@ -40,6 +42,7 @@ export function AdminRail() {
       <button
         type="button"
         aria-label="로그아웃"
+        onClick={logout}
         className="mx-2 flex w-[calc(100%-16px)] flex-col items-center gap-[5px] rounded-control bg-admin-danger-bg py-2.5 text-admin-danger-text"
       >
         <LogoutIcon className="size-[18px]" />

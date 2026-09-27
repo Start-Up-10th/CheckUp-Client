@@ -13,12 +13,12 @@ export function VolunteerSearchRow({
   onRequestRemove,
 }: VolunteerSearchRowProps) {
   return (
-    <div className="flex w-full items-center justify-between rounded-[11px] bg-admin-rowSurface px-3.5 py-[11px] md:rounded-[14px] md:px-5 md:py-3.5">
+    <div className="flex w-full items-center justify-between rounded-[11px] bg-admin-rowSurface px-3.5 py-[11px] md:rounded-[12px] md:px-4 md:py-3">
       <div className="flex flex-col gap-0.5">
-        <p className="text-[13px] font-bold leading-4 text-admin-text md:text-[15px] md:leading-normal">
+        <p className="text-[13px] font-bold leading-4 text-admin-text md:text-[14px] md:leading-normal">
           {volunteer.name}
         </p>
-        <p className="font-mono text-[10px] leading-[13px] text-admin-textMuted md:text-xs">
+        <p className="font-mono text-[10px] leading-[13px] text-admin-textMuted md:text-[11px]">
           {volunteer.studentId} · {volunteer.room}
         </p>
       </div>
@@ -26,7 +26,7 @@ export function VolunteerSearchRow({
         <button
           type="button"
           onClick={() => onRequestRemove(volunteer)}
-          className="flex h-[23px] w-[51px] items-center justify-center rounded-lg bg-admin-danger-bg text-[11px] font-bold leading-[13px] text-admin-danger-text md:h-[30px] md:w-[68px] md:rounded-[10px] md:text-[13px] md:leading-normal"
+          className="flex h-[23px] w-[51px] items-center justify-center rounded-lg bg-admin-danger-bg text-[11px] font-bold leading-[13px] text-admin-danger-text md:h-[26px] md:w-[58px] md:rounded-[9px] md:text-[12px] md:leading-normal"
         >
           제외
         </button>
@@ -34,7 +34,7 @@ export function VolunteerSearchRow({
         <button
           type="button"
           onClick={() => onAdd(volunteer.studentId)}
-          className="flex h-[23px] w-[51px] items-center justify-center rounded-lg bg-admin-accent-bg text-[11px] font-bold leading-[13px] text-admin-accent-text md:h-[30px] md:w-[68px] md:rounded-[10px] md:text-[13px] md:leading-normal"
+          className="flex h-[23px] w-[51px] items-center justify-center rounded-lg bg-admin-accent-bg text-[11px] font-bold leading-[13px] text-admin-accent-text md:h-[26px] md:w-[58px] md:rounded-[9px] md:text-[12px] md:leading-normal"
         >
           추가
         </button>

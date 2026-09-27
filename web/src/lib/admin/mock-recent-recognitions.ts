@@ -16,6 +16,16 @@ export type RecognitionEntry = {
  */
 export const IS_MOCK_RECOGNITIONS = true;
 
+/** 목록 앞(최신)부터 연속 실패 횟수를 센다. REQ-FACE-007: 3회 이상이면 QR 안내 배너를 표시한다. */
+export function countLeadingFailures(entries: RecognitionEntry[]): number {
+  let count = 0;
+  for (const entry of entries) {
+    if (entry.outcome === "failure") count++;
+    else break;
+  }
+  return count;
+}
+
 export const MOCK_RECENT_RECOGNITIONS: RecognitionEntry[] = [
   { id: "1", label: "2405 김도현", outcome: "success", recognizedAt: "22:04" },
   { id: "2", label: "2412 박서연", outcome: "success", recognizedAt: "22:03" },
