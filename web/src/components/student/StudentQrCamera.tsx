@@ -48,6 +48,7 @@ const RESULT_TOAST_MS = 2500;
  * QR을 읽으면 스캔을 멈추고 `/qr#t=<토큰>` 형식에서 토큰만 꺼내 서버(지금은 mock)에 보낸다. 승인이면 1.5초 뒤 메인으로 가고,
  * 그 밖의 결과는 2.5초 동안 메시지를 보여 준 뒤 다시 스캔한다.
  * 카메라를 쓸 수 없으면(권한 거부·카메라 없음, Figma에 없음) 공통 오류 화면에 카메라 문구를 넣는다.
+ * 휴대폰 일반 카메라로 찍어 `/qr#t=<토큰>`으로 들어오면 카메라 없이 바로 제출한다(하네스 DEC-018).
  */
 export function StudentQrCamera() {
   const router = useRouter();
@@ -76,12 +77,23 @@ export function StudentQrCamera() {
     [submitToken],
   );
 
+  // 휴대폰 일반 카메라로 QR을 찍으면 `/qr#t=<토큰>`으로 들어온다(하네스 DEC-018). 이때는 카메라를
+  // 켜지 않고 바로 제출한다. 제출한 뒤 주소에서 `#t=…`를 지워 새로고침·뒤로가기로 같은 토큰을 다시
+  // 제출하지 않게 한다. `#t=`로 시작하지만 형식이 다르면 서버를 부르지 않고 "유효하지 않은 QR"이다.
   useEffect(() => {
     if (entryHandled.current) return;
     entryHandled.current = true;
+    const { hash, href, pathname, search } = window.location;
+    const fromLink = hash.startsWith("#t=");
     // 브라우저 주소를 읽은 뒤에야 정할 수 있는 값이라 effect에서 한 번 정한다(파생 상태 아님).
-    setEntry("camera");
-  }, []);
+    setEntry(fromLink ? "link" : "camera");
+    if (!fromLink) return;
+    // 진입할 때 한 번만 서버에 제출을 시작한다(entryHandled로 중복 방지). 제출 시작과 함께
+    // "처리 중" 상태를 켜는 것이라 렌더가 연쇄로 반복되지 않는다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    submitToken(parseQrToken(href));
+    window.history.replaceState(window.history.state, "", pathname + search);
+  }, [submitToken]);
 
   const { videoRef, status } = useQrScanner({
     onDetect: handleDetect,
