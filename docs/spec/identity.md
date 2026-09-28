@@ -5,15 +5,17 @@
 학생과 관리자는 DataGSM으로 로그인한다. 자체 회원가입·비밀번호 입력 폼은 없다.
 로그인 버튼은 `DataGSM으로 계속하기`다.
 
-| 항목 | 사용자 제공 값 |
+| 항목 | 값 |
 | --- | --- |
 | 인가 | `https://oauth.authorization.datagsm.kr/v1/oauth/authorize` |
 | 토큰 교환 | `https://oauth.authorization.datagsm.kr/v1/oauth/token` |
 | 사용자 정보 | `https://oauth.resource.datagsm.kr/userinfo` |
-| 개발 Redirect URI | `http://localhost:3000/callback` |
-| 운영 Redirect URI | `https://실제-서비스-주소/callback` |
+| 개발 Client ID | `f396a536-641a-4112-95ff-e614c52ec534` (2026-09-28 확보) |
+| 개발 Redirect URI | `http://localhost:8080/api/v1/auth/callback` (서버 콜백, 2026-09-28 확보) |
+| 운영 Redirect URI | 배포 시 확보 |
 
-Client ID·Secret·scope와 정확한 운영 주소는 연동/배포 때 확보한다. 가짜 값을 실서비스 값으로 사용하지 않는다.
+Redirect URI는 서버(`localhost:8080`)가 콜백을 받아 토큰 교환·세션 쿠키 발급 후 프론트로 이동시킨다.
+Client Secret·scope·운영 주소는 배포 때 확보한다. 가짜 값을 실서비스 값으로 사용하지 않는다.
 실제 인증 없이 화면·도메인 로직 개발은 가능하며 mock 모드는 운영에서 사용하지 않는다.
 OAuth state, 콜백 검증, 토큰 교환과 세션 보호는 백엔드 책임이다.
 QR 스캔 후 로그인할 때 인증 대상의 용도와 QR 정보를 보존하되 로그인 완료 시 만료를 다시 검사한다.
