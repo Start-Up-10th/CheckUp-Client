@@ -6,7 +6,16 @@
  * 경고 아이콘은 관리자 화면과 같은 public/icons/state-error.svg이고, 모양도 관리자
  * 최근 인식 오류(RecentRecognitionsList의 StateMessage)와 같은 Figma 값이다.
  */
-export function StudentErrorState({ onRetry }: { onRetry: () => void }) {
+export function StudentErrorState({
+  onRetry,
+  title = "불러오지 못했어요",
+  description = "네트워크 연결을 확인하고 다시 시도해 주세요.",
+}: {
+  onRetry: () => void;
+  /** 기본은 Figma 조회 실패 문구. 카메라처럼 다른 실패는 문구만 바꿔 쓴다. */
+  title?: string;
+  description?: string;
+}) {
   return (
     <div
       role="alert"
@@ -24,12 +33,8 @@ export function StudentErrorState({ onRetry }: { onRetry: () => void }) {
         />
       </span>
       <div className="flex flex-col items-center gap-1.5">
-        <p className="text-[19px] font-bold text-admin-text">
-          불러오지 못했어요
-        </p>
-        <p className="text-sm text-admin-textMuted">
-          네트워크 연결을 확인하고 다시 시도해 주세요.
-        </p>
+        <p className="text-[19px] font-bold text-admin-text">{title}</p>
+        <p className="text-sm text-admin-textMuted">{description}</p>
       </div>
       <button
         type="button"

@@ -5,15 +5,17 @@
 학생과 관리자는 DataGSM으로 로그인한다. 자체 회원가입·비밀번호 입력 폼은 없다.
 로그인 버튼은 `DataGSM으로 계속하기`다.
 
-| 항목 | 사용자 제공 값 |
+| 항목 | 값 |
 | --- | --- |
 | 인가 | `https://oauth.authorization.datagsm.kr/v1/oauth/authorize` |
 | 토큰 교환 | `https://oauth.authorization.datagsm.kr/v1/oauth/token` |
 | 사용자 정보 | `https://oauth.resource.datagsm.kr/userinfo` |
-| 개발 Redirect URI | `http://localhost:3000/callback` |
-| 운영 Redirect URI | `https://실제-서비스-주소/callback` |
+| 개발 Client ID | `f396a536-641a-4112-95ff-e614c52ec534` (2026-09-28 확보) |
+| 개발 Redirect URI | `http://localhost:8080/api/v1/auth/callback` (서버 콜백, 2026-09-28 확보) |
+| 운영 Redirect URI | 배포 시 확보 |
 
-Client ID·Secret·scope와 정확한 운영 주소는 연동/배포 때 확보한다. 가짜 값을 실서비스 값으로 사용하지 않는다.
+Redirect URI는 서버(`localhost:8080`)가 콜백을 받아 토큰 교환·세션 쿠키 발급 후 프론트로 이동시킨다.
+Client Secret·scope·운영 주소는 배포 때 확보한다. 가짜 값을 실서비스 값으로 사용하지 않는다.
 실제 인증 없이 화면·도메인 로직 개발은 가능하며 mock 모드는 운영에서 사용하지 않는다.
 OAuth state, 콜백 검증, 토큰 교환과 세션 보호는 백엔드 책임이다.
 QR 스캔 후 로그인할 때 인증 대상의 용도와 QR 정보를 보존하되 로그인 완료 시 만료를 다시 검사한다.
@@ -43,7 +45,7 @@ API 권한·실제 응답 확인은 백엔드 연동 과제이며 학생 수동 
 ### REQ-AUTH-003 — 역할과 접근 범위
 
 사감과 자치위원은 동일한 관리자 권한을 가진다. DataGSM `role == DORMITORY_MANAGER`로 판별한다.
-QR 생성·얼굴 인식 운영·관리자 전개도·수동 출석 수정·봉사 관리·공지 변경은 관리자 전용이다.
+QR 생성·얼굴 인식 운영·관리자 전개도·수동 출석 수정·봉사 관리는 관리자 전용이다.
 학생은 본인과 본인 호실 화면에서 허용된 정보만 읽는다. 다른 학생 봉사 정보나 얼굴 벡터는 볼 수 없다.
 관리자 화면을 숨기는 것뿐 아니라 API에서도 역할을 검증한다. 로그인하지 않으면 로그인으로 이동한다.
 관리자 로그인의 권한 부족 문구는 `관리자 권한이 없는 계정입니다.`다.

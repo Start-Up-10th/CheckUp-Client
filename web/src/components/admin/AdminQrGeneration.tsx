@@ -1,74 +1,144 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel";
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
 import { StatusBanner } from "@/components/admin/StatusBanner";
+import { formatCountdown, type QrPurpose } from "@/lib/admin/mock-qr-session";
 import {
-  createMockQrSession,
-  formatCountdown,
-  type QrPurpose,
-  type QrSession,
-} from "@/lib/admin/mock-qr-session";
+  createQrSession,
+  heartbeatQrSession,
+  closeQrSession,
+  QrSessionNotFoundError,
+} from "@/lib/admin/qr-api";
 
 const DEFAULT_PURPOSE: QrPurpose = "dorm";
+const HEARTBEAT_INTERVAL_MS = 20_000;
 
-const SESSION_ERROR_MESSAGES = {
-  failed: "QR 자동 생성에 실패했습니다. 새로고침해 주세요.",
-  expired: "유효 시간이 만료되었습니다.",
-} as const;
+type ActiveSession = {
+  sessionId: string;
+  qrUrl: string;
+  tokenExpiresAt: number;
+  serverTimeOffset: number; // serverTime - clientTime at issuance
+};
 
 /**
  * REQ-ATT-003: 페이지 진입/목적 전환마다 새 QR 세션을 즉시 발급한다. 생성/종료 버튼은 없다.
- * REQ-ATT-004: 15분마다 갱신하고 "남은 유효 시간" mm:ss를 보여준다.
+ * REQ-ATT-004: heartbeat(~20s)로 qrUrl을 교체하고 "남은 유효 시간" mm:ss를 보여준다.
  *
- * 세션 발급은 마운트 이후(useEffect)에만 한다. Math.random 기반 토큰을 초기 렌더에서
- * 바로 만들면 서버 렌더 결과와 클라이언트 첫 렌더가 달라져 hydration mismatch가 난다.
- * 실제 서버 연동 후에도 첫 발급은 비동기 응답을 기다려야 하므로, 이 로딩 상태는
- * REQ-UI-006의 스켈레톤 패턴과 자연히 맞아떨어진다.
+ * serverTimeOffset으로 브라우저 시계 오차를 보정해 tokenExpiresAt 기준 카운트다운을 계산한다.
+ * 목적 전환·페이지 이탈 시 sendBeacon으로 해당 세션만 종료한다(다른 탭·관리자 세션 영향 없음).
  */
 export function AdminQrGeneration() {
   const [purpose, setPurpose] = useState<QrPurpose>(DEFAULT_PURPOSE);
-  const [session, setSession] = useState<QrSession | null>(null);
+  const [session, setSession] = useState<ActiveSession | null>(null);
   const [now, setNow] = useState<number | null>(null);
-  const [sessionError, setSessionError] = useState<
-    keyof typeof SESSION_ERROR_MESSAGES | null
-  >(null);
+  const [error, setError] = useState<string | null>(null);
+  // sessionKey를 올려 heartbeat 404 시 세션 재생성을 트리거한다.
+  const [sessionKey, setSessionKey] = useState(0);
+
+  const sessionIdRef = useRef<string | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // ref로 즉시 취소: handleSelectPurpose에서 React 스케줄러 전에 동기적으로 세트한다.
+  const cancelRef = useRef(false);
 
   function handleSelectPurpose(nextPurpose: QrPurpose) {
+    cancelRef.current = true;
     setPurpose(nextPurpose);
-    setSessionError(null);
-    const fresh = createMockQrSession(nextPurpose);
-    setSession(fresh);
-    setNow(fresh.issuedAt);
+    setSession(null);
+    setError(null);
   }
 
   useEffect(() => {
-    const initial = createMockQrSession(DEFAULT_PURPOSE);
-    // Math.random 기반 첫 세션은 마운트 후에만 만들 수 있다(hydration mismatch 방지 목적의
-    // 의도된 초기화이며, 매 렌더마다 반복되는 파생 상태가 아니다).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSession(initial);
-    setNow(initial.issuedAt);
+    cancelRef.current = false;
 
-    const interval = setInterval(() => {
-      const tick = Date.now();
-      setNow(tick);
-      setSession((prev) => {
-        if (!prev || tick < prev.expiresAt) return prev;
-        // TODO(REQ-ATT-004): 실제 갱신 API 호출로 교체한다. 실패 시에만 setSessionError("expired")로
-        // "유효 시간이 만료되었습니다."를 보여주고, 갱신 재시도 전까지 만료된 토큰은 유효 처리하지 않는다.
-        return createMockQrSession(prev.purpose, tick);
-      });
+    function clearHeartbeat() {
+      if (heartbeatRef.current) {
+        clearInterval(heartbeatRef.current);
+        heartbeatRef.current = null;
+      }
+    }
+
+    async function startSession() {
+      clearHeartbeat();
+      try {
+        const data = await createQrSession(purpose);
+        if (cancelRef.current) {
+          closeQrSession(data.sessionId);
+          return;
+        }
+        sessionIdRef.current = data.sessionId;
+        const offset = data.serverTime - Date.now();
+        setSession({
+          sessionId: data.sessionId,
+          qrUrl: data.qrUrl,
+          tokenExpiresAt: data.tokenExpiresAt,
+          serverTimeOffset: offset,
+        });
+        setNow(Date.now());
+
+        heartbeatRef.current = setInterval(async () => {
+          const id = sessionIdRef.current;
+          if (!id || cancelRef.current) return;
+          try {
+            const hb = await heartbeatQrSession(id);
+            if (cancelRef.current) return;
+            setSession((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    qrUrl: hb.qrUrl,
+                    tokenExpiresAt: hb.tokenExpiresAt,
+                    serverTimeOffset: hb.serverTime - Date.now(),
+                  }
+                : null,
+            );
+          } catch (err) {
+            if (cancelRef.current) return;
+            if (err instanceof QrSessionNotFoundError) {
+              // 서버 세션이 사라진 경우 새 세션을 생성한다.
+              sessionIdRef.current = null;
+              setSession(null);
+              setSessionKey((k) => k + 1);
+            } else {
+              // 일시적 네트워크·서버 오류: 만료된 QR을 유효한 것처럼 표시하지 않는다.
+              setSession(null);
+              setError("QR 갱신에 실패했습니다. 새로고침해 주세요.");
+            }
+          }
+        }, HEARTBEAT_INTERVAL_MS);
+      } catch {
+        if (!cancelRef.current) {
+          setError("QR 자동 생성에 실패했습니다. 새로고침해 주세요.");
+        }
+      }
+    }
+
+    startSession();
+
+    const tickTimer = setInterval(() => {
+      if (!cancelRef.current) setNow(Date.now());
     }, 1000);
-    return () => clearInterval(interval);
-  }, []);
 
-  const countdownLabel =
-    sessionError !== null || !session || now === null
-      ? undefined
-      : formatCountdown(session.expiresAt - now);
+    return () => {
+      cancelRef.current = true;
+      clearInterval(tickTimer);
+      clearHeartbeat();
+      if (sessionIdRef.current) {
+        closeQrSession(sessionIdRef.current);
+        sessionIdRef.current = null;
+      }
+    };
+  }, [purpose, sessionKey]);
+
+  const countdownLabel = (() => {
+    if (error || !session || now === null) return undefined;
+    const remaining = session.tokenExpiresAt - (now + session.serverTimeOffset);
+    // remaining <= 0이면 undefined를 반환해 만료된 QR을 화면에 남기지 않는다.
+    if (remaining <= 0) return undefined;
+    return formatCountdown(remaining);
+  })();
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6">
@@ -84,16 +154,11 @@ export function AdminQrGeneration() {
         <PurposeTabs selected={purpose} onSelect={handleSelectPurpose} />
       </div>
 
-      {sessionError && (
-        <StatusBanner
-          variant="error"
-          message={SESSION_ERROR_MESSAGES[sessionError]}
-        />
-      )}
+      {error && <StatusBanner variant="error" message={error} />}
 
       {session && countdownLabel ? (
         <QrCodeGenerationPanel
-          qrValue={session.token}
+          qrValue={session.qrUrl}
           countdownLabel={countdownLabel}
         />
       ) : (

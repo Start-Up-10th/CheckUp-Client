@@ -7,6 +7,7 @@ type NotificationItemProps = {
 /**
  * REQ-COM-005 알림 목록 한 줄 — 알림 문구와 상대 시각을 두 줄로 보여 준다.
  * 핸드폰(Figma 456:478)은 흰 화면 위 회색 카드, 노트북(460:709)은 회색 화면 위 흰 카드다.
+ * 줄 높이는 Figma 글자 상자(17px·13px)에 맞춰 한 줄이 60px이 되게 했다.
  * 누르면 이동하는 규칙은 담당자 결정 사항이고 Figma에도 표시가 없어 지금은 누를 수 없다.
  */
 export function NotificationItem({
@@ -14,9 +15,11 @@ export function NotificationItem({
   timeLabel,
 }: NotificationItemProps) {
   return (
-    <li className="flex flex-col gap-0.5 rounded-control bg-admin-rowSurface px-4 py-3.5 leading-normal md:bg-admin-surface md:px-[18px]">
-      <p className="text-sm text-admin-text">{message}</p>
-      <p className="text-[11px] text-admin-textMuted">{timeLabel}</p>
+    <li className="flex flex-col gap-0.5 rounded-control bg-admin-rowSurface px-4 py-3.5 md:bg-admin-surface md:px-[18px]">
+      <p className="text-sm leading-[17px] text-admin-text">{message}</p>
+      <p className="text-[11px] leading-[13px] text-admin-textMuted">
+        {timeLabel}
+      </p>
     </li>
   );
 }

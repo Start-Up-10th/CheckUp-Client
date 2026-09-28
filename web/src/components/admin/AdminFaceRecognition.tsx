@@ -40,7 +40,7 @@ export function AdminFaceRecognition({
     consecutiveFailures >= 3
       ? ({
           variant: "error" as const,
-          message: "인식 실패 · 3회 초과 시 QR로 출석",
+          message: "인식 실패 · 3회 연속 실패 시 QR로 출석",
         } satisfies NonNullable<typeof notice>)
       : null;
   // 폰은 빈·오류 상태에서 카메라 패널을 숨기고 최근 인식 패널이 전체 높이를 쓴다(Figma 관리자-핸드폰).
@@ -88,13 +88,18 @@ export function AdminFaceRecognition({
         />
       </div>
 
-      {(notice ?? failureNotice) && (
-        <StatusBanner
-          variant={(notice ?? failureNotice)!.variant}
-          message={(notice ?? failureNotice)!.message}
-          className="w-fit"
-        />
-      )}
+      {(() => {
+        const activeNotice = notice ?? failureNotice;
+        return (
+          activeNotice && (
+            <StatusBanner
+              variant={activeNotice.variant}
+              message={activeNotice.message}
+              className="w-fit"
+            />
+          )
+        );
+      })()}
 
       <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:gap-4 xl:flex-row">
         <div
