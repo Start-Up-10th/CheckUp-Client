@@ -7,6 +7,15 @@ const PURPOSE_TO_API: Record<Purpose, ApiPurpose> = {
   study: "STUDY_ROOM",
 };
 
+/** 서버 응답 원본. 시각은 ISO-8601 UTC 문자열이다(하네스 qr-attendance.md "관리자 API 응답"). */
+type QrSessionApiResponse = {
+  sessionId: string;
+  qrUrl: string;
+  tokenExpiresAt: string;
+  serverTime: string;
+};
+
+/** 화면에서 쓰는 형태. 시각은 계산하기 쉽게 unix ms로 바꾼다. */
 export type QrCreateResponse = {
   sessionId: string;
   qrUrl: string;
@@ -19,6 +28,21 @@ export type QrHeartbeatResponse = {
   tokenExpiresAt: number;
   serverTime: number;
 };
+
+function toEpochMs(iso: string, field: string): number {
+  const ms = Date.parse(iso);
+  if (Number.isNaN(ms)) throw new Error(`invalid ${field}`);
+  return ms;
+}
+
+function toQrSession(body: QrSessionApiResponse): QrCreateResponse {
+  return {
+    sessionId: body.sessionId,
+    qrUrl: body.qrUrl,
+    tokenExpiresAt: toEpochMs(body.tokenExpiresAt, "tokenExpiresAt"),
+    serverTime: toEpochMs(body.serverTime, "serverTime"),
+  };
+}
 
 export class QrSessionNotFoundError extends Error {
   constructor() {
@@ -37,7 +61,7 @@ export async function createQrSession(
     body: JSON.stringify({ purpose: PURPOSE_TO_API[purpose] }),
   });
   if (!res.ok) throw new Error(`createQrSession: ${res.status}`);
-  return res.json() as Promise<QrCreateResponse>;
+  return toQrSession((await res.json()) as QrSessionApiResponse);
 }
 
 /** REQ-ATT-004: heartbeat로 qrUrl 교체·세션 유지. 404면 QrSessionNotFoundError */
@@ -50,7 +74,10 @@ export async function heartbeatQrSession(
   );
   if (res.status === 404) throw new QrSessionNotFoundError();
   if (!res.ok) throw new Error(`heartbeat: ${res.status}`);
-  return res.json() as Promise<QrHeartbeatResponse>;
+  const { qrUrl, tokenExpiresAt, serverTime } = toQrSession(
+    (await res.json()) as QrSessionApiResponse,
+  );
+  return { qrUrl, tokenExpiresAt, serverTime };
 }
 
 /** REQ-ATT-003: 페이지 이탈·용도 탭 변경 시 해당 세션만 종료 (sendBeacon) */
