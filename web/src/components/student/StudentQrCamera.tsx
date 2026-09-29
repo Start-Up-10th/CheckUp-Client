@@ -2,9 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { submitQrAttendance } from "@/lib/student/mock-qr-attendance";
+import {
+  QrLoginRequiredError,
+  QrNotStudentError,
+  submitQrAttendance,
+} from "@/lib/student/qr-attendance-api";
 import { parseQrToken } from "@/lib/student/parse-qr-token";
 import type { QrAttendanceResult } from "@/lib/student/qr-attendance-result";
+import { saveQrReturnUrl } from "@/lib/student/qr-return-url";
 import { useQrScanner } from "@/lib/student/use-qr-scanner";
 import { QrCameraHeader } from "./QrCameraHeader";
 import { QrResultToast, type QrResultVariant } from "./QrResultToast";
@@ -12,9 +17,16 @@ import { QrScanFrame } from "./QrScanFrame";
 import { StudentErrorState } from "./StudentErrorState";
 import { StudentShell } from "./StudentShell";
 
+/**
+ * 화면에 보여 줄 결과. 서버 판정 5종에 더해, 판정을 받지 못한 경우를 따로 둔다.
+ * - notStudent: 학생 정보가 없는 계정(403, 교사 등)
+ * - retry: 네트워크 오류·서버 오류. 판정이 아니므로 "유효하지 않은 QR"로 뭉개지 않는다.
+ */
+type QrOutcome = QrAttendanceResult | "notStudent" | "retry";
+
 /** 결과별 문구·색. 문구는 REQ-ATT-004/005와 Figma state messages(4:71, 345:43)를 따른다. */
 const RESULT_MESSAGES: Record<
-  QrAttendanceResult,
+  QrOutcome,
   { variant: QrResultVariant; message: string }
 > = {
   approved: { variant: "success", message: "승인되었습니다" },
@@ -29,6 +41,9 @@ const RESULT_MESSAGES: Record<
     message: "지금은 출석 인증을 받고 있지 않습니다.",
   },
   invalid: { variant: "error", message: "유효하지 않은 QR입니다." },
+  // Figma에 없는 상태라 기존 오류 토스트 스타일로 안내한다.
+  notStudent: { variant: "error", message: "학생 계정만 출석할 수 있어요." },
+  retry: { variant: "error", message: "잠시 후 다시 시도해 주세요." },
 };
 
 /**
@@ -45,7 +60,7 @@ const RESULT_TOAST_MS = 2500;
 /**
  * 학생 웹 QR 카메라(REQ-ATT-005). 핸드폰(Figma 4:43)은 어두운 화면에 `‹ QR 카메라`, 스캔 영역,
  * 안내 문구. 노트북(228:2)은 어두운 사이드바와 가운데 제목·스캔 영역·안내 문구.
- * QR을 읽으면 스캔을 멈추고 `/qr#t=<토큰>` 형식에서 토큰만 꺼내 서버(지금은 mock)에 보낸다. 승인이면 1.5초 뒤 메인으로 가고,
+ * QR을 읽으면 스캔을 멈추고 `/qr#t=<토큰>` 형식에서 토큰만 꺼내 서버 스캔 API에 보낸다. 승인이면 1.5초 뒤 메인으로 가고,
  * 그 밖의 결과는 2.5초 동안 메시지를 보여 준 뒤 다시 스캔한다.
  * 카메라를 쓸 수 없으면(권한 거부·카메라 없음, Figma에 없음) 공통 오류 화면에 카메라 문구를 넣는다.
  * 휴대폰 일반 카메라로 찍어 `/qr#t=<토큰>`으로 들어오면 카메라 없이 바로 제출한다(하네스 DEC-018).
@@ -54,23 +69,36 @@ const RESULT_TOAST_MS = 2500;
 export function StudentQrCamera() {
   const router = useRouter();
   const [processing, setProcessing] = useState(false);
-  const [result, setResult] = useState<QrAttendanceResult | null>(null);
+  const [result, setResult] = useState<QrOutcome | null>(null);
   const [entry, setEntry] = useState<QrEntry>("checking");
   // React 개발 모드(Strict Mode)에서 effect가 두 번 돌아도 진입 처리는 한 번만 한다.
   const entryHandled = useRef(false);
 
   // 토큰을 제출한다. 우리 QR 형식이 아니어서 토큰이 없으면(null) 서버를 부르지 않고 바로
   // "유효하지 않은 QR"로 보여 준다(하네스 DEC-018). 토큰은 로그에 남기지 않는다.
-  const submitToken = useCallback((token: string | null) => {
-    setProcessing(true);
-    if (!token) {
-      setResult("invalid");
-      return;
-    }
-    submitQrAttendance(token)
-      .then(setResult)
-      .catch(() => setResult("invalid"));
-  }, []);
+  // 로그인이 안 돼 있으면(401) 같은 QR로 돌아올 주소를 남기고 로그인으로 보낸다.
+  const submitToken = useCallback(
+    (token: string | null) => {
+      setProcessing(true);
+      if (!token) {
+        setResult("invalid");
+        return;
+      }
+      submitQrAttendance(token)
+        .then(setResult)
+        .catch((error: unknown) => {
+          if (error instanceof QrLoginRequiredError) {
+            saveQrReturnUrl(token);
+            router.push("/login");
+            return;
+          }
+          setResult(
+            error instanceof QrNotStudentError ? "notStudent" : "retry",
+          );
+        });
+    },
+    [router],
+  );
 
   // 웹 내부 카메라로 읽은 QR 값에서 `#t=` 토큰만 꺼내 제출한다.
   const handleDetect = useCallback(
