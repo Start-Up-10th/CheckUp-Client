@@ -1,19 +1,11 @@
 import Image from "next/image";
 
-function buildDataGsmAuthUrl(): string | null {
-  const base = process.env.NEXT_PUBLIC_DATAGSM_AUTH_URL;
-  const clientId = process.env.NEXT_PUBLIC_DATAGSM_CLIENT_ID;
-  const redirectUri = process.env.NEXT_PUBLIC_AUTH_REDIRECT_URI;
-  if (!base || !clientId || !redirectUri) return null;
-  const url = new URL(base);
-  url.searchParams.set("client_id", clientId);
-  url.searchParams.set("redirect_uri", redirectUri);
-  url.searchParams.set("response_type", "code");
-  return url.toString();
-}
-
 /**
  * REQ-AUTH-001: 관리자 DataGSM OAuth 로그인.
+ *
+ * 버튼은 서버의 GET /api/v1/auth/login으로 이동한다.
+ * 서버가 state·PKCE를 생성·저장하고 DataGSM 인가 URL로 302 리다이렉트한다.
+ * 프론트에서 인가 URL을 직접 조립하면 state 검증(INVALID_OAUTH_STATE)이 실패한다.
  *
  * 수치 근거 (Figma node 278:6 핸드폰 / 51:6 패드):
  *   로고: 폰 w=171 h=45 top=(56+394)/844=53.3%  | 패드 w=201 h=53 top=520/1024=50.78%
@@ -22,8 +14,6 @@ function buildDataGsmAuthUrl(): string | null {
  *   D 아이콘: size=14×14 left=20px(6.67%) 세로 중앙 | 텍스트: Pretendard Medium 14px #0f172a
  */
 export default function AdminLoginPage() {
-  const authUrl = buildDataGsmAuthUrl();
-
   return (
     <>
       {/* CHECKUP 로고 */}
@@ -40,40 +30,21 @@ export default function AdminLoginPage() {
 
       {/* DataGSM 로그인 버튼 */}
       <div className="absolute left-1/2 top-[77.84%] -translate-x-1/2 md:top-[71.78%]">
-        {authUrl ? (
-          <a
-            href={authUrl}
-            className="relative flex h-12 w-[300px] items-center justify-center rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc]"
-          >
-            <Image
-              src="/icons/admin-login/datagsm-icon.svg"
-              alt="DataGSM"
-              width={14}
-              height={14}
-              className="absolute left-5 top-1/2 -translate-y-1/2"
-            />
-            <span className="text-[14px] font-medium leading-none text-[#0f172a]">
-              DataGSM으로 계속하기
-            </span>
-          </a>
-        ) : (
-          <button
-            type="button"
-            disabled
-            className="relative flex h-12 w-[300px] cursor-not-allowed items-center justify-center rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc] opacity-50"
-          >
-            <Image
-              src="/icons/admin-login/datagsm-icon.svg"
-              alt="DataGSM"
-              width={14}
-              height={14}
-              className="absolute left-5 top-1/2 -translate-y-1/2"
-            />
-            <span className="text-[14px] font-medium leading-none text-[#0f172a]">
-              DataGSM으로 계속하기
-            </span>
-          </button>
-        )}
+        <a
+          href="/api/v1/auth/login"
+          className="relative flex h-12 w-[300px] items-center justify-center rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc]"
+        >
+          <Image
+            src="/icons/admin-login/datagsm-icon.svg"
+            alt="DataGSM"
+            width={14}
+            height={14}
+            className="absolute left-5 top-1/2 -translate-y-1/2"
+          />
+          <span className="text-[14px] font-medium leading-none text-[#0f172a]">
+            DataGSM으로 계속하기
+          </span>
+        </a>
       </div>
     </>
   );
