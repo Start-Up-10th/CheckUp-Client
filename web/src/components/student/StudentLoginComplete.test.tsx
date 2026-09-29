@@ -62,6 +62,14 @@ describe("StudentLoginComplete", () => {
     expect(window.sessionStorage.getItem(QR_RETURN_URL_KEY)).toBeNull();
   });
 
+  it("QR 링크로 왔던 관리자(기숙사 자치위원)도 저장한 QR 주소로 돌아가고 값은 지운다", async () => {
+    window.sessionStorage.setItem(QR_RETURN_URL_KEY, QR_URL);
+    mockMe(200, { name: "자치위원", role: "ADMIN" });
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith(QR_URL));
+    expect(window.sessionStorage.getItem(QR_RETURN_URL_KEY)).toBeNull();
+  });
+
   it("그 밖의 학생은 개인정보 동의로", async () => {
     mockMe(200, { name: "김도현", role: "STUDENT" });
     render(<StudentLoginComplete />);
