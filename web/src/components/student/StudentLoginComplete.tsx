@@ -6,10 +6,11 @@ import { takeQrReturnUrl } from "@/lib/student/qr-return-url";
 
 /**
  * 로그인 완료(REQ-AUTH-001·004, REQ-ATT-005). 서버 DataGSM 콜백이 로그인을 마치고 돌려보내는 곳이다
- * (서버 CheckUp-server#26·#29에 이 주소를 제안). 세션을 `/api/v1/auth/me`로 확인해 보낸다.
+ * (서버 CheckUp-server#53). 세션을 `/api/v1/auth/me`로 확인해 보낸다.
  * - 로그인 안 됨·서버 오류 → `/login?error=1`(로그인 실패 문구)
+ * - QR 링크로 왔다가 로그인하러 갔으면 → 역할과 상관없이 저장해 둔 `/qr#t=<토큰>`으로 돌아가 출석을 이어간다.
+ *   기숙사 자치위원은 서버에서 관리자(`ADMIN`)이면서 학생이라 QR 출석 대상이다. 학생 여부는 스캔 API가 판정한다.
  * - 관리자 → `/admin`
- * - 학생이고 QR 링크로 왔다가 로그인하러 갔으면 → 저장해 둔 `/qr#t=<토큰>`으로 돌아가 출석을 이어간다
  * - 그 밖의 학생 → 최초 이용 순서의 다음 화면 `/consent`. 서버 `/me`에 동의·얼굴 등록 여부가 아직 없어
  *   이미 마친 학생도 동의 화면으로 간다(서버 응답이 늘면 `/face`·`/main`으로 나눈다).
  * 페이지째 이동(`location.replace`)해서 뒤로가기로 이 화면에 돌아오지 않게 하고, QR 주소의 `#t=`를
@@ -25,8 +26,9 @@ export function StudentLoginComplete() {
     fetchCurrentMember()
       .then((member) => {
         if (!member) return "/login?error=1";
-        if (member.role === "ADMIN") return "/admin";
-        return takeQrReturnUrl() ?? "/consent";
+        const qrReturnUrl = takeQrReturnUrl();
+        if (qrReturnUrl) return qrReturnUrl;
+        return member.role === "ADMIN" ? "/admin" : "/consent";
       })
       .catch(() => "/login?error=1")
       .then((next) => window.location.replace(next));
