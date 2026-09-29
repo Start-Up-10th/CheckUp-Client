@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { submitQrAttendance } from "@/lib/student/mock-qr-attendance";
+import { submitQrAttendance } from "@/lib/student/qr-attendance-api";
 import { parseQrToken } from "@/lib/student/parse-qr-token";
 import type { QrAttendanceResult } from "@/lib/student/qr-attendance-result";
 import { useQrScanner } from "@/lib/student/use-qr-scanner";
@@ -45,7 +45,7 @@ const RESULT_TOAST_MS = 2500;
 /**
  * 학생 웹 QR 카메라(REQ-ATT-005). 핸드폰(Figma 4:43)은 어두운 화면에 `‹ QR 카메라`, 스캔 영역,
  * 안내 문구. 노트북(228:2)은 어두운 사이드바와 가운데 제목·스캔 영역·안내 문구.
- * QR을 읽으면 스캔을 멈추고 `/qr#t=<토큰>` 형식에서 토큰만 꺼내 서버(지금은 mock)에 보낸다. 승인이면 1.5초 뒤 메인으로 가고,
+ * QR을 읽으면 스캔을 멈추고 `/qr#t=<토큰>` 형식에서 토큰만 꺼내 서버 스캔 API에 보낸다. 승인이면 1.5초 뒤 메인으로 가고,
  * 그 밖의 결과는 2.5초 동안 메시지를 보여 준 뒤 다시 스캔한다.
  * 카메라를 쓸 수 없으면(권한 거부·카메라 없음, Figma에 없음) 공통 오류 화면에 카메라 문구를 넣는다.
  * 휴대폰 일반 카메라로 찍어 `/qr#t=<토큰>`으로 들어오면 카메라 없이 바로 제출한다(하네스 DEC-018).
