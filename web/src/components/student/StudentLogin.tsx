@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { StatusBanner } from "@/components/admin/StatusBanner";
+import { LOGIN_START_PATH } from "@/lib/auth/auth-api";
 import { DataGsmLoginButton } from "./DataGsmLoginButton";
 
 /**
@@ -17,12 +17,11 @@ import { DataGsmLoginButton } from "./DataGsmLoginButton";
  * (학생 홈 서버 오류와 같은 자리)로 둔다.
  */
 export function StudentLogin({ failed = false }: { failed?: boolean }) {
-  const router = useRouter();
-
-  // TODO(REQ-AUTH-001, DEC-001): OAuth 연동 때 백엔드의 DataGSM 인가 시작 주소로 이동한다
-  // (state·콜백 검증·토큰 교환은 백엔드). 실패하면 `/login?error=1`로 돌아오게 한다.
-  // 지금은 화면 개발용으로 학생 최초 이용 흐름의 다음 화면(개인정보 동의)으로 보낸다.
-  const login = () => router.push("/consent");
+  // 서버 로그인 시작 주소로 페이지째 이동한다(같은 출처 `/api` 프록시). 서버가 state·PKCE를 만들어
+  // DataGSM 로그인으로 보내고, 콜백 검증·토큰 교환·세션 발급도 서버가 한다(REQ-AUTH-001).
+  // 웹은 DataGSM 주소·클라이언트 ID를 직접 만들지 않는다. 앱 안 이동(router)이 아니라 서버 302를
+  // 따라가야 하므로 location을 바꾼다.
+  const login = () => window.location.assign(LOGIN_START_PATH);
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-[106px] bg-[#f5f5f7] px-4 pt-[255px] md:gap-[162px] md:bg-admin-bg md:pt-[225px]">
