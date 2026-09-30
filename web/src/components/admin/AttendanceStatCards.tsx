@@ -10,6 +10,10 @@ type AttendanceStatCardsProps = {
  * - 핸드폰(280:26): 세로 스택 · p-3 · rounded-[12px] · 라벨 회색 10px · 출석 숫자 진한 올리브 18px · 미출석 숫자 검정 18px · 미출석 테두리 없음.
  * - 패드(52:53): 가로(items-baseline justify-between) · px-4 py-[14px] · rounded-[14px] · 라벨 올리브 12px · 숫자 진한 올리브 22px · 두 카드 모두 초록 테두리(#dcefad).
  * - 데스크톱(16:445): 세로 스택 · px-[18px] py-[16px] · rounded-2xl(16) · 라벨 회색 12px · 숫자 검정 24px · 미출석 테두리 없음.
+ *
+ * xl(≥1280) 범위 내에서는 노트북(1280)~데스크톱(1920) 사이에서 padding·rounded·숫자 크기가
+ * 뷰포트 폭에 따라 부드럽게 스케일되도록 clamp를 쓴다. 1280에서는 md(패드) 수치와 이어지고
+ * 1920에서 Figma 관리자-컴퓨터 최종값에 도달한다.
  */
 export function AttendanceStatCards({
   present,
@@ -17,19 +21,19 @@ export function AttendanceStatCards({
 }: AttendanceStatCardsProps) {
   return (
     <div className="flex w-full items-start gap-2 md:gap-7 xl:gap-[14px]">
-      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-admin-attendance-border bg-admin-attendance-bg p-3 md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:px-4 md:py-[14px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-2xl xl:px-[18px] xl:py-[16px]">
+      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-admin-attendance-border bg-admin-attendance-bg p-3 md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:px-4 md:py-[14px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)] xl:px-[clamp(16px,calc(16px+(100vw-1280px)/320),18px)] xl:py-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)]">
         <p className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs md:leading-[14px] md:text-admin-attendance-textMuted xl:text-admin-textMuted">
           출석
         </p>
-        <p className="text-lg font-bold leading-[22px] text-admin-attendance-text md:text-[22px] md:leading-normal xl:text-[24px] xl:text-admin-text">
+        <p className="text-lg font-bold leading-[22px] text-admin-attendance-text md:text-[22px] md:leading-normal xl:text-[clamp(22px,calc(22px+(100vw-1280px)/320),24px)] xl:text-admin-text">
           {present}
         </p>
       </div>
-      <div className="flex flex-1 flex-col gap-1 rounded-xl bg-admin-surface p-3 md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:border md:border-admin-attendance-border md:px-4 md:py-[14px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-2xl xl:border-0 xl:px-[18px] xl:py-[16px]">
+      <div className="flex flex-1 flex-col gap-1 rounded-xl bg-admin-surface p-3 md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:border md:border-admin-attendance-border md:px-4 md:py-[14px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)] xl:border-0 xl:px-[clamp(16px,calc(16px+(100vw-1280px)/320),18px)] xl:py-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)]">
         <p className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs md:leading-[14px] md:text-admin-attendance-textMuted xl:text-admin-textMuted">
           미출석
         </p>
-        <p className="text-lg font-bold leading-[22px] text-admin-text md:text-[22px] md:leading-normal md:text-admin-attendance-text xl:text-[24px] xl:text-admin-text">
+        <p className="text-lg font-bold leading-[22px] text-admin-text md:text-[22px] md:leading-normal md:text-admin-attendance-text xl:text-[clamp(22px,calc(22px+(100vw-1280px)/320),24px)] xl:text-admin-text">
           {absent}
         </p>
       </div>
