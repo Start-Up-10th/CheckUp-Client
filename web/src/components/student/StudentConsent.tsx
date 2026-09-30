@@ -5,6 +5,7 @@ import { useState } from "react";
 import { StatusBanner } from "@/components/admin/StatusBanner";
 import {
   ConsentLoginRequiredError,
+  ConsentNotStudentError,
   submitConsent,
 } from "@/lib/student/consent-api";
 import { ConsentAllRow } from "./ConsentAllRow";
@@ -42,6 +43,14 @@ const CONSENT_ITEMS: {
   },
 ];
 
+/** 저장 실패 종류. server는 다시 시도할 수 있고, notStudent(403)는 다시 시도해도 같다. */
+type ConsentError = "server" | "notStudent";
+
+const ERROR_MESSAGES: Record<ConsentError, string> = {
+  server: "서버와 연결이 원활하지 않습니다.",
+  notStudent: "학생 계정만 이용할 수 있어요.",
+};
+
 /**
  * 학생 개인정보 동의 화면(REQ-AUTH-004). 핸드폰(Figma 605:5)은 버튼을 하단에 두고,
  * 노트북(md 이상, Figma 사용자-노트북 605:52)은 가운데 520px 덩어리 안에 버튼까지 넣는다.
@@ -50,6 +59,8 @@ const CONSENT_ITEMS: {
  * 로그인이 안 돼 있으면(401) 로그인 화면으로 보낸다. 저장이 실패하면 Figma에 저장 실패 문구가 없어
  * 학생 홈 서버 오류와 같은 `서버와 연결이 원활하지 않습니다.`를 같은 자리(핸드폰 아래, 노트북 오른쪽 위)에
  * 보여 주고, 다시 누를 수 있게 한다. 저장하는 동안에는 버튼을 막아 두 번 보내지 않는다.
+ * 학생이 아닌 계정(403, 교사 등)은 다시 눌러도 결과가 같으므로 `학생 계정만 이용할 수 있어요.`를 보여 주고
+ * 버튼을 막는다(Figma에 없어 QR 화면의 학생 아님 문구와 같은 말투로 정함).
  */
 export function StudentConsent() {
   const router = useRouter();
@@ -59,7 +70,7 @@ export function StudentConsent() {
     notice: false,
   });
   const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [error, setError] = useState<ConsentError | null>(null);
 
   const allChecked = CONSENT_ITEMS.every((item) => checked[item.key]);
   const canContinue = CONSENT_ITEMS.every(
@@ -77,20 +88,24 @@ export function StudentConsent() {
 
   const agree = () => {
     setSaving(true);
-    setFailed(false);
+    setError(null);
     submitConsent({
       privacy: checked.privacy,
       face: checked.face,
       noticeAlarm: checked.notice,
     })
       .then(() => router.push("/face"))
-      .catch((error: unknown) => {
-        if (error instanceof ConsentLoginRequiredError) {
+      .catch((reason: unknown) => {
+        if (reason instanceof ConsentLoginRequiredError) {
           router.push("/login");
           return;
         }
+        if (reason instanceof ConsentNotStudentError) {
+          setError("notStudent");
+          return;
+        }
         setSaving(false);
-        setFailed(true);
+        setError("server");
       });
   };
 
@@ -123,12 +138,9 @@ export function StudentConsent() {
           동의하고 계속하기
         </PrimaryButton>
       </div>
-      {failed && (
+      {error && (
         <div className="pointer-events-none fixed inset-x-[18px] bottom-[104px] z-40 md:inset-x-auto md:bottom-auto md:right-8 md:top-8 md:w-[380px]">
-          <StatusBanner
-            variant="error"
-            message="서버와 연결이 원활하지 않습니다."
-          />
+          <StatusBanner variant="error" message={ERROR_MESSAGES[error]} />
         </div>
       )}
     </main>
