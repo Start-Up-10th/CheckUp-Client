@@ -27,11 +27,20 @@ describe("fetchCurrentMember", () => {
   });
 
   it.each(["STUDENT", "ADMIN"] as const)("%s 회원을 돌려준다", async (role) => {
-    mockFetch(200, { name: "김도현", role });
+    mockFetch(200, { name: "김도현", role, consented: true });
 
     await expect(fetchCurrentMember()).resolves.toEqual({
       name: "김도현",
       role,
+      consented: true,
+    });
+  });
+
+  it("동의 여부가 없거나 true가 아니면 false로 본다", async () => {
+    mockFetch(200, { name: "김도현", role: "STUDENT" });
+
+    await expect(fetchCurrentMember()).resolves.toMatchObject({
+      consented: false,
     });
   });
 
