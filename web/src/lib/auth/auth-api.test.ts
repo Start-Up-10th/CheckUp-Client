@@ -1,4 +1,4 @@
-import { fetchCurrentMember } from "./auth-api";
+import { fetchCurrentMember, logout } from "./auth-api";
 
 function mockFetch(status: number, body?: unknown) {
   const fetchMock = vi.fn().mockResolvedValue(
@@ -27,11 +27,20 @@ describe("fetchCurrentMember", () => {
   });
 
   it.each(["STUDENT", "ADMIN"] as const)("%s 회원을 돌려준다", async (role) => {
-    mockFetch(200, { name: "김도현", role });
+    mockFetch(200, { name: "김도현", role, consented: true });
 
     await expect(fetchCurrentMember()).resolves.toEqual({
       name: "김도현",
       role,
+      consented: true,
+    });
+  });
+
+  it("동의 여부가 없거나 true가 아니면 false로 본다", async () => {
+    mockFetch(200, { name: "김도현", role: "STUDENT" });
+
+    await expect(fetchCurrentMember()).resolves.toMatchObject({
+      consented: false,
     });
   });
 
@@ -51,5 +60,24 @@ describe("fetchCurrentMember", () => {
     mockFetch(200, { name: "김도현", role: "TEACHER" });
 
     await expect(fetchCurrentMember()).rejects.toThrow("unexpected response");
+  });
+});
+
+describe("logout", () => {
+  it("세션 쿠키와 함께 POST /api/v1/auth/logout을 부른다", async () => {
+    const fetchMock = mockFetch(204);
+
+    await logout();
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/v1/auth/logout");
+    expect(init.method).toBe("POST");
+    expect(init.credentials).toBe("include");
+  });
+
+  it("서버 오류는 오류로 올린다", async () => {
+    mockFetch(500);
+
+    await expect(logout()).rejects.toThrow("authLogout: 500");
   });
 });

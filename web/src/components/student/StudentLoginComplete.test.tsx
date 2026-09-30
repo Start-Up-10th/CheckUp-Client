@@ -70,10 +70,16 @@ describe("StudentLoginComplete", () => {
     expect(window.sessionStorage.getItem(QR_RETURN_URL_KEY)).toBeNull();
   });
 
-  it("그 밖의 학생은 개인정보 동의로", async () => {
-    mockMe(200, { name: "김도현", role: "STUDENT" });
+  it("아직 동의하지 않은 학생은 개인정보 동의로", async () => {
+    mockMe(200, { name: "김도현", role: "STUDENT", consented: false });
     render(<StudentLoginComplete />);
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/consent"));
+  });
+
+  it("이미 동의한 학생은 학생 홈으로", async () => {
+    mockMe(200, { name: "김도현", role: "STUDENT", consented: true });
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/main"));
   });
 
   it("로그인이 안 됐으면 저장한 QR 주소를 남겨 둔다(다시 로그인할 때 쓴다)", async () => {
