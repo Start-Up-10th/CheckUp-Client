@@ -66,4 +66,22 @@ describe("StudentConsent", () => {
       screen.getByRole("button", { name: "동의하고 계속하기" }),
     ).toBeEnabled();
   });
+
+  it("학생이 아닌 계정(403)이면 학생 전용 문구를 보여 주고 다시 누를 수 없다", async () => {
+    mockFetch(403);
+    render(<StudentConsent />);
+
+    agreeAll();
+
+    expect(
+      await screen.findByText("학생 계정만 이용할 수 있어요."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("서버와 연결이 원활하지 않습니다."),
+    ).not.toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "동의하고 계속하기" }),
+    ).toBeDisabled();
+  });
 });
