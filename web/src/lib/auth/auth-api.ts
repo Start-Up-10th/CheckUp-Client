@@ -38,3 +38,15 @@ export async function fetchCurrentMember(): Promise<CurrentMember | null> {
     consented: body.consented === true,
   };
 }
+
+/**
+ * `POST /api/v1/auth/logout`으로 서버 세션을 끊는다(REQ-AUTH-005). 서버는 세션을 무효화하고 `SESSION`
+ * 쿠키를 지운 뒤 204를 준다. 이미 로그아웃된 세션도 성공으로 본다. 그 밖의 응답·네트워크 오류는 던진다.
+ */
+export async function logout(): Promise<void> {
+  const res = await fetch("/api/v1/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error(`authLogout: ${res.status}`);
+}
