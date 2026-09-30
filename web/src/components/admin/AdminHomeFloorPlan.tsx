@@ -83,7 +83,7 @@ export function AdminHomeFloorPlan({
   }
 
   return (
-    <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6">
+    <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
       <ToastLayer toast={toast} />
 
       {/* 헤더: 제목 좌측 + 층 탭 우측 */}

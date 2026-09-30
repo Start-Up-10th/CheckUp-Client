@@ -14,7 +14,7 @@ type FloorTabsProps = {
 export function FloorTabs({ selected, onSelect, className }: FloorTabsProps) {
   return (
     <div
-      className={`flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 md:gap-2 md:rounded-none md:bg-transparent md:p-0 ${className ?? ""}`}
+      className={`flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 md:gap-[6px] md:rounded-none md:bg-transparent md:p-0 xl:gap-2 ${className ?? ""}`}
     >
       {FLOORS.map((floor) => {
         const active = floor === selected;
@@ -24,7 +24,7 @@ export function FloorTabs({ selected, onSelect, className }: FloorTabsProps) {
             type="button"
             aria-pressed={active}
             onClick={() => onSelect(floor)}
-            className={`rounded-lg px-3 py-[7px] text-xs leading-[14px] md:rounded-control md:border md:px-[22px] md:py-[9px] md:text-sm md:font-medium md:leading-[17px] ${
+            className={`rounded-lg px-3 py-[7px] text-xs leading-[14px] md:rounded-control md:border md:px-4 md:py-[9px] md:text-sm md:font-medium md:leading-[17px] xl:px-[22px] xl:py-[10px] ${
               active
                 ? "bg-admin-attendance-bg font-bold text-admin-attendance-text md:border-admin-attendance-border"
                 : "bg-admin-surface font-normal text-admin-ghost-text md:border-admin-border md:text-admin-text"
