@@ -2,6 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { StatusBanner } from "@/components/admin/StatusBanner";
+import {
+  ConsentLoginRequiredError,
+  submitConsent,
+} from "@/lib/student/consent-api";
 import { ConsentAllRow } from "./ConsentAllRow";
 import { ConsentItem } from "./ConsentItem";
 import { PrimaryButton } from "./PrimaryButton";
@@ -41,7 +46,10 @@ const CONSENT_ITEMS: {
  * 학생 개인정보 동의 화면(REQ-AUTH-004). 핸드폰(Figma 605:5)은 버튼을 하단에 두고,
  * 노트북(md 이상, Figma 사용자-노트북 605:52)은 가운데 520px 덩어리 안에 버튼까지 넣는다.
  * 처음에는 모두 꺼진 상태로 시작한다(사용자 결정 — Figma의 필수 2개 선택은 예시 상태).
- * 서버가 아직 없어 동의 결과는 저장하지 않고 얼굴 등록(/face)으로만 이동한다.
+ * `동의하고 계속하기`를 누르면 서버에 동의를 저장하고(`POST /api/v1/consent`) 얼굴 등록(/face)으로 간다.
+ * 로그인이 안 돼 있으면(401) 로그인 화면으로 보낸다. 저장이 실패하면 Figma에 저장 실패 문구가 없어
+ * 학생 홈 서버 오류와 같은 `서버와 연결이 원활하지 않습니다.`를 같은 자리(핸드폰 아래, 노트북 오른쪽 위)에
+ * 보여 주고, 다시 누를 수 있게 한다. 저장하는 동안에는 버튼을 막아 두 번 보내지 않는다.
  */
 export function StudentConsent() {
   const router = useRouter();
@@ -50,6 +58,8 @@ export function StudentConsent() {
     face: false,
     notice: false,
   });
+  const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const allChecked = CONSENT_ITEMS.every((item) => checked[item.key]);
   const canContinue = CONSENT_ITEMS.every(
@@ -63,6 +73,25 @@ export function StudentConsent() {
 
   const toggleItem = (key: ConsentKey) => {
     setChecked((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const agree = () => {
+    setSaving(true);
+    setFailed(false);
+    submitConsent({
+      privacy: checked.privacy,
+      face: checked.face,
+      noticeAlarm: checked.notice,
+    })
+      .then(() => router.push("/face"))
+      .catch((error: unknown) => {
+        if (error instanceof ConsentLoginRequiredError) {
+          router.push("/login");
+          return;
+        }
+        setSaving(false);
+        setFailed(true);
+      });
   };
 
   return (
@@ -90,13 +119,18 @@ export function StudentConsent() {
             ))}
           </div>
         </div>
-        <PrimaryButton
-          disabled={!canContinue}
-          onClick={() => router.push("/face")}
-        >
+        <PrimaryButton disabled={!canContinue || saving} onClick={agree}>
           동의하고 계속하기
         </PrimaryButton>
       </div>
+      {failed && (
+        <div className="pointer-events-none fixed inset-x-[18px] bottom-[104px] z-40 md:inset-x-auto md:bottom-auto md:right-8 md:top-8 md:w-[380px]">
+          <StatusBanner
+            variant="error"
+            message="서버와 연결이 원활하지 않습니다."
+          />
+        </div>
+      )}
     </main>
   );
 }
