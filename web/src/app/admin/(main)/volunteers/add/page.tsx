@@ -1,5 +1,5 @@
-import { AdminVolunteerAdd } from "@/components/admin/AdminVolunteerAdd";
+import { AdminVolunteerRoster } from "@/components/admin/AdminVolunteerRoster";
 
 export default function AdminVolunteersAddPage() {
-  return <AdminVolunteerAdd />;
+  return <AdminVolunteerRoster />;
 }
