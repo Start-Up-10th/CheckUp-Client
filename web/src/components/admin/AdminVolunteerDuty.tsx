@@ -67,9 +67,11 @@ export function AdminVolunteerDuty({
         {/* 폰·패드는 제목 옆, 컴퓨터는 아래 줄 오른쪽(Figma 06). 링크 하나를 격자 위치만 바꿔 쓴다. */}
         <Link
           href={rosterHref}
-          className="col-start-2 row-start-1 rounded-[10px] bg-admin-accent-bg px-3.5 py-2 text-[13px] font-bold leading-4 text-admin-accent-text xl:row-start-2 xl:px-[18px] xl:py-[9px]"
+          aria-label="+ 명단에서 지정"
+          className="col-start-2 row-start-1 rounded-[10px] bg-admin-accent-bg px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-accent-text md:text-[13px] md:leading-4 xl:row-start-2 xl:px-[18px] xl:py-[9px]"
         >
-          + 명단에서 지정
+          <span className="md:hidden">+ 지정</span>
+          <span className="hidden md:inline">+ 명단에서 지정</span>
         </Link>
         <div className="hidden items-center gap-2 xl:col-start-1 xl:row-start-2 xl:flex">
           <h2 className="text-[15px] font-bold leading-[18px] text-admin-text">
@@ -81,8 +83,8 @@ export function AdminVolunteerDuty({
         </div>
       </div>
 
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-3.5 overflow-y-auto rounded-[16px] bg-admin-surface p-3.5 md:rounded-[18px] md:p-5 xl:gap-0 xl:rounded-panel xl:p-[22px]">
-        <p className="text-xs leading-[14px] text-admin-textSecondary xl:hidden">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-y-auto md:gap-3.5 rounded-[16px] bg-admin-surface p-3.5 pt-4 md:rounded-[18px] md:p-5 xl:gap-0 xl:rounded-panel xl:p-[22px]">
+        <p className="text-[11px] leading-[13px] text-admin-textSecondary md:text-xs md:leading-[14px] xl:hidden">
           {dayLabel} 당일 봉사자 · {today.length}명
         </p>
         <div className="flex flex-col gap-2">
