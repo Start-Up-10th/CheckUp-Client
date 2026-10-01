@@ -20,9 +20,12 @@ import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
  */
 export function AdminVolunteerDuty({
   listLoadFailed = false,
+  rosterHref = "/admin/volunteers/add",
 }: {
   /** 당일 봉사자 목록 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
   listLoadFailed?: boolean;
+  /** `+ 명단에서 지정`이 가는 봉사자 명단 편집 주소. 로그인 없이 보는 확인용 페이지에서만 바꾼다. */
+  rosterHref?: string;
 }) {
   const [roster, setRoster] = useVolunteerRoster();
   const { toast, showToast } = useToast();
@@ -70,7 +73,7 @@ export function AdminVolunteerDuty({
           </p>
         </div>
         <Link
-          href="/admin/volunteers/add"
+          href={rosterHref}
           className="rounded-[10px] bg-admin-accent-bg px-[18px] py-[9px] text-[13px] font-bold leading-4 text-admin-accent-text"
         >
           + 명단에서 지정

@@ -42,6 +42,16 @@ describe("AdminVolunteerDuty", () => {
     ).toHaveAttribute("href", "/admin/volunteers/add");
   });
 
+  it("명단에서 지정 링크 주소를 바꿀 수 있다", () => {
+    render(
+      <AdminVolunteerDuty rosterHref="/admin/state-demo/volunteer-roster" />,
+    );
+
+    expect(
+      screen.getByRole("link", { name: "+ 명단에서 지정" }),
+    ).toHaveAttribute("href", "/admin/state-demo/volunteer-roster");
+  });
+
   it("완료하면 목록에서 빠지고 횟수를 1 줄이며 완료 문구를 보여 준다", () => {
     render(<AdminVolunteerDuty />);
     expect(countOf("2405")).toBe(3);
