@@ -26,7 +26,7 @@ export const MOCK_STUDENT: StudentProfile = {
   floor: 4,
   roomNumber: "412",
   hasUnreadNotification: true,
-  // 관리자 봉사 mock(mock-volunteers.ts)의 김도현 누적 횟수와 같게 둔다.
+  // 활동 내역 mock(mock-volunteer.ts)의 합계와 같게 둔다. 관리자 봉사 명단 mock과는 값이 연결돼 있지 않다.
   volunteerCount: 5,
   faceRegistered: true,
 };
