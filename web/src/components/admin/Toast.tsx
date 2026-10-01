@@ -36,6 +36,7 @@ export function useToast() {
  * - 패드(md): 콘텐츠 영역(레일 96px 오른쪽) 상단 28px · 우측 24px, 최대 360px (Figma 783:1221)
  * - 컴퓨터(xl): 하단 28px, 사이드바(300px) 오른쪽 콘텐츠 영역 중앙, 최대 500px
  * `placement="top-right"`는 컴퓨터(xl)에서만 오른쪽 위(상단 28px · 우측 32px, 화면 본문 여백과 같음)로 옮긴다.
+ * `"below-tabs"`는 같은 오른쪽이되 헤더의 층 탭(하단 83px) 바로 아래 8px(91px)에 둬 탭을 가리지 않는다.
  * 폰·패드는 위 규칙을 그대로 따른다. `variantBorder`는 봉사 화면(Figma 06·07)의 종류별 테두리다.
  * 모달(z-40) 위에 표시되도록 z-50 유지.
  * 전체화면 카메라(얼굴 인식 전체화면) 중 토스트는 Fullscreen API 제약으로 별도 처리가 필요하며 현재 미구현.
@@ -43,6 +44,8 @@ export function useToast() {
 const DESKTOP_PLACEMENT = {
   default: "xl:top-auto xl:bottom-7 xl:left-[300px] xl:justify-center xl:pr-0",
   "top-right": "xl:top-7 xl:bottom-auto xl:left-[300px] xl:justify-end xl:pr-8",
+  "below-tabs":
+    "xl:top-[91px] xl:bottom-auto xl:left-[300px] xl:justify-end xl:pr-8",
 } as const;
 
 export function ToastLayer({

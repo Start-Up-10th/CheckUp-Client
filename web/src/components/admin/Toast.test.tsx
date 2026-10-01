@@ -27,6 +27,14 @@ describe("ToastLayer 위치", () => {
     );
   });
 
+  it("below-tabs는 컴퓨터에서 층 탭 아래(91px) 오른쪽이다", () => {
+    render(<ToastLayer toast={toast} placement="below-tabs" />);
+
+    expect(layerOf()).toHaveClass("xl:top-[91px]", "xl:justify-end", "xl:pr-8");
+    expect(layerOf()).not.toHaveClass("xl:top-7");
+    expect(layerOf()).not.toHaveClass("xl:bottom-7");
+  });
+
   it("variantBorder를 배너에 전달한다", () => {
     render(<ToastLayer toast={toast} variantBorder />);
 
