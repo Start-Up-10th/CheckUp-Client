@@ -84,7 +84,7 @@ export function AdminVolunteerRoster({
         <FloorTabs selected={floor} onSelect={setFloor} />
       </div>
 
-      <label className="flex h-[46px] w-full items-center gap-2.5 rounded-control border border-admin-border bg-admin-rowSurface px-4 md:w-[420px]">
+      <label className="flex h-[46px] w-full items-center gap-2.5 rounded-control border border-admin-border bg-admin-rowSurface px-4 transition-colors focus-within:border-admin-accent-bg focus-within:bg-admin-surface focus-within:ring-2 focus-within:ring-admin-accent-bg/40 md:w-[420px]">
         {/* eslint-disable-next-line @next/next/no-img-element -- Figma 검색 아이콘 원본 SVG */}
         <img
           src="/icons/admin/search.svg"
