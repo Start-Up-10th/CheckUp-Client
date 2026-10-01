@@ -33,6 +33,7 @@ npm run format:check
 npm run test    # Vitest + Testing Library
 npm run build
 npm run check   # 위 다섯을 한 번에
+npm run dev:preview  # 개발 전용: 로그인·서버 없이 관리자 화면을 폭별로 확인(프로덕션에서는 무시됨)
 ```
 
 컴포넌트 테스트는 Vitest로 실행한다. 브라우저(E2E) 테스트 도구는 카메라·화면 동선 검증을 시작할 때 정해 등록한다.
