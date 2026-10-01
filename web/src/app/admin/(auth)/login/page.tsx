@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { AdminLoginRedirect } from "@/components/admin/AdminLoginRedirect";
 
 /**
  * REQ-AUTH-001: 관리자 DataGSM OAuth 로그인.
@@ -16,6 +17,8 @@ import Image from "next/image";
 export default function AdminLoginPage() {
   return (
     <>
+      <AdminLoginRedirect />
+
       {/* CHECKUP 로고 */}
       <div className="absolute left-1/2 top-[53.2%] -translate-x-1/2 md:top-[50.78%]">
         <Image

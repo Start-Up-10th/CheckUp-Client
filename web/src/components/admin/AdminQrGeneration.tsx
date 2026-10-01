@@ -6,10 +6,12 @@ import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel"
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
 import { StatusBanner } from "@/components/admin/StatusBanner";
 import { formatCountdown, type QrPurpose } from "@/lib/admin/mock-qr-session";
+import { redirectToAdminLogin } from "@/lib/admin/admin-session";
 import {
   createQrSession,
   heartbeatQrSession,
   closeQrSession,
+  AdminUnauthorizedError,
   QrSessionNotFoundError,
 } from "@/lib/admin/qr-api";
 
@@ -96,7 +98,13 @@ export function AdminQrGeneration() {
             );
           } catch (err) {
             if (cancelRef.current) return;
-            if (err instanceof QrSessionNotFoundError) {
+            if (err instanceof AdminUnauthorizedError) {
+              // 관리자 세션이 끊기면 만료된 QR을 남기지 않고 로그인으로 보낸다.
+              clearHeartbeat();
+              sessionIdRef.current = null;
+              setSession(null);
+              redirectToAdminLogin();
+            } else if (err instanceof QrSessionNotFoundError) {
               // 서버 세션이 사라진 경우 새 세션을 생성한다.
               sessionIdRef.current = null;
               setSession(null);
@@ -108,8 +116,11 @@ export function AdminQrGeneration() {
             }
           }
         }, HEARTBEAT_INTERVAL_MS);
-      } catch {
-        if (!cancelRef.current) {
+      } catch (err) {
+        if (cancelRef.current) return;
+        if (err instanceof AdminUnauthorizedError) {
+          redirectToAdminLogin();
+        } else {
           setError("QR 자동 생성에 실패했습니다. 새로고침해 주세요.");
         }
       }
