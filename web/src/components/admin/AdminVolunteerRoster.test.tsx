@@ -31,14 +31,12 @@ describe("AdminVolunteerRoster", () => {
   it("행에 학번과 최근 활동을 보여 주고 활동이 없으면 -를 쓴다", () => {
     render(<AdminVolunteerRoster />);
 
-    const row = screen.getByText("김도현").closest("div")
-      ?.parentElement as HTMLElement;
+    const row = screen.getByRole("group", { name: "김도현" });
     expect(within(row).getByText("2405")).toBeInTheDocument();
     expect(within(row).getByText("최근 활동 10/01")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "3층" }));
-    const none = screen.getByText("서지안").closest("div")
-      ?.parentElement as HTMLElement;
+    const none = screen.getByRole("group", { name: "서지안" });
     expect(within(none).getByText("최근 활동 -")).toBeInTheDocument();
   });
 
@@ -101,8 +99,7 @@ describe("AdminVolunteerRoster", () => {
         screen.getByRole("button", { name: "박서연 봉사 1회 추가" }),
       );
 
-      const row = screen.getByText("박서연").closest("div")
-        ?.parentElement as HTMLElement;
+      const row = screen.getByRole("group", { name: "박서연" });
       expect(within(row).getByText("2회")).toBeInTheDocument();
       expect(screen.getByRole("status")).toHaveTextContent(
         "봉사 횟수를 변경했습니다.",
@@ -116,8 +113,7 @@ describe("AdminVolunteerRoster", () => {
         screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
       );
 
-      const row = screen.getByText("박서연").closest("div")
-        ?.parentElement as HTMLElement;
+      const row = screen.getByRole("group", { name: "박서연" });
       expect(within(row).getByText("0회")).toBeInTheDocument();
       expect(screen.getByRole("status")).toHaveTextContent(
         "봉사 횟수를 변경했습니다.",
@@ -160,8 +156,7 @@ describe("AdminVolunteerRoster", () => {
         screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
       );
 
-      const row = screen.getByText("박서연").closest("div")
-        ?.parentElement as HTMLElement;
+      const row = screen.getByRole("group", { name: "박서연" });
       expect(within(row).getByText("1회")).toBeInTheDocument();
     });
 

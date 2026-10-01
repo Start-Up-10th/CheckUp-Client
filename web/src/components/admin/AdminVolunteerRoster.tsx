@@ -38,6 +38,9 @@ export function AdminVolunteerRoster({
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
   const { toast, showToast } = useToast();
+  const designatedCount = roster.filter(
+    (student) => student.duty !== "none",
+  ).length;
 
   const groups = useMemo(
     () => groupByRoom(roster, { floor, query }),
@@ -72,19 +75,19 @@ export function AdminVolunteerRoster({
       <ToastLayer toast={toast} placement="below-tabs" variantBorder />
 
       <div className="flex w-full items-center justify-between md:items-end">
-        <div className="flex flex-col gap-0.5 md:gap-1">
+        <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
           <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:tracking-[1.8px] xl:text-[11px] xl:leading-[15px] xl:tracking-[1.98px]">
             <span className="md:hidden">ADMIN</span>
             <span className="hidden md:inline">VOLUNTEER</span>
           </p>
-          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-normal md:tracking-[-0.78px] xl:text-[30px] xl:leading-[36px] xl:tracking-[-0.9px]">
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-[31px] md:tracking-[-0.78px] xl:text-[30px] xl:leading-[36px] xl:tracking-[-0.9px]">
             봉사자 명단 편집
           </h1>
         </div>
         <FloorTabs selected={floor} onSelect={setFloor} />
       </div>
 
-      <label className="flex h-[46px] w-full items-center gap-2.5 rounded-control border border-admin-border bg-admin-rowSurface px-4 transition-colors focus-within:border-admin-accent-bg focus-within:bg-admin-surface focus-within:ring-2 focus-within:ring-admin-accent-bg/40 md:w-[420px]">
+      <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-4 transition-colors focus-within:border-admin-accent-bg focus-within:bg-admin-surface focus-within:ring-2 focus-within:ring-admin-accent-bg/40 xl:h-[46px] xl:w-[420px] xl:gap-2.5">
         {/* eslint-disable-next-line @next/next/no-img-element -- Figma 검색 아이콘 원본 SVG */}
         <img
           src="/icons/admin/search.svg"
@@ -104,7 +107,10 @@ export function AdminVolunteerRoster({
         />
       </label>
 
-      <div className="flex min-h-0 w-full flex-1 flex-col overflow-y-auto rounded-[16px] bg-admin-surface p-3.5 md:rounded-[18px] md:p-[22px] xl:rounded-panel">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-3.5 overflow-y-auto xl:gap-0 rounded-[16px] bg-admin-surface p-3.5 md:rounded-[18px] md:p-5 xl:rounded-panel xl:p-[22px]">
+        <p className="text-xs leading-[14px] text-admin-textSecondary xl:hidden">
+          전교생 {roster.length}명 · 당일 지정 {designatedCount}명
+        </p>
         {listLoadFailed ? (
           <AdminContentState variant="error" onRetry={() => {}} />
         ) : groups.length === 0 ? (
@@ -112,18 +118,18 @@ export function AdminVolunteerRoster({
             검색 결과가 없습니다.
           </p>
         ) : (
-          <div className="flex flex-col gap-[22px]">
+          <div className="flex flex-col gap-[18px] xl:gap-[22px]">
             {groups.map((group) => (
               <section
                 key={group.roomNumber}
                 aria-label={`${group.roomNumber}호`}
                 className="flex flex-col gap-2"
               >
-                <div className="flex items-center gap-2 pl-1">
-                  <h2 className="text-[15px] font-bold leading-[18px] text-admin-text">
+                <div className="flex items-center gap-1.5 pl-0.5 xl:gap-2 xl:pl-1">
+                  <h2 className="text-sm font-bold leading-[17px] text-admin-text xl:text-[15px] xl:leading-[18px]">
                     {group.roomNumber}호
                   </h2>
-                  <p className="font-mono text-xs leading-4 text-admin-textMuted">
+                  <p className="font-mono text-[11px] leading-[15px] text-admin-textMuted xl:text-xs xl:leading-4">
                     {group.students.length}명
                   </p>
                 </div>
