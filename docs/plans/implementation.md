@@ -116,6 +116,7 @@ CI/CD 구성·정적 검사는 서비스 개발 전에 준비할 수 있고, 테
 | 2026-09-26 | 사용자가 로컬 화면 확인 중 봉사 활동 내역이 Figma·기능명세서에는 있는데 화면에 없다고 지적 → 인터뷰 `자기 봉사 횟수만 확인`을 내역 제외로 해석했던 REQ-COM-003을 본인 활동 내역 포함으로 복구(#42). 활동명은 Figma대로 표시하기로 해 REQ-COM-002에 적립 시 활동명 기록 추가(입력 UI는 관리자 담당). REQ-SCOPE-003·DEC-014·SRC-CORRECTIONS·ACC-COM-002/003 갱신 | `npm run harness:check`, 화면은 `feature/user-volunteer-history` |
 | 2026-09-26 | #43 머지 후 팀원(관리자 담당)이 "Figma 활동명은 예시, 실제는 날짜만"이라고 정정 → REQ-COM-002를 날짜만 기록으로 되돌리고 REQ-COM-003 내역을 `날짜(요일) · 횟수`로 변경(#50). 기능명세서 활동명 문구는 팀원이 수정. 학생 내역 한 줄은 날짜를 활동명 자리로 올린 한 줄(높이 60px 유지, Figma에 없어 정한 값) | `npm run harness:check`, `web/` `npm run check` |
 | 2026-09-29 | 학생 로그인을 서버 DataGSM 로그인에 연결(#73): 버튼은 같은 출처 `/api/v1/auth/login`으로 이동(state·PKCE는 서버), 로그인 완료 페이지 `/login/complete`가 `/api/v1/auth/me`로 확인해 관리자 `/admin`, QR 링크로 왔던 학생은 sessionStorage의 `/qr#t=` 복귀, 그 밖의 학생은 `/consent`, 실패는 `/login?error=1`. 서버 콜백이 아직 JSON을 반환해(CheckUp-server#26·#29) 로그인 후 웹 복귀는 서버 작업 뒤 E2E 확인 | `web/` `npm run check`, 로컬 서버로 `/api/v1/auth/login` 302(state·PKCE 포함)와 세션 없는 `/login/complete` → `/login?error=1` 확인 |
+| 2026-10-01 | 관리자 권한을 교직원 계정 없이 기존 계정에 부여하는 방식을 논의하다 사용자가 "서버에 맞춰줘"로 결정. 서버 `AuthService.resolveRole`을 읽어 자치위원(학생 `DORMITORY_MANAGER`)과 기숙사부 교직원(사감)을 관리자로 판정함을 확인하고 REQ-AUTH-002·003, ACC-AUTH-003, `docs/plans/auth.md`, 출처 지도(SRC-SERVER-ROLE)를 서버 기준으로 맞춤(#85). 코드 변경 없음(프론트는 `/auth/me`의 `role`만 봄). 교직원 소속 필드는 DataGSM 제공 명세에 없어 백엔드가 실제 응답으로 확인해야 함. |
 
 현재 변경은 계획 문서뿐이며 제품 API·웹·AI·배포 구현은 수행하지 않았다.
 
