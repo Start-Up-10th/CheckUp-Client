@@ -3,12 +3,26 @@
 import { useMemo, useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { FloorTabs } from "@/components/admin/FloorTabs";
+import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerRosterRow } from "@/components/admin/VolunteerRosterRow";
 import type { Floor } from "@/lib/admin/mock-floor-data";
-import { groupByRoom } from "@/lib/admin/volunteer-roster";
+import { operatingDayLabel } from "@/lib/admin/operating-day";
+import {
+  adjustCount,
+  designate,
+  groupByRoom,
+  type RosterChange,
+} from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
 
 const DEFAULT_FLOOR: Floor = 4;
+
+/** 지정이 막힌 이유별 안내(Figma 07 state messages, 봉사 없음·완료는 하네스 REQ-COM-006 문구). */
+const DESIGNATE_REFUSAL: Partial<Record<RosterChange["result"], string>> = {
+  "already-designated": "이미 당일 봉사자로 지정된 학생입니다.",
+  "already-completed": "이미 봉사를 완료했습니다.",
+  "no-count": "봉사가 없습니다.",
+};
 
 /**
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.
@@ -20,17 +34,43 @@ export function AdminVolunteerRoster({
   /** 학생 명단 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
   listLoadFailed?: boolean;
 }) {
-  const [roster] = useVolunteerRoster();
+  const [roster, setRoster] = useVolunteerRoster();
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
+  const { toast, showToast } = useToast();
 
   const groups = useMemo(
     () => groupByRoom(roster, { floor, query }),
     [roster, floor, query],
   );
 
+  function handleAdjustCount(studentId: string, delta: 1 | -1) {
+    const change = adjustCount(
+      roster,
+      studentId,
+      delta,
+      operatingDayLabel(new Date()),
+    );
+    if (change.result !== "changed") return;
+    setRoster(change.students);
+    showToast({ variant: "success", message: "봉사 횟수를 변경했습니다." });
+  }
+
+  function handleDesignate(studentId: string) {
+    const change = designate(roster, studentId);
+    if (change.result === "changed") {
+      setRoster(change.students);
+      showToast({ variant: "success", message: "당일 봉사자로 지정했습니다." });
+      return;
+    }
+    const refusal = DESIGNATE_REFUSAL[change.result];
+    if (refusal) showToast({ variant: "neutral", message: refusal });
+  }
+
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
+      <ToastLayer toast={toast} />
+
       <div className="flex w-full items-center justify-between md:items-end">
         <div className="flex flex-col gap-0.5 md:gap-1">
           <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:tracking-[1.8px] xl:text-[11px] xl:leading-[15px] xl:tracking-[1.98px]">
@@ -91,6 +131,8 @@ export function AdminVolunteerRoster({
                   <VolunteerRosterRow
                     key={student.studentId}
                     student={student}
+                    onAdjustCount={handleAdjustCount}
+                    onDesignate={handleDesignate}
                   />
                 ))}
               </section>

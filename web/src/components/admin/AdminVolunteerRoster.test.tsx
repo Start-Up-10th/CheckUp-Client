@@ -92,4 +92,116 @@ describe("AdminVolunteerRoster", () => {
 
     expect(screen.getByRole("alert")).toBeInTheDocument();
   });
+
+  describe("횟수 가감", () => {
+    it("+를 누르면 횟수가 늘고 성공 문구를 보여 준다", () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 봉사 1회 추가" }),
+      );
+
+      const row = screen.getByText("박서연").closest("div")
+        ?.parentElement as HTMLElement;
+      expect(within(row).getByText("2회")).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "봉사 횟수를 변경했습니다.",
+      );
+    });
+
+    it("−를 누르면 횟수가 줄고 같은 성공 문구를 보여 준다", () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
+      );
+
+      const row = screen.getByText("박서연").closest("div")
+        ?.parentElement as HTMLElement;
+      expect(within(row).getByText("0회")).toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "봉사 횟수를 변경했습니다.",
+      );
+    });
+
+    it("1회에서 −로 0회가 되면 −가 비활성화된다", () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
+      );
+
+      expect(
+        screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
+      ).toBeDisabled();
+    });
+  });
+
+  describe("당일 봉사자 지정", () => {
+    it("횟수가 있는 학생을 지정하면 지정됨으로 바뀌고 성공 문구를 보여 준다", () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      );
+
+      expect(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정됨" }),
+      ).toHaveTextContent("지정됨");
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "당일 봉사자로 지정했습니다.",
+      );
+    });
+
+    it("지정해도 횟수는 그대로다", () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      );
+
+      const row = screen.getByText("박서연").closest("div")
+        ?.parentElement as HTMLElement;
+      expect(within(row).getByText("1회")).toBeInTheDocument();
+    });
+
+    it("횟수가 0인 학생은 지정하지 않고 봉사가 없다고 알린다", () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "이지후 당일 봉사자로 지정" }),
+      );
+
+      expect(screen.getByRole("status")).toHaveTextContent("봉사가 없습니다.");
+      expect(
+        screen.getByRole("button", { name: "이지후 당일 봉사자로 지정" }),
+      ).toHaveTextContent("봉사자 지정");
+    });
+
+    it("이미 지정된 학생을 누르면 이미 지정됐다고 알린다", () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "김도현 당일 봉사자로 지정됨" }),
+      );
+
+      expect(screen.getByRole("status")).toHaveTextContent(
+        "이미 당일 봉사자로 지정된 학생입니다.",
+      );
+    });
+
+    it("지정한 학생은 다른 화면에서 같은 명단으로 보인다", () => {
+      const { unmount } = render(<AdminVolunteerRoster />);
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      );
+      unmount();
+
+      render(<AdminVolunteerRoster />);
+
+      expect(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정됨" }),
+      ).toBeInTheDocument();
+    });
+  });
 });
