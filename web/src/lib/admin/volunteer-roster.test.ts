@@ -7,6 +7,7 @@ import {
   designatedToday,
   floorOf,
   groupByRoom,
+  lastActivityKorean,
   matchesQuery,
 } from "./volunteer-roster";
 
@@ -246,5 +247,20 @@ describe("completeDuty", () => {
     expect(completeDuty([student({})], "2405", "10/02").result).toBe(
       "not-designated",
     );
+  });
+});
+
+describe("lastActivityKorean", () => {
+  it("MM/DD를 N월 D일로 바꾸고 앞의 0을 뗀다", () => {
+    expect(lastActivityKorean("10/01")).toBe("10월 1일");
+    expect(lastActivityKorean("09/28")).toBe("9월 28일");
+  });
+
+  it("활동이 없으면 -다", () => {
+    expect(lastActivityKorean(undefined)).toBe("-");
+  });
+
+  it("모양이 다르면 그대로 돌려준다", () => {
+    expect(lastActivityKorean("어제")).toBe("어제");
   });
 });

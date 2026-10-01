@@ -190,3 +190,14 @@ export function completeDuty(
     };
   });
 }
+
+/**
+ * 패드 06(Figma 318:376)은 최근 활동을 `9월 12일`로 쓴다. 명단 편집(07)의 `MM/DD`를 그 모양으로 바꾸고,
+ * 활동이 없으면 `-`다(REQ-COM-002).
+ */
+export function lastActivityKorean(label: string | undefined): string {
+  if (!label) return "-";
+  const match = /^(\d{1,2})\/(\d{1,2})$/.exec(label);
+  if (!match) return label;
+  return `${Number(match[1])}월 ${Number(match[2])}일`;
+}

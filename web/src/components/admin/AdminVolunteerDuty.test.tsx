@@ -34,6 +34,13 @@ describe("AdminVolunteerDuty", () => {
     expect(screen.getByText("2401 · 412호")).toBeInTheDocument();
   });
 
+  it("패드용으로 행마다 최근 활동을 N월 D일로, 패널 안에는 요약 줄을 둔다", () => {
+    render(<AdminVolunteerDuty />);
+
+    expect(screen.getAllByText("10월 1일")).toHaveLength(2);
+    expect(screen.getByText("10/01 당일 봉사자 · 2명")).toBeInTheDocument();
+  });
+
   it("명단에서 지정 링크는 봉사자 명단 편집으로 간다", () => {
     render(<AdminVolunteerDuty />);
 

@@ -30,6 +30,7 @@ export function AdminVolunteerDuty({
   const [roster, setRoster] = useVolunteerRoster();
   const { toast, showToast } = useToast();
   const today = designatedToday(roster);
+  const dayLabel = operatingDayLabel(new Date());
 
   function handleComplete(studentId: string) {
     const change = completeDuty(
@@ -53,52 +54,57 @@ export function AdminVolunteerDuty({
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
       <ToastLayer toast={toast} placement="top-right" variantBorder />
 
-      <div className="flex flex-col gap-0.5 md:gap-1">
-        <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:tracking-[1.8px] xl:text-[11px] xl:leading-[15px] xl:tracking-[1.98px]">
-          <span className="md:hidden">ADMIN</span>
-          <span className="hidden md:inline">VOLUNTEER</span>
-        </p>
-        <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-normal md:tracking-[-0.78px] xl:text-[30px] xl:leading-[36px] xl:tracking-[-0.9px]">
-          봉사자 관리
-        </h1>
-      </div>
-
-      <div className="flex w-full items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 xl:gap-y-5">
+        <div className="flex flex-col gap-0.5 md:gap-1">
+          <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:tracking-[1.8px] xl:text-[11px] xl:leading-[15px] xl:tracking-[1.98px]">
+            <span className="md:hidden">ADMIN</span>
+            <span className="hidden md:inline">VOLUNTEER</span>
+          </p>
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-normal md:tracking-[-0.78px] xl:text-[30px] xl:leading-[36px] xl:tracking-[-0.9px]">
+            봉사자 관리
+          </h1>
+        </div>
+        {/* 폰·패드는 제목 옆, 컴퓨터는 아래 줄 오른쪽(Figma 06). 링크 하나를 격자 위치만 바꿔 쓴다. */}
+        <Link
+          href={rosterHref}
+          className="col-start-2 row-start-1 rounded-[10px] bg-admin-accent-bg px-3.5 py-2 text-[13px] font-bold leading-4 text-admin-accent-text xl:row-start-2 xl:px-[18px] xl:py-[9px]"
+        >
+          + 명단에서 지정
+        </Link>
+        <div className="hidden items-center gap-2 xl:col-start-1 xl:row-start-2 xl:flex">
           <h2 className="text-[15px] font-bold leading-[18px] text-admin-text">
-            {operatingDayLabel(new Date())} 당일 봉사자
+            {dayLabel} 당일 봉사자
           </h2>
           <p className="font-mono text-xs leading-4 text-admin-textMuted">
             {today.length}명
           </p>
         </div>
-        <Link
-          href={rosterHref}
-          className="rounded-[10px] bg-admin-accent-bg px-[18px] py-[9px] text-[13px] font-bold leading-4 text-admin-accent-text"
-        >
-          + 명단에서 지정
-        </Link>
       </div>
 
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto rounded-[16px] bg-admin-surface p-3.5 md:rounded-[18px] md:p-[22px] xl:rounded-panel">
-        {listLoadFailed ? (
-          <AdminContentState variant="error" onRetry={() => {}} />
-        ) : today.length === 0 ? (
-          <StatusBanner
-            variant="neutral"
-            variantBorder
-            message="오늘 지정된 봉사자가 없습니다. 봉사자 명단에서 지정해 주세요."
-          />
-        ) : (
-          today.map((student) => (
-            <VolunteerDutyRow
-              key={student.studentId}
-              student={student}
-              onComplete={handleComplete}
-              onCancel={handleCancel}
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-3.5 overflow-y-auto rounded-[16px] bg-admin-surface p-3.5 md:rounded-[18px] md:p-5 xl:gap-0 xl:rounded-panel xl:p-[22px]">
+        <p className="text-xs leading-[14px] text-admin-textSecondary xl:hidden">
+          {dayLabel} 당일 봉사자 · {today.length}명
+        </p>
+        <div className="flex flex-col gap-2">
+          {listLoadFailed ? (
+            <AdminContentState variant="error" onRetry={() => {}} />
+          ) : today.length === 0 ? (
+            <StatusBanner
+              variant="neutral"
+              variantBorder
+              message="오늘 지정된 봉사자가 없습니다. 봉사자 명단에서 지정해 주세요."
             />
-          ))
-        )}
+          ) : (
+            today.map((student) => (
+              <VolunteerDutyRow
+                key={student.studentId}
+                student={student}
+                onComplete={handleComplete}
+                onCancel={handleCancel}
+              />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
