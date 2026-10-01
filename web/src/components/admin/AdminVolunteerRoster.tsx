@@ -74,7 +74,7 @@ export function AdminVolunteerRoster({
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
       <ToastLayer toast={toast} placement="below-tabs" variantBorder />
 
-      <div className="flex w-full items-center justify-between md:items-end">
+      <div className="flex w-full items-end justify-between">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
           <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:tracking-[1.8px] xl:text-[11px] xl:leading-[15px] xl:tracking-[1.98px]">
             <span className="md:hidden">ADMIN</span>
@@ -87,7 +87,7 @@ export function AdminVolunteerRoster({
         <FloorTabs selected={floor} onSelect={setFloor} />
       </div>
 
-      <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-4 transition-colors focus-within:border-admin-accent-bg focus-within:bg-admin-surface focus-within:ring-2 focus-within:ring-admin-accent-bg/40 xl:h-[46px] xl:w-[420px] xl:gap-2.5">
+      <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 transition-colors md:px-4 focus-within:border-admin-accent-bg focus-within:bg-admin-surface focus-within:ring-2 focus-within:ring-admin-accent-bg/40 xl:h-[46px] xl:w-[420px] xl:gap-2.5">
         {/* eslint-disable-next-line @next/next/no-img-element -- Figma 검색 아이콘 원본 SVG */}
         <img
           src="/icons/admin/search.svg"
@@ -107,8 +107,8 @@ export function AdminVolunteerRoster({
         />
       </label>
 
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-3.5 overflow-y-auto xl:gap-0 rounded-[16px] bg-admin-surface p-3.5 md:rounded-[18px] md:p-5 xl:rounded-panel xl:p-[22px]">
-        <p className="text-xs leading-[14px] text-admin-textSecondary xl:hidden">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-y-auto md:gap-3.5 xl:gap-0 rounded-[16px] bg-admin-surface p-3.5 pt-4 md:rounded-[18px] md:p-5 xl:rounded-panel xl:p-[22px]">
+        <p className="text-[11px] leading-[13px] text-admin-textSecondary md:text-xs md:leading-[14px] xl:hidden">
           전교생 {roster.length}명 · 당일 지정 {designatedCount}명
         </p>
         {listLoadFailed ? (
@@ -118,7 +118,7 @@ export function AdminVolunteerRoster({
             검색 결과가 없습니다.
           </p>
         ) : (
-          <div className="flex flex-col gap-[18px] xl:gap-[22px]">
+          <div className="flex flex-col gap-4 md:gap-[18px] xl:gap-[22px]">
             {groups.map((group) => (
               <section
                 key={group.roomNumber}
@@ -126,10 +126,10 @@ export function AdminVolunteerRoster({
                 className="flex flex-col gap-2"
               >
                 <div className="flex items-center gap-1.5 pl-0.5 xl:gap-2 xl:pl-1">
-                  <h2 className="text-sm font-bold leading-[17px] text-admin-text xl:text-[15px] xl:leading-[18px]">
+                  <h2 className="text-[13px] font-bold leading-4 text-admin-text md:text-sm md:leading-[17px] xl:text-[15px] xl:leading-[18px]">
                     {group.roomNumber}호
                   </h2>
-                  <p className="font-mono text-[11px] leading-[15px] text-admin-textMuted xl:text-xs xl:leading-4">
+                  <p className="font-mono text-[10px] leading-[13px] text-admin-textMuted md:text-[11px] md:leading-[15px] xl:text-xs xl:leading-4">
                     {group.students.length}명
                   </p>
                 </div>
