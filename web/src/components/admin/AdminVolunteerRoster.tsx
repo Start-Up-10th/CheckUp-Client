@@ -69,7 +69,7 @@ export function AdminVolunteerRoster({
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} />
+      <ToastLayer toast={toast} placement="top-right" variantBorder />
 
       <div className="flex w-full items-center justify-between md:items-end">
         <div className="flex flex-col gap-0.5 md:gap-1">
