@@ -1,4 +1,5 @@
 import {
+  AdminUnauthorizedError,
   QrSessionNotFoundError,
   createQrSession,
   heartbeatQrSession,
@@ -59,6 +60,14 @@ describe("createQrSession", () => {
     await expect(createQrSession("dorm")).rejects.toThrow("invalid serverTime");
   });
 
+  it("401이면 관리자 세션 만료 오류를 낸다", async () => {
+    mockFetch(401);
+
+    await expect(createQrSession("dorm")).rejects.toBeInstanceOf(
+      AdminUnauthorizedError,
+    );
+  });
+
   it("실패 응답은 오류를 낸다", async () => {
     mockFetch(403, {
       code: "ADMIN_ONLY",
@@ -82,6 +91,14 @@ describe("heartbeatQrSession", () => {
       tokenExpiresAt: Date.UTC(2026, 8, 27, 3, 15),
       serverTime: Date.UTC(2026, 8, 27, 3, 0),
     });
+  });
+
+  it("401이면 관리자 세션 만료 오류를 낸다", async () => {
+    mockFetch(401);
+
+    await expect(heartbeatQrSession("session-1")).rejects.toBeInstanceOf(
+      AdminUnauthorizedError,
+    );
   });
 
   it("404면 세션 없음 오류를 낸다", async () => {
