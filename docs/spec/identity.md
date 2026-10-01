@@ -19,8 +19,9 @@ Client Secret·scope·운영 주소는 배포 때 확보한다. 가짜 값을 �
 실제 인증 없이 화면·도메인 로직 개발은 가능하며 mock 모드는 운영에서 사용하지 않는다.
 OAuth state, 콜백 검증, 토큰 교환과 세션 보호는 백엔드 책임이다.
 QR 스캔 후 로그인할 때 인증 대상의 용도와 QR 정보를 보존하되 로그인 완료 시 만료를 다시 검사한다.
+로그인이 실패하면 서버가 웹 로그인 화면(`/login?error=<오류 코드>`)으로 돌려보낸다. 서버가 계정을 거부한 경우(`INACTIVE_ACCOUNT`·`MISSING_STUDENT_INFO`·`UNSUPPORTED_ACCOUNT`)는 서버 문구를 그대로 보여 주고, 그 밖의 실패는 `로그인에 실패했습니다. 다시 시도해 주세요.`를 보여 준다.
 
-근거: SRC-DATAGSM, SRC-USER-UI.
+근거: SRC-DATAGSM, SRC-USER-UI, SRC-SERVER-LOGIN-FAIL.
 
 ### REQ-AUTH-002 — 데이터 매핑과 명단
 
