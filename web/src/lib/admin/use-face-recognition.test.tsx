@@ -130,6 +130,35 @@ describe("useFaceRecognition 세션", () => {
     expect(gateway.closeSession).toHaveBeenCalledWith("session-1");
   });
 
+  it("탭을 닫거나 새로고침해도(pagehide) 세션을 종료하고 그 뒤 화면을 내려도 다시 종료하지 않는다", async () => {
+    const gateway = makeGateway();
+    const { unmount } = setup(gateway);
+    await tick();
+
+    act(() => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
+
+    expect(gateway.closeSession).toHaveBeenCalledTimes(1);
+    expect(gateway.closeSession).toHaveBeenCalledWith("session-1");
+
+    unmount();
+
+    expect(gateway.closeSession).toHaveBeenCalledTimes(1);
+  });
+
+  it("세션이 없을 때의 pagehide는 아무것도 종료하지 않는다", async () => {
+    const gateway = makeGateway();
+    setup(gateway, { cameraReady: false });
+    await tick();
+
+    act(() => {
+      window.dispatchEvent(new Event("pagehide"));
+    });
+
+    expect(gateway.closeSession).not.toHaveBeenCalled();
+  });
+
   it("세션을 만드는 중에 떠나도 그 세션을 종료한다", async () => {
     let resolveSession: (id: string) => void = () => {};
     const gateway = makeGateway({

@@ -71,6 +71,7 @@ export function useFaceRecognition({
     if (!cameraReady) return;
     let cancelled = false;
     let sessionId: string | null = null;
+    let closedSessionId: string | null = null;
     let state = INITIAL_RECOGNITION;
     let directory: StudentDirectory = {};
     const timers = new Set<ReturnType<typeof setTimeout>>();
@@ -230,12 +231,23 @@ export function useFaceRecognition({
     /* eslint-enable react-hooks/set-state-in-effect */
     void run();
 
+    // 탭을 닫거나 새로고침·이동하면 React 정리 함수가 실행되지 않을 수 있어, 페이지를 떠날 때도 현재 세션을
+    // 종료한다(REQ-FACE-004). 같은 세션을 두 번 종료하지 않는다. 뒤로 가기 캐시에서 되살아나 종료된 세션으로
+    // 프레임을 보내면 서버가 세션 없음을 알려 새 세션으로 이어 간다.
+    function closeCurrentSession() {
+      if (!sessionId || closedSessionId === sessionId) return;
+      closedSessionId = sessionId;
+      gateway.closeSession(sessionId);
+    }
+    window.addEventListener("pagehide", closeCurrentSession);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("pagehide", closeCurrentSession);
       timers.forEach(clearTimeout);
       clearTimeout(qrTimer);
       clearTimeout(successTimer);
-      if (sessionId) gateway.closeSession(sessionId);
+      closeCurrentSession();
     };
   }, [cameraReady, purpose, gateway, attempt, capture, intervalMs, videoRef]);
 
