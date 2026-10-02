@@ -1,4 +1,4 @@
-import type { RosterStudent } from "@/lib/admin/mock-volunteer-roster";
+import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 type VolunteerRosterRowProps = {
   student: RosterStudent;

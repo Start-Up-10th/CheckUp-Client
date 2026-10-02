@@ -3,15 +3,21 @@
 import Link from "next/link";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { StatusBanner } from "@/components/admin/StatusBanner";
-import { ToastLayer, useToast } from "@/components/admin/Toast";
+import {
+  ToastLayer,
+  useToast,
+  type ToastMessage,
+} from "@/components/admin/Toast";
 import { VolunteerDutyRow } from "@/components/admin/VolunteerDutyRow";
 import { operatingDayLabel } from "@/lib/admin/operating-day";
-import {
-  cancelDuty,
-  completeDuty,
-  designatedToday,
-} from "@/lib/admin/volunteer-roster";
+import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
+import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
+import { designatedToday } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
+import type { RosterStudent } from "@/lib/admin/volunteer-types";
+
+/** 서버가 이유를 알려 주지 않은 실패(Figma 06 state messages). */
+const FAILURE_MESSAGE = "처리에 실패했습니다. 다시 시도해 주세요.";
 
 /**
  * 토스트는 헤더 조작부(`+ 명단에서 지정` 버튼) 바로 아래, 목록 행 위에 둔다. 폰 58px(버튼 하단 50px + 8px),
@@ -26,35 +32,50 @@ const TOAST_POSITION =
  * 이동하는 봉사자 명단 편집(07)에서 한다.
  */
 export function AdminVolunteerDuty({
-  listLoadFailed = false,
   rosterHref = "/admin/volunteers/add",
 }: {
-  /** 당일 봉사자 목록 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
-  listLoadFailed?: boolean;
   /** `+ 명단에서 지정`이 가는 봉사자 명단 편집 주소. 로그인 없이 보는 확인용 페이지에서만 바꾼다. */
   rosterHref?: string;
 }) {
-  const [roster, setRoster] = useVolunteerRoster();
+  const { roster, status, updateStudent, reload } = useVolunteerRoster();
+  const gateway = useVolunteerGateway();
+  const singleFlight = useSingleFlight();
   const { toast, showToast } = useToast();
   const today = designatedToday(roster);
   const dayLabel = operatingDayLabel(new Date());
 
+  /** 서버에 요청하고, 서버가 돌려준 학생 상태를 명단에 넣는다. 실패는 상태 메시지로 알린다. */
+  function runDutyAction(
+    studentId: string,
+    request: (id: number) => Promise<RosterStudent>,
+    successMessage: ToastMessage,
+  ) {
+    const target = roster.find((student) => student.studentId === studentId);
+    if (!target) return;
+    return singleFlight(target.id, async () => {
+      try {
+        const updated = await request(target.id);
+        updateStudent(updated);
+        showToast(successMessage);
+      } catch (error) {
+        const failure = failureToast(error, FAILURE_MESSAGE, reload);
+        if (failure) showToast(failure);
+      }
+    });
+  }
+
   function handleComplete(studentId: string) {
-    const change = completeDuty(
-      roster,
-      studentId,
-      operatingDayLabel(new Date()),
-    );
-    if (change.result !== "changed") return;
-    setRoster(change.students);
-    showToast({ variant: "success", message: "봉사를 완료 처리했습니다." });
+    return runDutyAction(studentId, gateway.completeDuty, {
+      variant: "success",
+      message: "봉사를 완료 처리했습니다.",
+    });
   }
 
   function handleCancel(studentId: string) {
-    const change = cancelDuty(roster, studentId);
-    if (change.result !== "changed") return;
-    setRoster(change.students);
-    showToast({ variant: "neutral", message: "당일 봉사자에서 제외했습니다." });
+    return runDutyAction(studentId, gateway.cancelDuty, {
+      variant: "neutral",
+      message: "당일 봉사자에서 제외했습니다.",
+    });
   }
 
   return (
@@ -95,8 +116,12 @@ export function AdminVolunteerDuty({
           {dayLabel} 당일 봉사자 · {today.length}명
         </p>
         <div className="flex flex-col gap-2">
-          {listLoadFailed ? (
-            <AdminContentState variant="error" onRetry={() => {}} />
+          {status === "error" ? (
+            <AdminContentState variant="error" onRetry={reload} />
+          ) : status !== "ready" ? (
+            <p className="py-6 text-center text-sm text-admin-textMuted">
+              불러오는 중…
+            </p>
           ) : today.length === 0 ? (
             <StatusBanner
               variant="neutral"

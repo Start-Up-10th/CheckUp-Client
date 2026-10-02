@@ -1,3 +1,4 @@
+import { MockVolunteerProvider } from "../_components/MockVolunteerProvider";
 import { PreviewFrameShell } from "../_components/PreviewFrameShell";
 
 export default function PreviewFrameLayout({
@@ -5,5 +6,9 @@ export default function PreviewFrameLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <PreviewFrameShell>{children}</PreviewFrameShell>;
+  return (
+    <MockVolunteerProvider>
+      <PreviewFrameShell>{children}</PreviewFrameShell>
+    </MockVolunteerProvider>
+  );
 }

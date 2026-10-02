@@ -1,4 +1,4 @@
-import type { RosterStudent } from "./mock-volunteer-roster";
+import type { RosterStudent } from "./volunteer-types";
 import {
   adjustCount,
   cancelDuty,
@@ -13,6 +13,7 @@ import {
 
 function student(overrides: Partial<RosterStudent>): RosterStudent {
   return {
+    id: 1,
     studentId: "2405",
     name: "김도현",
     roomNumber: 412,

@@ -6,23 +6,20 @@ import { FloorTabs } from "@/components/admin/FloorTabs";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerRosterRow } from "@/components/admin/VolunteerRosterRow";
 import type { Floor } from "@/lib/admin/mock-floor-data";
-import { operatingDayLabel } from "@/lib/admin/operating-day";
-import {
-  adjustCount,
-  designate,
-  groupByRoom,
-  type RosterChange,
-} from "@/lib/admin/volunteer-roster";
+import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
+import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
+import { groupByRoom } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
 
 const DEFAULT_FLOOR: Floor = 4;
 
-/** 지정이 막힌 이유별 안내(Figma 07 state messages, 봉사 없음·완료는 하네스 REQ-COM-006 문구). */
-const DESIGNATE_REFUSAL: Partial<Record<RosterChange["result"], string>> = {
-  "already-designated": "이미 당일 봉사자로 지정된 학생입니다.",
-  "already-completed": "이미 봉사를 완료했습니다.",
-  "no-count": "봉사가 없습니다.",
-};
+/** 서버가 이유를 알려 주지 않은 횟수 변경 실패(Figma 07 state messages). */
+const COUNT_FAILURE_MESSAGE =
+  "봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.";
+
+/** 서버가 이유를 알려 주지 않은 지정 실패(Figma 07 state messages). */
+const DESIGNATE_FAILURE_MESSAGE =
+  "당일 봉사자 지정에 실패했습니다. 다시 시도해 주세요.";
 
 /**
  * 토스트는 헤더 조작부(층 탭·검색창) 바로 아래 8px에 둬 탭·검색창·행 버튼을 가리지 않는다: 폰 121px(검색창
@@ -35,15 +32,12 @@ const TOAST_POSITION =
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.
  * 명단에 학생을 추가·제외하는 단계는 없다.
  */
-export function AdminVolunteerRoster({
-  listLoadFailed = false,
-}: {
-  /** 학생 명단 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
-  listLoadFailed?: boolean;
-}) {
-  const [roster, setRoster] = useVolunteerRoster();
+export function AdminVolunteerRoster() {
+  const { roster, status, updateStudent, reload } = useVolunteerRoster();
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
+  const gateway = useVolunteerGateway();
+  const singleFlight = useSingleFlight();
   const { toast, showToast } = useToast();
   const designatedCount = roster.filter(
     (student) => student.duty !== "none",
@@ -55,26 +49,36 @@ export function AdminVolunteerRoster({
   );
 
   function handleAdjustCount(studentId: string, delta: 1 | -1) {
-    const change = adjustCount(
-      roster,
-      studentId,
-      delta,
-      operatingDayLabel(new Date()),
-    );
-    if (change.result !== "changed") return;
-    setRoster(change.students);
-    showToast({ variant: "success", message: "봉사 횟수를 변경했습니다." });
+    const target = roster.find((student) => student.studentId === studentId);
+    if (!target) return;
+    return singleFlight(target.id, async () => {
+      try {
+        const updated = await gateway.adjustCount(target.id, delta);
+        updateStudent(updated);
+        showToast({ variant: "success", message: "봉사 횟수를 변경했습니다." });
+      } catch (error) {
+        const failure = failureToast(error, COUNT_FAILURE_MESSAGE, reload);
+        if (failure) showToast(failure);
+      }
+    });
   }
 
   function handleDesignate(studentId: string) {
-    const change = designate(roster, studentId);
-    if (change.result === "changed") {
-      setRoster(change.students);
-      showToast({ variant: "success", message: "당일 봉사자로 지정했습니다." });
-      return;
-    }
-    const refusal = DESIGNATE_REFUSAL[change.result];
-    if (refusal) showToast({ variant: "neutral", message: refusal });
+    const target = roster.find((student) => student.studentId === studentId);
+    if (!target) return;
+    return singleFlight(target.id, async () => {
+      try {
+        const updated = await gateway.designate(target.id);
+        updateStudent(updated);
+        showToast({
+          variant: "success",
+          message: "당일 봉사자로 지정했습니다.",
+        });
+      } catch (error) {
+        const failure = failureToast(error, DESIGNATE_FAILURE_MESSAGE, reload);
+        if (failure) showToast(failure);
+      }
+    });
   }
 
   return (
@@ -118,8 +122,12 @@ export function AdminVolunteerRoster({
         <p className="text-[11px] leading-[13px] text-admin-textSecondary md:text-xs md:leading-[14px] xl:hidden">
           전교생 {roster.length}명 · 당일 지정 {designatedCount}명
         </p>
-        {listLoadFailed ? (
-          <AdminContentState variant="error" onRetry={() => {}} />
+        {status === "error" ? (
+          <AdminContentState variant="error" onRetry={reload} />
+        ) : status !== "ready" ? (
+          <p className="py-6 text-center text-sm text-admin-textMuted">
+            불러오는 중…
+          </p>
         ) : groups.length === 0 ? (
           <p className="py-6 text-center text-sm text-admin-textMuted">
             검색 결과가 없습니다.
