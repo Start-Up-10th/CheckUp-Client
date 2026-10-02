@@ -268,7 +268,7 @@ describe("useFaceRecognition 프레임 전송", () => {
         .mockResolvedValue(frameOf([])),
     });
     const { result } = setup(gateway);
-    await tick();
+    await tick(FRAME_INTERVAL_MS);
 
     expect(gateway.createSession).toHaveBeenCalledTimes(2);
     expect(gateway.sendFrame).toHaveBeenLastCalledWith(
@@ -277,6 +277,54 @@ describe("useFaceRecognition 프레임 전송", () => {
       expect.any(String),
     );
     expect(result.current.status).toBe("running");
+  });
+
+  it("세션이 계속 사라진다고 해도 무한히 만들지 않고 연속 실패 한도에서 error가 된다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn()
+        .mockRejectedValue(new FaceApiError(404, "FACE_SESSION_NOT_FOUND")),
+    });
+    const { result } = setup(gateway);
+
+    await tick(FRAME_INTERVAL_MS * MAX_CONSECUTIVE_FAILURES * 2);
+
+    expect(result.current.status).toBe("error");
+    expect(gateway.createSession).toHaveBeenCalledTimes(
+      MAX_CONSECUTIVE_FAILURES,
+    );
+  });
+
+  it("세션 없음이 아닌 404(라우트 없음 등)는 세션을 다시 만들지 않고 일반 실패로 센다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi.fn().mockRejectedValue(new FaceApiError(404, null)),
+    });
+    const { result } = setup(gateway);
+
+    await tick(ERROR_BACKOFF_MS * MAX_CONSECUTIVE_FAILURES);
+
+    expect(gateway.createSession).toHaveBeenCalledTimes(1);
+    expect(result.current.status).toBe("error");
+  });
+
+  it("세션을 새로 만들면 이전 세션의 트랙 시도 기록을 버려 실패 행이 가려지지 않는다", async () => {
+    const failFrame = (attempts: number) =>
+      frameOf([
+        { trackId: "a", status: "UNKNOWN", attempts, qrRecommended: false },
+      ]);
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn()
+        .mockResolvedValueOnce(failFrame(3))
+        .mockRejectedValueOnce(new FaceApiError(404, "FACE_SESSION_NOT_FOUND"))
+        .mockResolvedValue(failFrame(1)),
+    });
+    const { result } = setup(gateway);
+
+    await tick(FRAME_INTERVAL_MS * 3);
+
+    // 새 세션의 같은 트랙 id가 attempts 1로 시작해도 새 시도로 센다.
+    expect(result.current.entries).toHaveLength(2);
   });
 
   it("연속 실패가 쌓이면 error가 되고 성공하면 횟수를 다시 센다", async () => {

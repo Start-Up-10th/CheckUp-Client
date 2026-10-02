@@ -31,6 +31,9 @@ export const MAX_CONSECUTIVE_FAILURES = 5;
 export const QR_NOTICE_HOLD_MS = 8000;
 export const SUCCESS_HOLD_MS = 3000;
 
+/** 서버가 프레임 요청에서 세션이 없거나 종료됐다고 알리는 오류 코드. */
+const SESSION_GONE_CODE = "FACE_SESSION_NOT_FOUND";
+
 export type FaceSessionStatus = "starting" | "running" | "error";
 
 type Options = {
@@ -175,8 +178,17 @@ export function useFaceRecognition({
               redirectToAdminLogin();
               return;
             }
-            if (error instanceof FaceApiError && error.status === 404) {
-              // 세션이 서버에서 사라졌다(유휴 정리 등). 새 세션을 만들어 이어 간다.
+            if (
+              error instanceof FaceApiError &&
+              error.code === SESSION_GONE_CODE
+            ) {
+              // 세션이 서버에서 사라졌다(유휴 정리 등). 새 세션을 만들어 이어 가되, 계속 사라지면 무한히 만들지
+              // 않도록 실패로 세고 간격을 둔다. 라우트가 없는 404 등 다른 404는 이 경우가 아니다.
+              failures += 1;
+              if (failures >= MAX_CONSECUTIVE_FAILURES) {
+                fail(error);
+                return;
+              }
               let recreated: string;
               try {
                 recreated = await gateway.createSession(purpose);
@@ -189,6 +201,9 @@ export function useFaceRecognition({
                 return;
               }
               sessionId = recreated;
+              // 새 세션은 얼굴 트랙도 새로 시작하므로 이전 세션의 트랙 시도 기록은 버린다.
+              state = { ...state, tracks: {} };
+              await sleep(intervalMs);
               continue;
             }
             failures += 1;

@@ -37,10 +37,10 @@ async function loadStudentsFromRoster(): Promise<StudentDirectory> {
   const students = await fetchVolunteers();
   const directory: StudentDirectory = {};
   for (const student of students) {
-    directory[student.id] = {
-      studentNumber: Number(student.studentId),
-      name: student.name,
-    };
+    const studentNumber = Number(student.studentId);
+    // 학번을 읽을 수 없으면 `NaN 이름`이 보이지 않도록 명단에 넣지 않는다(성공 행은 이름 없이 `인식 성공`).
+    if (!Number.isFinite(studentNumber)) continue;
+    directory[student.id] = { studentNumber, name: student.name };
   }
   return directory;
 }
