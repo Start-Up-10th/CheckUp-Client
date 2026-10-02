@@ -3,6 +3,7 @@ import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
 import { VolunteerApiError } from "@/lib/admin/volunteer-api";
 import type { VolunteerGateway } from "@/lib/admin/volunteer-gateway";
 import {
+  adjustCount,
   cancelDuty,
   completeDuty,
   designate,
@@ -47,6 +48,10 @@ export function createMockVolunteerGateway(): VolunteerGateway {
 
   return {
     list: async () => MOCK_VOLUNTEER_ROSTER,
+    adjustCount: (id, delta) =>
+      mutate(id, (students, studentId) =>
+        adjustCount(students, studentId, delta, operatingDayLabel(new Date())),
+      ),
     designate: (id) => mutate(id, designate),
     cancelDuty: (id) => mutate(id, cancelDuty),
     completeDuty: (id) =>

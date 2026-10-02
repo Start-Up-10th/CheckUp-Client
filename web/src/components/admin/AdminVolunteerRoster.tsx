@@ -6,20 +6,19 @@ import { FloorTabs } from "@/components/admin/FloorTabs";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerRosterRow } from "@/components/admin/VolunteerRosterRow";
 import type { Floor } from "@/lib/admin/mock-floor-data";
-import { operatingDayLabel } from "@/lib/admin/operating-day";
 import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
 import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
-import {
-  adjustCount,
-  groupByRoom,
-  replaceStudent,
-} from "@/lib/admin/volunteer-roster";
+import { groupByRoom, replaceStudent } from "@/lib/admin/volunteer-roster";
 import {
   getRoster,
   useVolunteerRoster,
 } from "@/lib/admin/volunteer-roster-store";
 
 const DEFAULT_FLOOR: Floor = 4;
+
+/** 서버가 이유를 알려 주지 않은 횟수 변경 실패(Figma 07 state messages). */
+const COUNT_FAILURE_MESSAGE =
+  "봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.";
 
 /** 서버가 이유를 알려 주지 않은 지정 실패(Figma 07 state messages). */
 const DESIGNATE_FAILURE_MESSAGE =
@@ -53,15 +52,18 @@ export function AdminVolunteerRoster() {
   );
 
   function handleAdjustCount(studentId: string, delta: 1 | -1) {
-    const change = adjustCount(
-      roster,
-      studentId,
-      delta,
-      operatingDayLabel(new Date()),
-    );
-    if (change.result !== "changed") return;
-    setRoster(change.students);
-    showToast({ variant: "success", message: "봉사 횟수를 변경했습니다." });
+    const target = roster.find((student) => student.studentId === studentId);
+    if (!target) return;
+    return singleFlight(target.id, async () => {
+      try {
+        const updated = await gateway.adjustCount(target.id, delta);
+        setRoster(replaceStudent(getRoster(), updated));
+        showToast({ variant: "success", message: "봉사 횟수를 변경했습니다." });
+      } catch (error) {
+        const failure = failureToast(error, COUNT_FAILURE_MESSAGE, reload);
+        if (failure) showToast(failure);
+      }
+    });
   }
 
   function handleDesignate(studentId: string) {

@@ -3,6 +3,7 @@ import {
   fireEvent,
   render as renderPlain,
   screen,
+  waitFor,
   within,
 } from "@testing-library/react";
 import type { ReactElement } from "react";
@@ -148,44 +149,91 @@ describe("AdminVolunteerRoster", () => {
   });
 
   describe("횟수 가감", () => {
-    it("+를 누르면 횟수가 늘고 성공 문구를 보여 준다", () => {
+    it("+를 누르면 횟수가 늘고 성공 문구를 보여 준다", async () => {
       render(<AdminVolunteerRoster />);
 
       fireEvent.click(
         screen.getByRole("button", { name: "박서연 봉사 1회 추가" }),
       );
 
+      expect(await screen.findByRole("status")).toHaveTextContent(
+        "봉사 횟수를 변경했습니다.",
+      );
       const row = screen.getByRole("group", { name: "박서연" });
       expect(within(row).getByText("2회")).toBeInTheDocument();
-      expect(screen.getByRole("status")).toHaveTextContent(
-        "봉사 횟수를 변경했습니다.",
-      );
     });
 
-    it("−를 누르면 횟수가 줄고 같은 성공 문구를 보여 준다", () => {
+    it("−를 누르면 횟수가 줄고 같은 성공 문구를 보여 준다", async () => {
       render(<AdminVolunteerRoster />);
 
       fireEvent.click(
         screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
       );
 
+      expect(await screen.findByRole("status")).toHaveTextContent(
+        "봉사 횟수를 변경했습니다.",
+      );
       const row = screen.getByRole("group", { name: "박서연" });
       expect(within(row).getByText("0회")).toBeInTheDocument();
-      expect(screen.getByRole("status")).toHaveTextContent(
-        "봉사 횟수를 변경했습니다.",
-      );
     });
 
-    it("1회에서 −로 0회가 되면 −가 비활성화된다", () => {
+    it("1회에서 −로 0회가 되면 −가 비활성화된다", async () => {
       render(<AdminVolunteerRoster />);
 
       fireEvent.click(
         screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
       );
 
-      expect(
-        screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
-      ).toBeDisabled();
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
+        ).toBeDisabled(),
+      );
+    });
+
+    it("서버가 실패하면 횟수 변경 실패 오류 문구를 보여 주고 횟수는 그대로다", async () => {
+      const adjustCount = vi.fn().mockRejectedValue(new Error("network"));
+      renderPlain(
+        <VolunteerGatewayProvider value={{ ...mockGateway, adjustCount }}>
+          <AdminVolunteerRoster />
+        </VolunteerGatewayProvider>,
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 봉사 1회 추가" }),
+      );
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.",
+      );
+      const row = screen.getByRole("group", { name: "박서연" });
+      expect(within(row).getByText("1회")).toBeInTheDocument();
+    });
+
+    it("누른 방향과 학생의 서버 ID로 한 번만 요청한다", async () => {
+      const adjustCount = vi
+        .fn()
+        .mockImplementation((id: number, delta: 1 | -1) =>
+          mockGateway.adjustCount(id, delta),
+        );
+      renderPlain(
+        <VolunteerGatewayProvider value={{ ...mockGateway, adjustCount }}>
+          <AdminVolunteerRoster />
+        </VolunteerGatewayProvider>,
+      );
+      const seoyeon = MOCK_VOLUNTEER_ROSTER.find(
+        (student) => student.name === "박서연",
+      )!;
+      const button = screen.getByRole("button", {
+        name: "박서연 봉사 1회 추가",
+      });
+
+      fireEvent.click(button);
+      fireEvent.click(button);
+      await screen.findByRole("status");
+
+      expect(adjustCount).toHaveBeenCalledTimes(1);
+      expect(adjustCount).toHaveBeenCalledWith(seoyeon.id, 1);
     });
   });
 
