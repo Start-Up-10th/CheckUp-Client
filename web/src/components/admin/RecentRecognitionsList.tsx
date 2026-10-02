@@ -1,4 +1,4 @@
-import type { RecognitionEntry } from "@/lib/admin/mock-recent-recognitions";
+import type { RecognitionEntry } from "@/lib/admin/face-results";
 
 export type RecentRecognitionsStatus = "ready" | "loading" | "error";
 

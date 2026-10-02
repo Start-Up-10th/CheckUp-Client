@@ -1,5 +1,24 @@
 import type { FaceResult } from "@/lib/admin/face-api";
-import type { RecognitionEntry } from "@/lib/admin/mock-recent-recognitions";
+
+export type RecognitionOutcome = "success" | "failure";
+
+export type RecognitionEntry = {
+  id: string;
+  /** 실패는 신원을 붙이지 않는다(REQ-FACE-005/007) — "인식 실패"만 표시. */
+  label: string;
+  outcome: RecognitionOutcome;
+  recognizedAt: string;
+};
+
+/** 학생 이름을 알 수 없을 때의 성공 행 문구. 이름을 지어내지 않는다. */
+export const UNNAMED_SUCCESS_LABEL = "인식 성공";
+
+/** 카메라 화면에 잠깐 보이는 성공 문구(REQ-FACE-007 `성공 · 학번 이름`). 이름을 모르면 `성공`만 쓴다. */
+export function successMessage(entry: RecognitionEntry): string {
+  return entry.label === UNNAMED_SUCCESS_LABEL
+    ? "성공"
+    : `성공 · ${entry.label}`;
+}
 
 /** 같은 학생의 성공을 목록에 다시 올리지 않는 시간. 지나가는 동안 매 프레임 성공이 쌓이지 않게 한다. */
 export const SUCCESS_DEDUPE_MS = 10_000;
@@ -49,7 +68,7 @@ function timeLabel(now: Date): string {
 
 /** 성공 행의 이름. 학생 명단에서 찾지 못하면 이름을 지어내지 않고 `인식 성공`만 쓴다. */
 function successLabel(label: StudentLabel | undefined): string {
-  return label ? `${label.studentNumber} ${label.name}` : "인식 성공";
+  return label ? `${label.studentNumber} ${label.name}` : UNNAMED_SUCCESS_LABEL;
 }
 
 /**

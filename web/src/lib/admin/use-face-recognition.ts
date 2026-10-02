@@ -15,7 +15,7 @@ import {
   type StudentDirectory,
 } from "@/lib/admin/face-gateway";
 import { applyFrame, INITIAL_RECOGNITION } from "@/lib/admin/face-results";
-import type { RecognitionEntry } from "@/lib/admin/mock-recent-recognitions";
+import type { RecognitionEntry } from "@/lib/admin/face-results";
 import type { Purpose } from "@/lib/admin/purpose";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 

@@ -5,6 +5,7 @@ import {
   SUCCESS_DEDUPE_MS,
   TRACK_MEMORY_MS,
   applyFrame,
+  successMessage,
   type RecognitionState,
 } from "./face-results";
 
@@ -220,5 +221,19 @@ describe("applyFrame 목록", () => {
 
     expect(() => run(frozen, [known(101), unknown("t1", 1)])).not.toThrow();
     expect(INITIAL_RECOGNITION.entries).toEqual([]);
+  });
+});
+
+describe("successMessage", () => {
+  it("`성공 · 학번 이름`이다", () => {
+    const { success } = run(INITIAL_RECOGNITION, [known(101)]);
+
+    expect(successMessage(success!)).toBe("성공 · 2405 김도현");
+  });
+
+  it("이름을 모르면 이름 없이 `성공`만 쓴다", () => {
+    const { success } = run(INITIAL_RECOGNITION, [known(999)]);
+
+    expect(successMessage(success!)).toBe("성공");
   });
 });
