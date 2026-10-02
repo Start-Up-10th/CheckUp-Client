@@ -1,5 +1,12 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
+import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
 import {
   getRoster,
   resetRoster,
@@ -11,9 +18,11 @@ beforeEach(() => {
   // 2026-10-01 12:00 KST. 타이머는 그대로 두고 날짜만 고정한다.
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-10-01T03:00:00Z"));
+  setRoster(MOCK_VOLUNTEER_ROSTER);
 });
 
 afterEach(() => {
+  cleanup();
   vi.useRealTimers();
   resetRoster();
 });
@@ -105,10 +114,31 @@ describe("AdminVolunteerDuty", () => {
     );
   });
 
-  it("목록 조회에 실패하면 오류 상태를 보여 준다", () => {
-    render(<AdminVolunteerDuty listLoadFailed />);
+  it("목록 조회에 실패하면 오류 상태를 보여 준다", async () => {
+    resetRoster();
+    const list = vi.fn().mockRejectedValue(new Error("network"));
 
-    expect(screen.getByRole("alert")).toBeInTheDocument();
+    render(
+      <VolunteerGatewayProvider value={{ list }}>
+        <AdminVolunteerDuty />
+      </VolunteerGatewayProvider>,
+    );
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+  });
+
+  it("목록을 받는 동안에는 빈 안내 대신 불러오는 중을 보여 준다", () => {
+    resetRoster();
+    const list = vi.fn().mockReturnValue(new Promise(() => {}));
+
+    render(
+      <VolunteerGatewayProvider value={{ list }}>
+        <AdminVolunteerDuty />
+      </VolunteerGatewayProvider>,
+    );
+
+    expect(screen.getByText("불러오는 중…")).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("08:00 전에는 아직 전날 운영일로 보여 준다", () => {

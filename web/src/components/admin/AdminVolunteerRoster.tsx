@@ -35,13 +35,8 @@ const TOAST_POSITION =
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.
  * 명단에 학생을 추가·제외하는 단계는 없다.
  */
-export function AdminVolunteerRoster({
-  listLoadFailed = false,
-}: {
-  /** 학생 명단 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
-  listLoadFailed?: boolean;
-}) {
-  const [roster, setRoster] = useVolunteerRoster();
+export function AdminVolunteerRoster() {
+  const { roster, status, setRoster, reload } = useVolunteerRoster();
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
   const { toast, showToast } = useToast();
@@ -118,8 +113,12 @@ export function AdminVolunteerRoster({
         <p className="text-[11px] leading-[13px] text-admin-textSecondary md:text-xs md:leading-[14px] xl:hidden">
           전교생 {roster.length}명 · 당일 지정 {designatedCount}명
         </p>
-        {listLoadFailed ? (
-          <AdminContentState variant="error" onRetry={() => {}} />
+        {status === "error" ? (
+          <AdminContentState variant="error" onRetry={reload} />
+        ) : status !== "ready" ? (
+          <p className="py-6 text-center text-sm text-admin-textMuted">
+            불러오는 중…
+          </p>
         ) : groups.length === 0 ? (
           <p className="py-6 text-center text-sm text-admin-textMuted">
             검색 결과가 없습니다.

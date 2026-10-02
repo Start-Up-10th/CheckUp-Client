@@ -26,15 +26,12 @@ const TOAST_POSITION =
  * 이동하는 봉사자 명단 편집(07)에서 한다.
  */
 export function AdminVolunteerDuty({
-  listLoadFailed = false,
   rosterHref = "/admin/volunteers/add",
 }: {
-  /** 당일 봉사자 목록 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
-  listLoadFailed?: boolean;
   /** `+ 명단에서 지정`이 가는 봉사자 명단 편집 주소. 로그인 없이 보는 확인용 페이지에서만 바꾼다. */
   rosterHref?: string;
 }) {
-  const [roster, setRoster] = useVolunteerRoster();
+  const { roster, status, setRoster, reload } = useVolunteerRoster();
   const { toast, showToast } = useToast();
   const today = designatedToday(roster);
   const dayLabel = operatingDayLabel(new Date());
@@ -95,8 +92,12 @@ export function AdminVolunteerDuty({
           {dayLabel} 당일 봉사자 · {today.length}명
         </p>
         <div className="flex flex-col gap-2">
-          {listLoadFailed ? (
-            <AdminContentState variant="error" onRetry={() => {}} />
+          {status === "error" ? (
+            <AdminContentState variant="error" onRetry={reload} />
+          ) : status !== "ready" ? (
+            <p className="py-6 text-center text-sm text-admin-textMuted">
+              불러오는 중…
+            </p>
           ) : today.length === 0 ? (
             <StatusBanner
               variant="neutral"

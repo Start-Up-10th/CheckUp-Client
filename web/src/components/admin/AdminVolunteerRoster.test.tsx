@@ -1,8 +1,20 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { resetRoster } from "@/lib/admin/volunteer-roster-store";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
+import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
+import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
+import { resetRoster, setRoster } from "@/lib/admin/volunteer-roster-store";
 import { AdminVolunteerRoster } from "./AdminVolunteerRoster";
 
-afterEach(() => resetRoster());
+beforeEach(() => setRoster(MOCK_VOLUNTEER_ROSTER));
+afterEach(() => {
+  cleanup();
+  resetRoster();
+});
 
 describe("AdminVolunteerRoster", () => {
   it("처음에는 4층 학생을 호실별로 묶어 보여 준다", () => {
@@ -85,10 +97,41 @@ describe("AdminVolunteerRoster", () => {
     expect(screen.getByText("검색 결과가 없습니다.")).toBeInTheDocument();
   });
 
-  it("명단 조회에 실패하면 오류 상태를 보여 준다", () => {
-    render(<AdminVolunteerRoster listLoadFailed />);
+  it("명단을 받는 동안에는 불러오는 중을 보여 주고 받으면 명단을 보여 준다", async () => {
+    resetRoster();
+    const list = vi.fn().mockResolvedValue(MOCK_VOLUNTEER_ROSTER);
 
-    expect(screen.getByRole("alert")).toBeInTheDocument();
+    render(
+      <VolunteerGatewayProvider value={{ list }}>
+        <AdminVolunteerRoster />
+      </VolunteerGatewayProvider>,
+    );
+
+    expect(screen.getByText("불러오는 중…")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", { name: "412호" }),
+    ).toBeInTheDocument();
+  });
+
+  it("명단 조회에 실패하면 오류 상태를 보여 주고 다시 시도하면 불러온다", async () => {
+    resetRoster();
+    const list = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("network"))
+      .mockResolvedValueOnce(MOCK_VOLUNTEER_ROSTER);
+
+    render(
+      <VolunteerGatewayProvider value={{ list }}>
+        <AdminVolunteerRoster />
+      </VolunteerGatewayProvider>,
+    );
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+    expect(
+      await screen.findByRole("region", { name: "412호" }),
+    ).toBeInTheDocument();
+    expect(list).toHaveBeenCalledTimes(2);
   });
 
   describe("횟수 가감", () => {
