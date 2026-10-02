@@ -7,6 +7,7 @@ import {
   useVolunteerGateway,
   type VolunteerGateway,
 } from "@/lib/admin/volunteer-gateway";
+import { replaceStudent } from "@/lib/admin/volunteer-roster";
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 export type RosterStatus = "idle" | "loading" | "ready" | "error";
@@ -37,6 +38,14 @@ export function setRoster(next: RosterStudent[]): void {
   emit({ roster: next, status: "ready" });
 }
 
+/**
+ * 서버가 돌려준 학생 한 명의 상태만 명단에 넣는다. 진행 중인 명단 새로고침은 그대로 두어, 먼저 시작한
+ * 새로고침 결과가 이 동작 때문에 버려지지 않게 한다.
+ */
+export function updateStudent(updated: RosterStudent): void {
+  emit({ roster: replaceStudent(state.roster, updated), status: state.status });
+}
+
 /** 처음 상태(명단 없음, 아직 불러오지 않음)로 되돌린다. */
 export function resetRoster(): void {
   requestId += 1;
@@ -49,11 +58,9 @@ export function resetRoster(): void {
  */
 export async function loadRoster(gateway: VolunteerGateway): Promise<void> {
   const id = ++requestId;
-  // 이미 보이는 명단은 다시 받는 동안에도 그대로 둔다(충돌 뒤 조용한 새로고침).
-  emit({
-    roster: state.roster,
-    status: state.status === "ready" ? "ready" : "loading",
-  });
+  // 이미 보이는 명단은 다시 받는 동안에도, 받지 못했을 때도 그대로 둔다(충돌 뒤 조용한 새로고침).
+  const silent = state.status === "ready";
+  emit({ roster: state.roster, status: silent ? "ready" : "loading" });
   try {
     const students = await gateway.list();
     if (id === requestId) emit({ roster: students, status: "ready" });
@@ -63,7 +70,7 @@ export async function loadRoster(gateway: VolunteerGateway): Promise<void> {
       redirectToAdminLogin();
       return;
     }
-    emit({ roster: state.roster, status: "error" });
+    emit({ roster: state.roster, status: silent ? "ready" : "error" });
   }
 }
 
@@ -84,7 +91,7 @@ function getServerSnapshot(): RosterState {
 export function useVolunteerRoster(): {
   roster: RosterStudent[];
   status: RosterStatus;
-  setRoster: (next: RosterStudent[]) => void;
+  updateStudent: (updated: RosterStudent) => void;
   reload: () => void;
 } {
   const gateway = useVolunteerGateway();
@@ -99,5 +106,5 @@ export function useVolunteerRoster(): {
     if (status === "idle") reload();
   }, [status, reload]);
 
-  return { roster, status, setRoster, reload };
+  return { roster, status, updateStudent, reload };
 }

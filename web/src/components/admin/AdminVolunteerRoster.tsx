@@ -8,11 +8,8 @@ import { VolunteerRosterRow } from "@/components/admin/VolunteerRosterRow";
 import type { Floor } from "@/lib/admin/mock-floor-data";
 import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
 import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
-import { groupByRoom, replaceStudent } from "@/lib/admin/volunteer-roster";
-import {
-  getRoster,
-  useVolunteerRoster,
-} from "@/lib/admin/volunteer-roster-store";
+import { groupByRoom } from "@/lib/admin/volunteer-roster";
+import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
 
 const DEFAULT_FLOOR: Floor = 4;
 
@@ -36,7 +33,7 @@ const TOAST_POSITION =
  * 명단에 학생을 추가·제외하는 단계는 없다.
  */
 export function AdminVolunteerRoster() {
-  const { roster, status, setRoster, reload } = useVolunteerRoster();
+  const { roster, status, updateStudent, reload } = useVolunteerRoster();
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
   const gateway = useVolunteerGateway();
@@ -57,7 +54,7 @@ export function AdminVolunteerRoster() {
     return singleFlight(target.id, async () => {
       try {
         const updated = await gateway.adjustCount(target.id, delta);
-        setRoster(replaceStudent(getRoster(), updated));
+        updateStudent(updated);
         showToast({ variant: "success", message: "봉사 횟수를 변경했습니다." });
       } catch (error) {
         const failure = failureToast(error, COUNT_FAILURE_MESSAGE, reload);
@@ -72,7 +69,7 @@ export function AdminVolunteerRoster() {
     return singleFlight(target.id, async () => {
       try {
         const updated = await gateway.designate(target.id);
-        setRoster(replaceStudent(getRoster(), updated));
+        updateStudent(updated);
         showToast({
           variant: "success",
           message: "당일 봉사자로 지정했습니다.",

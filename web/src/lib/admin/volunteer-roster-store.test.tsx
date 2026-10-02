@@ -60,18 +60,18 @@ describe("volunteer roster store", () => {
     expect(list).toHaveBeenCalledTimes(1);
   });
 
-  it("이미 받은 명단은 다시 받지 않고, 바꾼 명단을 다른 화면도 본다", () => {
+  it("이미 받은 명단은 다시 받지 않고, 한 화면이 바꾼 학생을 다른 화면도 본다", () => {
     const list = vi.fn();
     const wrapper = wrapperFor({ ...createMockVolunteerGateway(), list });
-    const next = MOCK_VOLUNTEER_ROSTER.slice(0, 2);
+    const changed = { ...MOCK_VOLUNTEER_ROSTER[0], count: 9 };
     act(() => setRoster(MOCK_VOLUNTEER_ROSTER));
     const first = renderHook(() => useVolunteerRoster(), { wrapper });
     const second = renderHook(() => useVolunteerRoster(), { wrapper });
 
-    act(() => first.result.current.setRoster(next));
+    act(() => first.result.current.updateStudent(changed));
     first.unmount();
 
-    expect(second.result.current.roster).toBe(next);
+    expect(second.result.current.roster[0]).toBe(changed);
     expect(list).not.toHaveBeenCalled();
   });
 
