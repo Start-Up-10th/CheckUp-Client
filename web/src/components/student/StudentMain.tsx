@@ -42,7 +42,6 @@ export function StudentMain({
             name={student.name}
             studentNumber={student.studentNumber}
             floor={student.floor}
-            hasUnreadNotification={student.hasUnreadNotification}
           />
           <div className="flex min-h-0 flex-1 flex-col px-[18px] py-4 md:p-0">
             <MyRoomCard
