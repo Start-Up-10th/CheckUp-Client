@@ -5,7 +5,8 @@ import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel";
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
 import { StatusBanner } from "@/components/admin/StatusBanner";
-import { formatCountdown, type QrPurpose } from "@/lib/admin/mock-qr-session";
+import { formatCountdown } from "@/lib/admin/qr-countdown";
+import type { Purpose } from "@/lib/admin/purpose";
 import { redirectToAdminLogin } from "@/lib/admin/admin-session";
 import {
   createQrSession,
@@ -15,7 +16,7 @@ import {
   QrSessionNotFoundError,
 } from "@/lib/admin/qr-api";
 
-const DEFAULT_PURPOSE: QrPurpose = "dorm";
+const DEFAULT_PURPOSE: Purpose = "dorm";
 const HEARTBEAT_INTERVAL_MS = 20_000;
 
 type ActiveSession = {
@@ -33,7 +34,7 @@ type ActiveSession = {
  * 목적 전환·페이지 이탈 시 sendBeacon으로 해당 세션만 종료한다(다른 탭·관리자 세션 영향 없음).
  */
 export function AdminQrGeneration() {
-  const [purpose, setPurpose] = useState<QrPurpose>(DEFAULT_PURPOSE);
+  const [purpose, setPurpose] = useState<Purpose>(DEFAULT_PURPOSE);
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [now, setNow] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export function AdminQrGeneration() {
   // ref로 즉시 취소: handleSelectPurpose에서 React 스케줄러 전에 동기적으로 세트한다.
   const cancelRef = useRef(false);
 
-  function handleSelectPurpose(nextPurpose: QrPurpose) {
+  function handleSelectPurpose(nextPurpose: Purpose) {
     cancelRef.current = true;
     setPurpose(nextPurpose);
     setSession(null);
