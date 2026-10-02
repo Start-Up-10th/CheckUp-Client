@@ -1,12 +1,10 @@
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 /**
- * TODO(REQ-COM-001/002/006): 서버 봉사 API(`/api/v1/volunteer*`, 서버 PR #76)가 배포되면 이 mock을 교체한다.
- * 명단은 서비스에 저장된 전체 학생이다. 지금은 화면 개발용 고정 데이터이며 이름·학번은 4층 일부를 Figma
- * 07 예시에서 옮기고 3·5층은 합성한 값이다. 운영에는 사용하지 않는다.
+ * 로그인 없이 보는 확인용 페이지(`/admin/state-demo/*`)와 화면 테스트가 쓰는 고정 명단이다. 운영 화면은 서버 봉사
+ * API(`/api/v1/volunteer`)에서 받으므로 쓰지 않는다. 이름·학번은 4층 일부를 Figma 07 예시에서 옮기고 3·5층은
+ * 합성한 값이다.
  */
-export const IS_MOCK_VOLUNTEER_ROSTER = true;
-
 export const MOCK_VOLUNTEER_ROSTER: RosterStudent[] = (
   [
     {
