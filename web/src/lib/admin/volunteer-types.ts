@@ -7,8 +7,8 @@ export type RosterStudent = {
   /** 학번. 화면 표시와 검색에 쓴다. */
   studentId: string;
   name: string;
-  /** 호실 번호. 층은 `floor(roomNumber / 100)`이다(REQ-AUTH-002). */
-  roomNumber: number;
+  /** 호실 번호. 층은 `floor(roomNumber / 100)`이다(REQ-AUTH-002). 호실이 배정되지 않았으면 null이다. */
+  roomNumber: number | null;
   /** 앞으로 해야 할 봉사 횟수(REQ-COM-002). */
   count: number;
   /** 마지막 조정 날짜 `MM/DD`. 아직 없으면 undefined로 `-`를 표시한다. */

@@ -9,6 +9,7 @@ import {
   groupByRoom,
   lastActivityKorean,
   matchesQuery,
+  roomLabel,
 } from "./volunteer-roster";
 
 function student(overrides: Partial<RosterStudent>): RosterStudent {
@@ -263,5 +264,42 @@ describe("lastActivityKorean", () => {
 
   it("모양이 다르면 그대로 돌려준다", () => {
     expect(lastActivityKorean("어제")).toBe("어제");
+  });
+});
+
+describe("호실이 배정되지 않은 학생", () => {
+  const unassigned = student({
+    id: 9,
+    studentId: "2499",
+    name: "가나다",
+    roomNumber: null,
+  });
+
+  it("어느 층의 호실 묶음에도 나오지 않는다", () => {
+    for (const floor of [3, 4, 5] as const) {
+      expect(groupByRoom([unassigned], { floor, query: "" })).toEqual([]);
+    }
+  });
+
+  it("호실 번호 검색에는 걸리지 않고 학번·이름 검색에는 걸린다", () => {
+    expect(matchesQuery(unassigned, "412")).toBe(false);
+    expect(matchesQuery(unassigned, "2499")).toBe(true);
+    expect(matchesQuery(unassigned, "가나")).toBe(true);
+  });
+
+  it("오늘 지정돼 있으면 당일 봉사자 목록에는 맨 뒤에 나온다", () => {
+    const assigned = student({ id: 2, studentId: "2405", duty: "designated" });
+
+    const today = designatedToday([
+      { ...unassigned, duty: "designated" },
+      assigned,
+    ]);
+
+    expect(today.map((s) => s.studentId)).toEqual(["2405", "2499"]);
+  });
+
+  it("호실 문구는 `미배정`이다", () => {
+    expect(roomLabel(null)).toBe("미배정");
+    expect(roomLabel(412)).toBe("412호");
   });
 });

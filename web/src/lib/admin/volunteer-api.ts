@@ -6,7 +6,8 @@ export type VolunteerApiResponse = {
   studentId: number;
   name: string;
   studentNumber: number;
-  dormitoryRoom: number;
+  /** 호실. 배정되지 않았으면 null이다. */
+  dormitoryRoom: number | null;
   volunteerCount: number;
   lastActivityAt?: string | null;
   todayDuty?: "ASSIGNED" | "COMPLETED" | null;
@@ -49,7 +50,7 @@ export function toRosterStudent(body: VolunteerApiResponse): RosterStudent {
     id: body.studentId,
     studentId: String(body.studentNumber),
     name: body.name,
-    roomNumber: body.dormitoryRoom,
+    roomNumber: body.dormitoryRoom ?? null,
     count: body.volunteerCount,
     lastActivityDate: toMonthDay(body.lastActivityAt),
     duty: body.todayDuty ? DUTY_FROM_API[body.todayDuty] : "none",
