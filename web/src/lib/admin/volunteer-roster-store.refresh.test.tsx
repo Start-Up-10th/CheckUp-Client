@@ -47,7 +47,7 @@ describe("조용한 새로고침과 동작 반영", () => {
     expect(result.current.roster).toBe(MOCK_VOLUNTEER_ROSTER);
   });
 
-  it("동작 결과를 넣어도 먼저 시작한 새로고침 결과는 버려지지 않는다", async () => {
+  it("새로고침 중에 동작이 끝나도 응답은 반영하되 그 학생은 동작 결과를 유지한다", async () => {
     let finishReload: (
       students: typeof MOCK_VOLUNTEER_ROSTER,
     ) => void = () => {};
@@ -61,14 +61,39 @@ describe("조용한 새로고침과 동작 반영", () => {
       wrapper: wrapperFor({ ...createMockVolunteerGateway(), list }),
     });
     act(() => result.current.reload());
+    const changed = { ...MOCK_VOLUNTEER_ROSTER[0], count: 9 };
+    act(() => result.current.updateStudent(changed));
 
+    // 응답은 동작보다 먼저 서버를 읽은 낡은 값이다: 0번 학생은 옛 횟수, 1번 학생은 새 값.
+    const stale = [
+      MOCK_VOLUNTEER_ROSTER[0],
+      { ...MOCK_VOLUNTEER_ROSTER[1], count: 5 },
+    ];
+    await act(async () => finishReload(stale));
+
+    expect(getRoster()).toHaveLength(2);
+    expect(getRoster()[0]).toBe(changed);
+    expect(getRoster()[1].count).toBe(5);
+  });
+
+  it("새로고침이 끝난 뒤의 동작 결과는 다음 새로고침에 영향을 주지 않는다", async () => {
+    const list = vi.fn().mockResolvedValue(MOCK_VOLUNTEER_ROSTER);
+    act(() => setRoster(MOCK_VOLUNTEER_ROSTER));
+    const { result } = renderHook(() => useVolunteerRoster(), {
+      wrapper: wrapperFor({ ...createMockVolunteerGateway(), list }),
+    });
+    act(() => result.current.reload());
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
     act(() =>
       result.current.updateStudent({ ...MOCK_VOLUNTEER_ROSTER[0], count: 9 }),
     );
-    const fresh = MOCK_VOLUNTEER_ROSTER.slice(0, 2);
-    await act(async () => finishReload(fresh));
 
-    expect(getRoster()).toBe(fresh);
+    act(() => result.current.reload());
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(2));
+
+    await waitFor(() =>
+      expect(getRoster()[0].count).toBe(MOCK_VOLUNTEER_ROSTER[0].count),
+    );
   });
 
   it("updateStudent는 그 학생만 바꾸고 나머지는 그대로 둔다", () => {

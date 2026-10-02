@@ -21,6 +21,8 @@ type RosterState = { roster: RosterStudent[]; status: RosterStatus };
 const INITIAL: RosterState = { roster: [], status: "idle" };
 let state: RosterState = INITIAL;
 let requestId = 0;
+/** 진행 중인 새로고침마다, 그동안 성공한 동작이 돌려준 학생 상태. 응답이 오면 그 위에 덮어쓴다. */
+const activeOverlays = new Set<Map<number, RosterStudent>>();
 const listeners = new Set<() => void>();
 
 function emit(next: RosterState): void {
@@ -39,10 +41,11 @@ export function setRoster(next: RosterStudent[]): void {
 }
 
 /**
- * 서버가 돌려준 학생 한 명의 상태만 명단에 넣는다. 진행 중인 명단 새로고침은 그대로 두어, 먼저 시작한
- * 새로고침 결과가 이 동작 때문에 버려지지 않게 한다.
+ * 서버가 돌려준 학생 한 명의 상태만 명단에 넣는다. 진행 중인 명단 새로고침은 버리지 않고, 그 응답이 이 동작보다
+ * 먼저 서버를 읽은 낡은 값일 수 있어 응답이 오면 이 학생만 이 상태로 덮어쓴다.
  */
 export function updateStudent(updated: RosterStudent): void {
+  activeOverlays.forEach((overlay) => overlay.set(updated.id, updated));
   emit({ roster: replaceStudent(state.roster, updated), status: state.status });
 }
 
@@ -60,10 +63,19 @@ export async function loadRoster(gateway: VolunteerGateway): Promise<void> {
   const id = ++requestId;
   // 이미 보이는 명단은 다시 받는 동안에도, 받지 못했을 때도 그대로 둔다(충돌 뒤 조용한 새로고침).
   const silent = state.status === "ready";
+  const overlay = new Map<number, RosterStudent>();
+  activeOverlays.add(overlay);
   emit({ roster: state.roster, status: silent ? "ready" : "loading" });
   try {
     const students = await gateway.list();
-    if (id === requestId) emit({ roster: students, status: "ready" });
+    if (id === requestId) {
+      // 그동안 바뀐 학생이 없으면 응답 배열을 그대로 쓴다.
+      const merged =
+        overlay.size === 0
+          ? students
+          : students.map((student) => overlay.get(student.id) ?? student);
+      emit({ roster: merged, status: "ready" });
+    }
   } catch (error) {
     if (id !== requestId) return;
     if (error instanceof AdminUnauthorizedError) {
@@ -71,6 +83,8 @@ export async function loadRoster(gateway: VolunteerGateway): Promise<void> {
       return;
     }
     emit({ roster: state.roster, status: silent ? "ready" : "error" });
+  } finally {
+    activeOverlays.delete(overlay);
   }
 }
 
