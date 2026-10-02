@@ -165,7 +165,7 @@ export function AdminQrGeneration() {
         <PurposeTabs selected={purpose} onSelect={handleSelectPurpose} />
       </div>
 
-      {error && <StatusBanner variant="error" message={error} />}
+      {error && <StatusBanner variant="error" message={error} compactOnPhone />}
 
       {session && countdownLabel ? (
         <QrCodeGenerationPanel

@@ -95,6 +95,7 @@ export function AdminFaceRecognition({
             <StatusBanner
               variant={activeNotice.variant}
               message={activeNotice.message}
+              compactOnPhone
               className="w-fit"
             />
           )

@@ -63,7 +63,6 @@ export function AdminVolunteerDuty({
         toast={toast}
         positionClassName={TOAST_POSITION}
         variantBorder
-        compactOnPhone
       />
 
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 md:min-h-[57px] xl:min-h-0 xl:gap-y-5">

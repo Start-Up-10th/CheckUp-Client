@@ -36,6 +36,27 @@ describe("ToastLayer 위치", () => {
     expect(layerOf()).not.toHaveClass("xl:bottom-7");
   });
 
+  it("관리자 토스트는 기본으로 핸드폰 폭에서 작은 크기이고 패드 이상은 Figma 크기다", () => {
+    render(<ToastLayer toast={toast} />);
+
+    const banner = screen.getByRole("status");
+    expect(banner).toHaveClass("px-3", "py-2.5", "md:px-3.5", "md:py-3");
+    expect(screen.getByText("저장했습니다.")).toHaveClass(
+      "text-xs",
+      "md:text-[13px]",
+    );
+    expect(banner.parentElement).toHaveClass("w-fit", "md:w-full");
+  });
+
+  it("compactOnPhone을 끄면 핸드폰에서도 Figma 크기와 전체 폭이다", () => {
+    render(<ToastLayer toast={toast} compactOnPhone={false} />);
+
+    const banner = screen.getByRole("status");
+    expect(banner).toHaveClass("px-3.5", "py-3");
+    expect(banner.parentElement).toHaveClass("w-full");
+    expect(banner.parentElement).not.toHaveClass("w-fit");
+  });
+
   it("variantBorder를 배너에 전달한다", () => {
     render(<ToastLayer toast={toast} variantBorder />);
 
