@@ -1,10 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import {
-  MOCK_VOLUNTEER_ROSTER,
-  type RosterStudent,
-} from "@/lib/admin/mock-volunteer-roster";
+import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
+import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 /**
  * 봉사 명단(07)과 당일 봉사자(06)가 같은 명단을 보도록 화면 밖에 둔 임시 저장소다. 화면마다 상태를 따로 두면

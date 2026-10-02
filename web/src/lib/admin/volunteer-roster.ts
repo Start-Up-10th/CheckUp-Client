@@ -1,5 +1,5 @@
 import type { Floor } from "@/lib/admin/mock-floor-data";
-import type { RosterStudent } from "@/lib/admin/mock-volunteer-roster";
+import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 export type RoomGroup = { roomNumber: number; students: RosterStudent[] };
 
