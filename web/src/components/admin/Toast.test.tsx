@@ -8,30 +8,31 @@ function layerOf() {
 }
 
 describe("ToastLayer 위치", () => {
-  it("기본은 컴퓨터에서 하단 중앙이다", () => {
+  it("기본은 컴퓨터에서 하단 중앙, 패드는 오른쪽 위, 폰은 탭바 위다", () => {
     render(<ToastLayer toast={toast} />);
 
-    expect(layerOf()).toHaveClass("xl:bottom-7", "xl:justify-center");
-    expect(layerOf()).not.toHaveClass("xl:top-7");
-  });
-
-  it("top-right는 컴퓨터에서 오른쪽 위로 옮기고 패드·폰 위치는 그대로다", () => {
-    render(<ToastLayer toast={toast} placement="top-right" />);
-
-    expect(layerOf()).toHaveClass("xl:top-7", "xl:justify-end", "xl:pr-8");
-    expect(layerOf()).not.toHaveClass("xl:bottom-7");
     expect(layerOf()).toHaveClass(
-      "bottom-[78px]",
+      "xl:bottom-7",
+      "xl:justify-center",
       "md:top-7",
-      "md:justify-end",
+      "bottom-[78px]",
     );
   });
 
-  it("below-tabs는 컴퓨터에서 층 탭 아래(91px) 오른쪽이다", () => {
-    render(<ToastLayer toast={toast} placement="below-tabs" />);
+  it("positionClassName을 주면 기본 위치 대신 그 위치만 쓴다", () => {
+    render(
+      <ToastLayer
+        toast={toast}
+        positionClassName="inset-x-4 top-[63px] md:top-[79px] xl:top-[91px]"
+      />,
+    );
 
-    expect(layerOf()).toHaveClass("xl:top-[91px]", "xl:justify-end", "xl:pr-8");
-    expect(layerOf()).not.toHaveClass("xl:top-7");
+    expect(layerOf()).toHaveClass(
+      "top-[63px]",
+      "md:top-[79px]",
+      "xl:top-[91px]",
+    );
+    expect(layerOf()).not.toHaveClass("bottom-[78px]");
     expect(layerOf()).not.toHaveClass("xl:bottom-7");
   });
 

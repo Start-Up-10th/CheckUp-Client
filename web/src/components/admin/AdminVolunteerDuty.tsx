@@ -14,6 +14,13 @@ import {
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
 
 /**
+ * 토스트는 헤더 조작부(`+ 명단에서 지정` 버튼) 바로 아래, 목록 행 위에 둔다. 폰 58px(버튼 하단 50px + 8px),
+ * 패드 89px(헤더 하단 81px + 8px), 컴퓨터는 버튼이 아래 줄(103px)에 있어 제목 줄 오른쪽 위 28px이다.
+ */
+const TOAST_POSITION =
+  "inset-x-4 top-[58px] md:left-[96px] md:right-[22px] md:top-[89px] md:justify-end xl:left-[300px] xl:right-8 xl:top-7";
+
+/**
  * REQ-COM-006: 봉사자 관리(Figma 06). 오늘 운영일의 당일 봉사자 목록이다. `완료`는 봉사를 마친 것으로
  * 처리하고 횟수를 1 줄이며(목록에서 빠진다), `봉사 제외`는 지정을 취소한다. 지정은 `+ 명단에서 지정`으로
  * 이동하는 봉사자 명단 편집(07)에서 한다.
@@ -52,7 +59,11 @@ export function AdminVolunteerDuty({
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} placement="top-right" variantBorder />
+      <ToastLayer
+        toast={toast}
+        positionClassName={TOAST_POSITION}
+        variantBorder
+      />
 
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 md:min-h-[57px] xl:min-h-0 xl:gap-y-5">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">

@@ -25,6 +25,13 @@ const DESIGNATE_REFUSAL: Partial<Record<RosterChange["result"], string>> = {
 };
 
 /**
+ * 토스트는 헤더 조작부(층 탭·검색창) 바로 아래 8px에 둬 탭·검색창·행 버튼을 가리지 않는다: 폰 121px(검색창
+ * 하단 113px), 패드 139px(검색창 하단 131px). 컴퓨터는 검색창이 왼쪽 420px라 층 탭(하단 83px) 아래 오른쪽 91px이다.
+ */
+const TOAST_POSITION =
+  "inset-x-4 top-[121px] md:left-[96px] md:right-[22px] md:top-[139px] md:justify-end xl:left-[300px] xl:right-8 xl:top-[91px]";
+
+/**
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.
  * 명단에 학생을 추가·제외하는 단계는 없다.
  */
@@ -72,7 +79,11 @@ export function AdminVolunteerRoster({
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} placement="below-tabs" variantBorder />
+      <ToastLayer
+        toast={toast}
+        positionClassName={TOAST_POSITION}
+        variantBorder
+      />
 
       <div className="flex w-full items-end justify-between">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
