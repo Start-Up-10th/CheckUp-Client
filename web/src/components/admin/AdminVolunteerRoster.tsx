@@ -83,6 +83,7 @@ export function AdminVolunteerRoster({
         toast={toast}
         positionClassName={TOAST_POSITION}
         variantBorder
+        compactOnPhone
       />
 
       <div className="flex w-full items-end justify-between">

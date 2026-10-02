@@ -63,6 +63,7 @@ export function AdminVolunteerDuty({
         toast={toast}
         positionClassName={TOAST_POSITION}
         variantBorder
+        compactOnPhone
       />
 
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 md:min-h-[57px] xl:min-h-0 xl:gap-y-5">
@@ -105,6 +106,7 @@ export function AdminVolunteerDuty({
             <StatusBanner
               variant="neutral"
               variantBorder
+              compactOnPhone
               message="오늘 지정된 봉사자가 없습니다. 봉사자 명단에서 지정해 주세요."
             />
           ) : (
