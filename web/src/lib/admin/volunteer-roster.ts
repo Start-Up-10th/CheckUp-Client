@@ -201,3 +201,13 @@ export function lastActivityKorean(label: string | undefined): string {
   if (!match) return label;
   return `${Number(match[1])}월 ${Number(match[2])}일`;
 }
+
+/** 서버가 돌려준 학생 상태로 명단의 같은 학생(서버 ID)을 바꾼다. 명단에 없으면 그대로 둔다. */
+export function replaceStudent(
+  students: RosterStudent[],
+  updated: RosterStudent,
+): RosterStudent[] {
+  return students.map((student) =>
+    student.id === updated.id ? updated : student,
+  );
+}

@@ -1,7 +1,12 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import { fetchVolunteers } from "@/lib/admin/volunteer-api";
+import {
+  cancelVolunteerDuty,
+  completeVolunteerDuty,
+  designateVolunteer,
+  fetchVolunteers,
+} from "@/lib/admin/volunteer-api";
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 /**
@@ -10,10 +15,17 @@ import type { RosterStudent } from "@/lib/admin/volunteer-types";
  */
 export type VolunteerGateway = {
   list: () => Promise<RosterStudent[]>;
+  /** 아래 동작은 서버가 바꾼 뒤의 학생 상태를 돌려준다. `id`는 서버 학생 ID(`RosterStudent.id`)다. */
+  designate: (id: number) => Promise<RosterStudent>;
+  cancelDuty: (id: number) => Promise<RosterStudent>;
+  completeDuty: (id: number) => Promise<RosterStudent>;
 };
 
 export const apiVolunteerGateway: VolunteerGateway = {
   list: fetchVolunteers,
+  designate: designateVolunteer,
+  cancelDuty: cancelVolunteerDuty,
+  completeDuty: completeVolunteerDuty,
 };
 
 const VolunteerGatewayContext =

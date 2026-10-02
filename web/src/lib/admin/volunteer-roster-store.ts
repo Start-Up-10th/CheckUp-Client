@@ -49,7 +49,11 @@ export function resetRoster(): void {
  */
 export async function loadRoster(gateway: VolunteerGateway): Promise<void> {
   const id = ++requestId;
-  emit({ roster: state.roster, status: "loading" });
+  // 이미 보이는 명단은 다시 받는 동안에도 그대로 둔다(충돌 뒤 조용한 새로고침).
+  emit({
+    roster: state.roster,
+    status: state.status === "ready" ? "ready" : "loading",
+  });
   try {
     const students = await gateway.list();
     if (id === requestId) emit({ roster: students, status: "ready" });

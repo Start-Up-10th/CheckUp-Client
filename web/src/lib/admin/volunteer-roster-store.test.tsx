@@ -1,6 +1,7 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MOCK_VOLUNTEER_ROSTER } from "./mock-volunteer-roster";
+import { createMockVolunteerGateway } from "./volunteer-mock-gateway";
 import { AdminUnauthorizedError } from "./qr-api";
 import {
   VolunteerGatewayProvider,
@@ -38,7 +39,7 @@ describe("volunteer roster store", () => {
     const list = vi.fn().mockResolvedValue(MOCK_VOLUNTEER_ROSTER);
 
     const { result } = renderHook(() => useVolunteerRoster(), {
-      wrapper: wrapperFor({ list }),
+      wrapper: wrapperFor({ ...createMockVolunteerGateway(), list }),
     });
 
     expect(result.current.status).toBe("loading");
@@ -49,7 +50,7 @@ describe("volunteer roster store", () => {
 
   it("두 화면이 같은 명단을 쓰고 서버 요청은 한 번이다", async () => {
     const list = vi.fn().mockResolvedValue(MOCK_VOLUNTEER_ROSTER);
-    const wrapper = wrapperFor({ list });
+    const wrapper = wrapperFor({ ...createMockVolunteerGateway(), list });
 
     const first = renderHook(() => useVolunteerRoster(), { wrapper });
     const second = renderHook(() => useVolunteerRoster(), { wrapper });
@@ -61,7 +62,7 @@ describe("volunteer roster store", () => {
 
   it("이미 받은 명단은 다시 받지 않고, 바꾼 명단을 다른 화면도 본다", () => {
     const list = vi.fn();
-    const wrapper = wrapperFor({ list });
+    const wrapper = wrapperFor({ ...createMockVolunteerGateway(), list });
     const next = MOCK_VOLUNTEER_ROSTER.slice(0, 2);
     act(() => setRoster(MOCK_VOLUNTEER_ROSTER));
     const first = renderHook(() => useVolunteerRoster(), { wrapper });
@@ -81,7 +82,7 @@ describe("volunteer roster store", () => {
       .mockResolvedValueOnce(MOCK_VOLUNTEER_ROSTER);
 
     const { result } = renderHook(() => useVolunteerRoster(), {
-      wrapper: wrapperFor({ list }),
+      wrapper: wrapperFor({ ...createMockVolunteerGateway(), list }),
     });
     await waitFor(() => expect(result.current.status).toBe("error"));
 
@@ -94,7 +95,9 @@ describe("volunteer roster store", () => {
   it("401이면 관리자 로그인으로 보낸다", async () => {
     const list = vi.fn().mockRejectedValue(new AdminUnauthorizedError());
 
-    renderHook(() => useVolunteerRoster(), { wrapper: wrapperFor({ list }) });
+    renderHook(() => useVolunteerRoster(), {
+      wrapper: wrapperFor({ ...createMockVolunteerGateway(), list }),
+    });
 
     await waitFor(() => expect(redirectToAdminLogin).toHaveBeenCalledTimes(1));
   });

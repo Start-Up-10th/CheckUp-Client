@@ -7,22 +7,23 @@ import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerRosterRow } from "@/components/admin/VolunteerRosterRow";
 import type { Floor } from "@/lib/admin/mock-floor-data";
 import { operatingDayLabel } from "@/lib/admin/operating-day";
+import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
+import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
 import {
   adjustCount,
-  designate,
   groupByRoom,
-  type RosterChange,
+  replaceStudent,
 } from "@/lib/admin/volunteer-roster";
-import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
+import {
+  getRoster,
+  useVolunteerRoster,
+} from "@/lib/admin/volunteer-roster-store";
 
 const DEFAULT_FLOOR: Floor = 4;
 
-/** 지정이 막힌 이유별 안내(Figma 07 state messages, 봉사 없음·완료는 하네스 REQ-COM-006 문구). */
-const DESIGNATE_REFUSAL: Partial<Record<RosterChange["result"], string>> = {
-  "already-designated": "이미 당일 봉사자로 지정된 학생입니다.",
-  "already-completed": "이미 봉사를 완료했습니다.",
-  "no-count": "봉사가 없습니다.",
-};
+/** 서버가 이유를 알려 주지 않은 지정 실패(Figma 07 state messages). */
+const DESIGNATE_FAILURE_MESSAGE =
+  "당일 봉사자 지정에 실패했습니다. 다시 시도해 주세요.";
 
 /**
  * 토스트는 헤더 조작부(층 탭·검색창) 바로 아래 8px에 둬 탭·검색창·행 버튼을 가리지 않는다: 폰 121px(검색창
@@ -39,6 +40,8 @@ export function AdminVolunteerRoster() {
   const { roster, status, setRoster, reload } = useVolunteerRoster();
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
+  const gateway = useVolunteerGateway();
+  const singleFlight = useSingleFlight();
   const { toast, showToast } = useToast();
   const designatedCount = roster.filter(
     (student) => student.duty !== "none",
@@ -62,14 +65,21 @@ export function AdminVolunteerRoster() {
   }
 
   function handleDesignate(studentId: string) {
-    const change = designate(roster, studentId);
-    if (change.result === "changed") {
-      setRoster(change.students);
-      showToast({ variant: "success", message: "당일 봉사자로 지정했습니다." });
-      return;
-    }
-    const refusal = DESIGNATE_REFUSAL[change.result];
-    if (refusal) showToast({ variant: "neutral", message: refusal });
+    const target = roster.find((student) => student.studentId === studentId);
+    if (!target) return;
+    return singleFlight(target.id, async () => {
+      try {
+        const updated = await gateway.designate(target.id);
+        setRoster(replaceStudent(getRoster(), updated));
+        showToast({
+          variant: "success",
+          message: "당일 봉사자로 지정했습니다.",
+        });
+      } catch (error) {
+        const failure = failureToast(error, DESIGNATE_FAILURE_MESSAGE, reload);
+        if (failure) showToast(failure);
+      }
+    });
   }
 
   return (

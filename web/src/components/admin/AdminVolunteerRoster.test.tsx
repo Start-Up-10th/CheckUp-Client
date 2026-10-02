@@ -1,14 +1,27 @@
 import {
   cleanup,
   fireEvent,
-  render,
+  render as renderPlain,
   screen,
   within,
 } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
 import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
+import { createMockVolunteerGateway } from "@/lib/admin/volunteer-mock-gateway";
 import { resetRoster, setRoster } from "@/lib/admin/volunteer-roster-store";
 import { AdminVolunteerRoster } from "./AdminVolunteerRoster";
+
+const mockGateway = createMockVolunteerGateway();
+
+/** 서버 대신 목업 게이트웨이를 쓰는 화면. */
+function render(ui: ReactElement) {
+  return renderPlain(
+    <VolunteerGatewayProvider value={mockGateway}>
+      {ui}
+    </VolunteerGatewayProvider>,
+  );
+}
 
 beforeEach(() => setRoster(MOCK_VOLUNTEER_ROSTER));
 afterEach(() => {
@@ -101,8 +114,8 @@ describe("AdminVolunteerRoster", () => {
     resetRoster();
     const list = vi.fn().mockResolvedValue(MOCK_VOLUNTEER_ROSTER);
 
-    render(
-      <VolunteerGatewayProvider value={{ list }}>
+    renderPlain(
+      <VolunteerGatewayProvider value={{ ...mockGateway, list }}>
         <AdminVolunteerRoster />
       </VolunteerGatewayProvider>,
     );
@@ -120,8 +133,8 @@ describe("AdminVolunteerRoster", () => {
       .mockRejectedValueOnce(new Error("network"))
       .mockResolvedValueOnce(MOCK_VOLUNTEER_ROSTER);
 
-    render(
-      <VolunteerGatewayProvider value={{ list }}>
+    renderPlain(
+      <VolunteerGatewayProvider value={{ ...mockGateway, list }}>
         <AdminVolunteerRoster />
       </VolunteerGatewayProvider>,
     );
@@ -177,7 +190,7 @@ describe("AdminVolunteerRoster", () => {
   });
 
   describe("당일 봉사자 지정", () => {
-    it("횟수가 있는 학생을 지정하면 지정됨으로 바뀌고 성공 문구를 보여 준다", () => {
+    it("횟수가 있는 학생을 지정하면 지정됨으로 바뀌고 성공 문구를 보여 준다", async () => {
       render(<AdminVolunteerRoster />);
 
       fireEvent.click(
@@ -185,54 +198,106 @@ describe("AdminVolunteerRoster", () => {
       );
 
       expect(
-        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정됨" }),
+        await screen.findByRole("button", {
+          name: "박서연 당일 봉사자로 지정됨",
+        }),
       ).toHaveTextContent("지정됨");
       expect(screen.getByRole("status")).toHaveTextContent(
         "당일 봉사자로 지정했습니다.",
       );
     });
 
-    it("지정해도 횟수는 그대로다", () => {
+    it("지정해도 횟수는 그대로다", async () => {
       render(<AdminVolunteerRoster />);
 
       fireEvent.click(
         screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
       );
+      await screen.findByRole("button", {
+        name: "박서연 당일 봉사자로 지정됨",
+      });
 
       const row = screen.getByRole("group", { name: "박서연" });
       expect(within(row).getByText("1회")).toBeInTheDocument();
     });
 
-    it("횟수가 0인 학생은 지정하지 않고 봉사가 없다고 알린다", () => {
+    it("서버가 봉사 없음(NO_VOLUNTEER_LEFT)으로 막으면 봉사가 없다고 알린다", async () => {
       render(<AdminVolunteerRoster />);
 
       fireEvent.click(
         screen.getByRole("button", { name: "이지후 당일 봉사자로 지정" }),
       );
 
-      expect(screen.getByRole("status")).toHaveTextContent("봉사가 없습니다.");
+      expect(await screen.findByRole("status")).toHaveTextContent(
+        "봉사가 없습니다.",
+      );
       expect(
         screen.getByRole("button", { name: "이지후 당일 봉사자로 지정" }),
       ).toHaveTextContent("봉사자 지정");
     });
 
-    it("이미 지정된 학생을 누르면 이미 지정됐다고 알린다", () => {
+    it("서버가 이미 지정됨(ALREADY_ON_DUTY)으로 막으면 이미 지정됐다고 알린다", async () => {
       render(<AdminVolunteerRoster />);
 
       fireEvent.click(
         screen.getByRole("button", { name: "김도현 당일 봉사자로 지정됨" }),
       );
 
-      expect(screen.getByRole("status")).toHaveTextContent(
+      expect(await screen.findByRole("status")).toHaveTextContent(
         "이미 당일 봉사자로 지정된 학생입니다.",
       );
     });
 
-    it("지정한 학생은 다른 화면에서 같은 명단으로 보인다", () => {
+    it("서버가 이유 없이 실패하면 지정 실패 오류 문구를 보여 준다", async () => {
+      const designate = vi.fn().mockRejectedValue(new Error("network"));
+      renderPlain(
+        <VolunteerGatewayProvider value={{ ...mockGateway, designate }}>
+          <AdminVolunteerRoster />
+        </VolunteerGatewayProvider>,
+      );
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      );
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "당일 봉사자 지정에 실패했습니다. 다시 시도해 주세요.",
+      );
+      expect(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      ).toBeInTheDocument();
+    });
+
+    it("지정 요청이 끝나기 전에 다시 눌러도 서버에는 한 번만 보낸다", async () => {
+      const designate = vi
+        .fn()
+        .mockImplementation((id: number) => mockGateway.designate(id));
+      renderPlain(
+        <VolunteerGatewayProvider value={{ ...mockGateway, designate }}>
+          <AdminVolunteerRoster />
+        </VolunteerGatewayProvider>,
+      );
+      const button = screen.getByRole("button", {
+        name: "박서연 당일 봉사자로 지정",
+      });
+
+      fireEvent.click(button);
+      fireEvent.click(button);
+      await screen.findByRole("button", {
+        name: "박서연 당일 봉사자로 지정됨",
+      });
+
+      expect(designate).toHaveBeenCalledTimes(1);
+    });
+
+    it("지정한 학생은 다른 화면에서 같은 명단으로 보인다", async () => {
       const { unmount } = render(<AdminVolunteerRoster />);
       fireEvent.click(
         screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
       );
+      await screen.findByRole("button", {
+        name: "박서연 당일 봉사자로 지정됨",
+      });
       unmount();
 
       render(<AdminVolunteerRoster />);

@@ -2,17 +2,32 @@ import {
   act,
   cleanup,
   fireEvent,
-  render,
+  render as renderPlain,
   screen,
+  waitFor,
 } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
+import { VolunteerApiError } from "@/lib/admin/volunteer-api";
 import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
+import { createMockVolunteerGateway } from "@/lib/admin/volunteer-mock-gateway";
 import {
   getRoster,
   resetRoster,
   setRoster,
 } from "@/lib/admin/volunteer-roster-store";
 import { AdminVolunteerDuty } from "./AdminVolunteerDuty";
+
+const mockGateway = createMockVolunteerGateway();
+
+/** 서버 대신 목업 게이트웨이를 쓰는 화면. */
+function render(ui: ReactElement) {
+  return renderPlain(
+    <VolunteerGatewayProvider value={mockGateway}>
+      {ui}
+    </VolunteerGatewayProvider>,
+  );
+}
 
 beforeEach(() => {
   // 2026-10-01 12:00 KST. 타이머는 그대로 두고 날짜만 고정한다.
@@ -68,35 +83,72 @@ describe("AdminVolunteerDuty", () => {
     ).toHaveAttribute("href", "/admin/state-demo/volunteer-roster");
   });
 
-  it("완료하면 목록에서 빠지고 횟수를 1 줄이며 완료 문구를 보여 준다", () => {
+  it("완료하면 목록에서 빠지고 횟수를 1 줄이며 완료 문구를 보여 준다", async () => {
     render(<AdminVolunteerDuty />);
     expect(countOf("2405")).toBe(3);
 
     fireEvent.click(screen.getByRole("button", { name: "김도현 봉사 완료" }));
 
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "봉사를 완료 처리했습니다.",
+    );
     expect(screen.queryByText("김도현")).not.toBeInTheDocument();
     expect(screen.getByText("1명")).toBeInTheDocument();
     expect(countOf("2405")).toBe(2);
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "봉사를 완료 처리했습니다.",
-    );
   });
 
-  it("봉사 제외는 목록에서 빼지만 횟수는 바꾸지 않는다", () => {
+  it("봉사 제외는 목록에서 빼지만 횟수는 바꾸지 않는다", async () => {
     render(<AdminVolunteerDuty />);
 
     fireEvent.click(
       screen.getByRole("button", { name: "정민수 당일 봉사자에서 제외" }),
     );
 
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "당일 봉사자에서 제외했습니다.",
+    );
     expect(screen.queryByText("정민수")).not.toBeInTheDocument();
     expect(countOf("2401")).toBe(2);
     expect(
       getRoster().find((student) => student.studentId === "2401")?.duty,
     ).toBe("none");
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "당일 봉사자에서 제외했습니다.",
+  });
+
+  it("서버가 완료를 막으면(DUTY_ALREADY_COMPLETED) 안내하고 목록을 다시 받는다", async () => {
+    const completeDuty = vi
+      .fn()
+      .mockRejectedValue(new VolunteerApiError(409, "DUTY_ALREADY_COMPLETED"));
+    const list = vi.fn().mockResolvedValue(MOCK_VOLUNTEER_ROSTER);
+    renderPlain(
+      <VolunteerGatewayProvider value={{ ...mockGateway, completeDuty, list }}>
+        <AdminVolunteerDuty />
+      </VolunteerGatewayProvider>,
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "김도현 봉사 완료" }));
+
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "이미 봉사를 완료했습니다.",
+    );
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
+    expect(screen.getByText("김도현")).toBeInTheDocument();
+  });
+
+  it("서버가 이유 없이 실패하면 처리 실패 오류 문구를 보여 주고 목록은 그대로다", async () => {
+    const completeDuty = vi.fn().mockRejectedValue(new Error("network"));
+    renderPlain(
+      <VolunteerGatewayProvider value={{ ...mockGateway, completeDuty }}>
+        <AdminVolunteerDuty />
+      </VolunteerGatewayProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "김도현 봉사 완료" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "처리에 실패했습니다. 다시 시도해 주세요.",
+    );
+    expect(screen.getByText("김도현")).toBeInTheDocument();
+    expect(countOf("2405")).toBe(3);
   });
 
   it("지정된 학생이 없으면 안내 문구를 보여 준다", () => {
@@ -118,8 +170,8 @@ describe("AdminVolunteerDuty", () => {
     resetRoster();
     const list = vi.fn().mockRejectedValue(new Error("network"));
 
-    render(
-      <VolunteerGatewayProvider value={{ list }}>
+    renderPlain(
+      <VolunteerGatewayProvider value={{ ...mockGateway, list }}>
         <AdminVolunteerDuty />
       </VolunteerGatewayProvider>,
     );
@@ -131,8 +183,8 @@ describe("AdminVolunteerDuty", () => {
     resetRoster();
     const list = vi.fn().mockReturnValue(new Promise(() => {}));
 
-    render(
-      <VolunteerGatewayProvider value={{ list }}>
+    renderPlain(
+      <VolunteerGatewayProvider value={{ ...mockGateway, list }}>
         <AdminVolunteerDuty />
       </VolunteerGatewayProvider>,
     );

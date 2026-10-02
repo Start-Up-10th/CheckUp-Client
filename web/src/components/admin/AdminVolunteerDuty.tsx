@@ -3,15 +3,24 @@
 import Link from "next/link";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { StatusBanner } from "@/components/admin/StatusBanner";
-import { ToastLayer, useToast } from "@/components/admin/Toast";
+import {
+  ToastLayer,
+  useToast,
+  type ToastMessage,
+} from "@/components/admin/Toast";
 import { VolunteerDutyRow } from "@/components/admin/VolunteerDutyRow";
 import { operatingDayLabel } from "@/lib/admin/operating-day";
+import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
+import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
+import { designatedToday, replaceStudent } from "@/lib/admin/volunteer-roster";
 import {
-  cancelDuty,
-  completeDuty,
-  designatedToday,
-} from "@/lib/admin/volunteer-roster";
-import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
+  getRoster,
+  useVolunteerRoster,
+} from "@/lib/admin/volunteer-roster-store";
+import type { RosterStudent } from "@/lib/admin/volunteer-types";
+
+/** 서버가 이유를 알려 주지 않은 실패(Figma 06 state messages). */
+const FAILURE_MESSAGE = "처리에 실패했습니다. 다시 시도해 주세요.";
 
 /**
  * 토스트는 헤더 조작부(`+ 명단에서 지정` 버튼) 바로 아래, 목록 행 위에 둔다. 폰 58px(버튼 하단 50px + 8px),
@@ -32,26 +41,44 @@ export function AdminVolunteerDuty({
   rosterHref?: string;
 }) {
   const { roster, status, setRoster, reload } = useVolunteerRoster();
+  const gateway = useVolunteerGateway();
+  const singleFlight = useSingleFlight();
   const { toast, showToast } = useToast();
   const today = designatedToday(roster);
   const dayLabel = operatingDayLabel(new Date());
 
+  /** 서버에 요청하고, 서버가 돌려준 학생 상태를 명단에 넣는다. 실패는 상태 메시지로 알린다. */
+  function runDutyAction(
+    studentId: string,
+    request: (id: number) => Promise<RosterStudent>,
+    successMessage: ToastMessage,
+  ) {
+    const target = roster.find((student) => student.studentId === studentId);
+    if (!target) return;
+    return singleFlight(target.id, async () => {
+      try {
+        const updated = await request(target.id);
+        setRoster(replaceStudent(getRoster(), updated));
+        showToast(successMessage);
+      } catch (error) {
+        const failure = failureToast(error, FAILURE_MESSAGE, reload);
+        if (failure) showToast(failure);
+      }
+    });
+  }
+
   function handleComplete(studentId: string) {
-    const change = completeDuty(
-      roster,
-      studentId,
-      operatingDayLabel(new Date()),
-    );
-    if (change.result !== "changed") return;
-    setRoster(change.students);
-    showToast({ variant: "success", message: "봉사를 완료 처리했습니다." });
+    return runDutyAction(studentId, gateway.completeDuty, {
+      variant: "success",
+      message: "봉사를 완료 처리했습니다.",
+    });
   }
 
   function handleCancel(studentId: string) {
-    const change = cancelDuty(roster, studentId);
-    if (change.result !== "changed") return;
-    setRoster(change.students);
-    showToast({ variant: "neutral", message: "당일 봉사자에서 제외했습니다." });
+    return runDutyAction(studentId, gateway.cancelDuty, {
+      variant: "neutral",
+      message: "당일 봉사자에서 제외했습니다.",
+    });
   }
 
   return (
