@@ -57,8 +57,8 @@ describe("ToastLayer 위치", () => {
     expect(banner.parentElement).not.toHaveClass("w-fit");
   });
 
-  it("variantBorder를 배너에 전달한다", () => {
-    render(<ToastLayer toast={toast} variantBorder />);
+  it("토스트 종류에 맞는 테두리를 쓴다", () => {
+    render(<ToastLayer toast={toast} />);
 
     expect(screen.getByRole("status")).toHaveClass(
       "border-admin-attendance-border",
