@@ -59,12 +59,7 @@ export function AdminVolunteerDuty({
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer
-        toast={toast}
-        positionClassName={TOAST_POSITION}
-        variantBorder
-        compactOnPhone
-      />
+      <ToastLayer toast={toast} positionClassName={TOAST_POSITION} />
 
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 md:min-h-[57px] xl:min-h-0 xl:gap-y-5">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
@@ -105,7 +100,6 @@ export function AdminVolunteerDuty({
           ) : today.length === 0 ? (
             <StatusBanner
               variant="neutral"
-              variantBorder
               compactOnPhone
               message="오늘 지정된 봉사자가 없습니다. 봉사자 명단에서 지정해 주세요."
             />
