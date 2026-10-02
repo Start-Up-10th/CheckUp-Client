@@ -1,8 +1,8 @@
 import type { Purpose } from "@/lib/admin/purpose";
 
-type ApiPurpose = "DORMITORY" | "STUDY_ROOM";
+export type ApiPurpose = "DORMITORY" | "STUDY_ROOM";
 
-const PURPOSE_TO_API: Record<Purpose, ApiPurpose> = {
+export const PURPOSE_TO_API: Record<Purpose, ApiPurpose> = {
   dorm: "DORMITORY",
   study: "STUDY_ROOM",
 };
