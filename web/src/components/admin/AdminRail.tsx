@@ -6,9 +6,13 @@ import { LogoutIcon } from "@/components/icons/AdminNavIcons";
 import { ADMIN_NAV_ITEMS, isAdminNavActive } from "@/lib/admin/nav-items";
 import { useAdminLogout } from "@/lib/admin/use-admin-logout";
 
-/** 반응형 기준: 768~1279px(관리자-패드) — 좌측 축소형 아이콘 레일, 라벨 없이 아이콘만. */
-export function AdminRail() {
-  const pathname = usePathname();
+/**
+ * 반응형 기준: 768~1279px(관리자-패드) — 좌측 축소형 아이콘 레일, 라벨 없이 아이콘만.
+ * `activePath`는 로그인 없이 보는 확인용 페이지에서 활성 항목을 지정할 때만 쓴다(기본은 현재 주소).
+ */
+export function AdminRail({ activePath }: { activePath?: string }) {
+  const currentPath = usePathname();
+  const pathname = activePath ?? currentPath;
   const logout = useAdminLogout();
 
   return (

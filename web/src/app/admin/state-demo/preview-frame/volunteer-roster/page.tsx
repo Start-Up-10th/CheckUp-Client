@@ -1,5 +1,5 @@
 import { AdminVolunteerRoster } from "@/components/admin/AdminVolunteerRoster";
 
-export default function AdminVolunteersAddPage() {
+export default function Page() {
   return <AdminVolunteerRoster />;
 }

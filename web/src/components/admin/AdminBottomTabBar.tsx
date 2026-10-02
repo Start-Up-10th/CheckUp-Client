@@ -31,9 +31,11 @@ function TabIcon({ src, className }: { src: string; className?: string }) {
 /**
  * REQ-UI-005 / DEC-026: ~767px(관리자-핸드폰) 하단 탭바는 라벨 없이 아이콘만 있는 5탭이다.
  * 홈 / QR / 얼굴 / 봉사 / 로그아웃(맨 오른쪽, 경고색). 로그아웃은 사이드바와 같이 인증(P2) 연결 전까지 동작이 없다.
+ * `activePath`는 로그인 없이 보는 확인용 페이지에서 활성 항목을 지정할 때만 쓴다(기본은 현재 주소).
  */
-export function AdminBottomTabBar() {
-  const pathname = usePathname();
+export function AdminBottomTabBar({ activePath }: { activePath?: string }) {
+  const currentPath = usePathname();
+  const pathname = activePath ?? currentPath;
   const logout = useAdminLogout();
 
   return (
