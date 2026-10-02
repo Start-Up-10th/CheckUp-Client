@@ -29,7 +29,7 @@ const DESIGNATE_REFUSAL: Partial<Record<RosterChange["result"], string>> = {
  * 하단 113px), 패드 139px(검색창 하단 131px). 컴퓨터는 검색창이 왼쪽 420px라 층 탭(하단 83px) 아래 오른쪽 91px이다.
  */
 const TOAST_POSITION =
-  "inset-x-4 top-[121px] md:left-[96px] md:right-[22px] md:top-[139px] md:justify-end xl:left-[300px] xl:right-8 xl:top-[91px]";
+  "inset-x-4 top-[121px] justify-end md:left-[96px] md:right-[22px] md:top-[139px] md:justify-end xl:left-[300px] xl:right-8 xl:top-[91px]";
 
 /**
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.

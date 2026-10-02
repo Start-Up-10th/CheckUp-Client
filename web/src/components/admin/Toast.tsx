@@ -40,7 +40,7 @@ export function useToast() {
  * 종류별 테두리다. `compactOnPhone`은 핸드폰 폭에서 크기를 줄이고 내용 길이만큼만 차지한다. 모달(z-40) 위에 표시되도록 z-50 유지.
  * 전체화면 카메라(얼굴 인식 전체화면) 중 토스트는 Fullscreen API 제약으로 별도 처리가 필요하며 현재 미구현.
  */
-const DEFAULT_POSITION = `bottom-[78px] inset-x-[18px]
+const DEFAULT_POSITION = `justify-center bottom-[78px] inset-x-[18px]
   md:inset-x-0 md:top-7 md:bottom-auto md:left-[96px] md:justify-end md:pr-6
   xl:top-auto xl:bottom-7 xl:left-[300px] xl:justify-center xl:pr-0`;
 
@@ -57,9 +57,7 @@ export function ToastLayer({
 }) {
   if (!toast) return null;
   return (
-    <div
-      className={`pointer-events-none fixed z-50 flex justify-center ${positionClassName}`}
-    >
+    <div className={`pointer-events-none fixed z-50 flex ${positionClassName}`}>
       <div
         className={`pointer-events-auto md:max-w-[360px] xl:max-w-[500px] ${
           compactOnPhone ? "w-fit max-w-full md:w-full" : "w-full"

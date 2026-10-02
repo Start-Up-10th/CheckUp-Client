@@ -18,7 +18,7 @@ import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
  * 패드 89px(헤더 하단 81px + 8px), 컴퓨터는 버튼이 아래 줄(103px)에 있어 제목 줄 오른쪽 위 28px이다.
  */
 const TOAST_POSITION =
-  "inset-x-4 top-[58px] md:left-[96px] md:right-[22px] md:top-[89px] md:justify-end xl:left-[300px] xl:right-8 xl:top-7";
+  "inset-x-4 top-[58px] justify-end md:left-[96px] md:right-[22px] md:top-[89px] md:justify-end xl:left-[300px] xl:right-8 xl:top-7";
 
 /**
  * REQ-COM-006: 봉사자 관리(Figma 06). 오늘 운영일의 당일 봉사자 목록이다. `완료`는 봉사를 마친 것으로
