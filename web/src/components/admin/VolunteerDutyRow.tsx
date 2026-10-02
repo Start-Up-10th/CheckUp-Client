@@ -1,5 +1,5 @@
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
-import { lastActivityKorean } from "@/lib/admin/volunteer-roster";
+import { lastActivityKorean, roomLabel } from "@/lib/admin/volunteer-roster";
 
 type VolunteerDutyRowProps = {
   student: RosterStudent;
@@ -24,7 +24,7 @@ export function VolunteerDutyRow({
           {student.name}
         </p>
         <p className="font-mono text-[10px] leading-[13px] text-admin-textMuted md:text-[11px] md:leading-[15px] xl:text-xs xl:leading-4">
-          {student.studentId} · {student.roomNumber}호
+          {student.studentId} · {roomLabel(student.roomNumber)}
         </p>
       </div>
       <p className="hidden text-xs leading-[14px] text-admin-textSecondary md:block xl:hidden">

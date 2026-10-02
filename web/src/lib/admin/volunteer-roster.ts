@@ -7,6 +7,21 @@ export function floorOf(roomNumber: number): number {
   return Math.floor(roomNumber / 100);
 }
 
+/** 화면에 보이는 호실 문구. 호실이 배정되지 않은 학생은 `미배정`이다. */
+export function roomLabel(roomNumber: number | null): string {
+  return roomNumber === null ? "미배정" : `${roomNumber}호`;
+}
+
+/** 호실 → 이름 → 학번 순. 호실이 없는 학생은 맨 뒤다. */
+function compareStudents(a: RosterStudent, b: RosterStudent): number {
+  const roomA = a.roomNumber ?? Number.POSITIVE_INFINITY;
+  const roomB = b.roomNumber ?? Number.POSITIVE_INFINITY;
+  if (roomA !== roomB) return roomA < roomB ? -1 : 1;
+  return (
+    a.name.localeCompare(b.name, "ko") || a.studentId.localeCompare(b.studentId)
+  );
+}
+
 const CHOSEONG = [
   "ㄱ",
   "ㄲ",
@@ -58,13 +73,19 @@ export function matchesQuery(
   const query = rawQuery.trim();
   if (query === "") return true;
   if (ONLY_DIGITS.test(query)) {
-    return student.studentId === query || String(student.roomNumber) === query;
+    return (
+      student.studentId === query ||
+      (student.roomNumber !== null && String(student.roomNumber) === query)
+    );
   }
   if (student.name.includes(query)) return true;
   return ONLY_CHOSEONG.test(query) && toChoseong(student.name).includes(query);
 }
 
-/** 층 탭과 검색어로 거른 뒤 호실 → 이름 → 학번 순으로 같은 호실끼리 묶는다(REQ-COM-001). */
+/**
+ * 층 탭과 검색어로 거른 뒤 호실 → 이름 → 학번 순으로 같은 호실끼리 묶는다(REQ-COM-001). 호실이 배정되지 않은
+ * 학생은 어느 층에도 속하지 않아 이 목록에 나오지 않는다.
+ */
 export function groupByRoom(
   students: RosterStudent[],
   filter: { floor: Floor; query: string },
@@ -72,22 +93,18 @@ export function groupByRoom(
   const visible = students
     .filter(
       (student) =>
+        student.roomNumber !== null &&
         floorOf(student.roomNumber) === filter.floor &&
         matchesQuery(student, filter.query),
     )
-    .sort(
-      (a, b) =>
-        a.roomNumber - b.roomNumber ||
-        a.name.localeCompare(b.name, "ko") ||
-        a.studentId.localeCompare(b.studentId),
-    );
+    .sort(compareStudents);
 
   const groups: RoomGroup[] = [];
   for (const student of visible) {
     const last = groups[groups.length - 1];
-    if (last && last.roomNumber === student.roomNumber)
-      last.students.push(student);
-    else groups.push({ roomNumber: student.roomNumber, students: [student] });
+    const roomNumber = student.roomNumber as number;
+    if (last && last.roomNumber === roomNumber) last.students.push(student);
+    else groups.push({ roomNumber, students: [student] });
   }
   return groups;
 }
@@ -96,12 +113,7 @@ export function groupByRoom(
 export function designatedToday(students: RosterStudent[]): RosterStudent[] {
   return students
     .filter((student) => student.duty === "designated")
-    .sort(
-      (a, b) =>
-        a.roomNumber - b.roomNumber ||
-        a.name.localeCompare(b.name, "ko") ||
-        a.studentId.localeCompare(b.studentId),
-    );
+    .sort(compareStudents);
 }
 
 export type RosterChange = {
