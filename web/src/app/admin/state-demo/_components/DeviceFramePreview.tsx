@@ -4,6 +4,10 @@ const DEVICES = {
 } as const;
 
 const SCREENS = {
+  home: {
+    label: "01 · 홈(전개도)",
+    src: "/admin/state-demo/preview-frame/home",
+  },
   duty: {
     label: "06 · 봉사자 관리",
     src: "/admin/state-demo/preview-frame/volunteer-duty",
@@ -27,7 +31,8 @@ export function DeviceFramePreview({
   device: PreviewDevice;
   screen: string | undefined;
 }) {
-  const current = screen === "roster" ? "roster" : "duty";
+  const current: keyof typeof SCREENS =
+    screen === "roster" || screen === "home" ? screen : "duty";
   const frame = DEVICES[device];
   const links = (Object.keys(SCREENS) as (keyof typeof SCREENS)[]).map(
     (key) => (
