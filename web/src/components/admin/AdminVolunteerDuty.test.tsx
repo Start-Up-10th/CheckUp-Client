@@ -151,6 +151,25 @@ describe("AdminVolunteerDuty", () => {
     expect(countOf("2405")).toBe(3);
   });
 
+  it("호실이 배정되지 않은 지정 학생은 호실 대신 미배정으로 보여 준다", () => {
+    act(() =>
+      setRoster([
+        {
+          id: 99,
+          studentId: "2499",
+          name: "가나다",
+          roomNumber: null,
+          count: 1,
+          duty: "designated",
+        },
+      ]),
+    );
+
+    render(<AdminVolunteerDuty />);
+
+    expect(screen.getByText("2499 · 미배정")).toBeInTheDocument();
+  });
+
   it("지정된 학생이 없으면 안내 문구를 보여 준다", () => {
     act(() =>
       setRoster(

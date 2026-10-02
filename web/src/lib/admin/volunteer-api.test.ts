@@ -59,6 +59,12 @@ describe("toRosterStudent", () => {
     expect(student.duty).toBe("none");
   });
 
+  it("호실이 배정되지 않으면(null) 호실 없음이다", () => {
+    expect(
+      toRosterStudent({ ...BODY, dormitoryRoom: null }).roomNumber,
+    ).toBeNull();
+  });
+
   it("COMPLETED는 완료로 바꾼다", () => {
     expect(toRosterStudent({ ...BODY, todayDuty: "COMPLETED" }).duty).toBe(
       "completed",
