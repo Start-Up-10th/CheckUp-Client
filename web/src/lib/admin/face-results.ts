@@ -51,6 +51,8 @@ export type FrameOutcome = {
   state: RecognitionState;
   /** 이번 프레임에서 새로 생긴 성공(화면 중앙의 `성공 · 학번 이름`). 없으면 null. */
   success: RecognitionEntry | null;
+  /** 이번 프레임에서 새 실패 행이 생겼는가(카메라 하단의 `인식 실패` 표시). */
+  failure: boolean;
   /** 이번 프레임의 얼굴 중 서버가 QR 출석을 안내하라고 한 얼굴이 있는가(REQ-FACE-006). */
   qrRecommended: boolean;
 };
@@ -96,6 +98,7 @@ export function applyFrame(
   let sequence = prev.sequence;
   let success: RecognitionEntry | null = null;
   let qrRecommended = false;
+  let failure = false;
 
   for (const face of faces) {
     const seenAttempts = tracks[face.trackId]?.attempts ?? 0;
@@ -123,6 +126,7 @@ export function applyFrame(
       success = entry;
     } else if (face.status === "UNKNOWN" && face.attempts > seenAttempts) {
       sequence += 1;
+      failure = true;
       added.push({
         id: String(sequence),
         label: "인식 실패",
@@ -140,6 +144,7 @@ export function applyFrame(
       sequence,
     },
     success,
+    failure,
     qrRecommended,
   };
 }

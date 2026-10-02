@@ -30,6 +30,7 @@ export const MAX_CONSECUTIVE_FAILURES = 5;
 /** QR 안내·성공 표시를 유지하는 시간. 얼굴이 잠깐 사라져도 깜빡이지 않게 한다. */
 export const QR_NOTICE_HOLD_MS = 8000;
 export const SUCCESS_HOLD_MS = 3000;
+export const FAILURE_HOLD_MS = 3000;
 
 /** 서버가 프레임 요청에서 세션이 없거나 종료됐다고 알리는 오류 코드. */
 const SESSION_GONE_CODE = "FACE_SESSION_NOT_FOUND";
@@ -64,6 +65,7 @@ export function useFaceRecognition({
   const [status, setStatus] = useState<FaceSessionStatus>("starting");
   const [qrNotice, setQrNotice] = useState(false);
   const [success, setSuccess] = useState<RecognitionEntry | null>(null);
+  const [failure, setFailure] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
 
@@ -77,6 +79,7 @@ export function useFaceRecognition({
     const timers = new Set<ReturnType<typeof setTimeout>>();
     let qrTimer: ReturnType<typeof setTimeout> | undefined;
     let successTimer: ReturnType<typeof setTimeout> | undefined;
+    let failureTimer: ReturnType<typeof setTimeout> | undefined;
 
     function sleep(ms: number): Promise<void> {
       return new Promise((resolve) => {
@@ -165,6 +168,14 @@ export function useFaceRecognition({
                 successTimer,
               );
             }
+            if (outcome.failure) {
+              failureTimer = hold(
+                () => setFailure(true),
+                () => setFailure(false),
+                FAILURE_HOLD_MS,
+                failureTimer,
+              );
+            }
             if (outcome.qrRecommended) {
               qrTimer = hold(
                 () => setQrNotice(true),
@@ -228,6 +239,7 @@ export function useFaceRecognition({
     setStatus("starting");
     setQrNotice(false);
     setSuccess(null);
+    setFailure(false);
     /* eslint-enable react-hooks/set-state-in-effect */
     void run();
 
@@ -247,9 +259,10 @@ export function useFaceRecognition({
       timers.forEach(clearTimeout);
       clearTimeout(qrTimer);
       clearTimeout(successTimer);
+      clearTimeout(failureTimer);
       closeCurrentSession();
     };
   }, [cameraReady, purpose, gateway, attempt, capture, intervalMs, videoRef]);
 
-  return { entries, status, qrNotice, success, retry };
+  return { entries, status, qrNotice, success, failure, retry };
 }

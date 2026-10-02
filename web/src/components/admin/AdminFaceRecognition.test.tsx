@@ -85,7 +85,8 @@ describe("AdminFaceRecognition", () => {
     await tick();
 
     expect(screen.getByText("2405 김도현")).toBeInTheDocument();
-    expect(screen.getByText("인식 실패")).toBeInTheDocument();
+    // 최근 인식 행과 카메라 하단의 실패 배너, 두 곳에 보인다.
+    expect(screen.getAllByText("인식 실패")).toHaveLength(2);
   });
 
   it("서버가 QR을 권하면 안내 문구를 보여 주고 시간이 지나면 사라진다", async () => {
@@ -96,19 +97,51 @@ describe("AdminFaceRecognition", () => {
     renderWith(gateway);
     await tick();
 
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      "인식 실패 · 3회 초과 시 QR로 출석",
-    );
+    expect(
+      screen.getByText("인식 실패 · 3회 초과 시 QR로 출석"),
+    ).toBeInTheDocument();
 
     await tick(10_000);
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("인식 실패 · 3회 초과 시 QR로 출석"),
+    ).not.toBeInTheDocument();
   });
 
   it("실패가 3회 이하이면 QR 안내를 하지 않는다", async () => {
     renderWith(createMockFaceGateway([[unknown(3)]], STUDENTS));
     await tick();
 
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("인식 실패 · 3회 초과 시 QR로 출석"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("실패하면 카메라 하단에 인식 실패 배너를 잠깐 보이고 사라진다", async () => {
+    const gateway = createMockFaceGateway([[]], STUDENTS);
+    vi.spyOn(gateway, "sendFrame")
+      .mockResolvedValueOnce({ frameId: "f", faces: [unknown(1)] })
+      .mockResolvedValue({ frameId: "f", faces: [] });
+    renderWith(gateway);
+    await tick();
+
+    expect(screen.getAllByText("인식 실패")).toHaveLength(2);
+
+    await tick(5_000);
+    expect(screen.getAllByText("인식 실패")).toHaveLength(1);
+  });
+
+  it("성공하면 카메라 하단에 `성공 · 학번 이름` 배너를 잠깐 보인다", async () => {
+    const gateway = createMockFaceGateway([[]], STUDENTS);
+    vi.spyOn(gateway, "sendFrame")
+      .mockResolvedValueOnce({ frameId: "f", faces: [known(101)] })
+      .mockResolvedValue({ frameId: "f", faces: [] });
+    renderWith(gateway);
+    await tick();
+
+    expect(screen.getByText("성공 · 2405 김도현")).toBeInTheDocument();
+
+    await tick(5_000);
+    expect(screen.queryByText("성공 · 2405 김도현")).not.toBeInTheDocument();
   });
 
   it("카메라 허용 전에는 서버에 세션을 만들지 않는다", async () => {

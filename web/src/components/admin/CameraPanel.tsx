@@ -1,4 +1,5 @@
 import type { RefObject } from "react";
+import { StatusBanner } from "@/components/admin/StatusBanner";
 import { CloseIcon, ExpandIcon } from "@/components/icons/CameraIcons";
 import type { CameraStatus } from "@/lib/admin/use-camera-stream";
 
@@ -8,6 +9,8 @@ type CameraPanelProps = {
   isFullscreen: boolean;
   /** 방금 인식에 성공했을 때의 문구(`성공 · 학번 이름`). 있으면 `인식 대기 중`을 대신한다. */
   successMessage?: string | null;
+  /** 방금 인식에 실패했을 때의 문구. 있으면 카메라 하단에 실패 배너로 잠깐 보인다(REQ-FACE-006). */
+  failureMessage?: string | null;
   onEnterFullscreen: () => void;
   onExitFullscreen: () => void;
 };
@@ -21,6 +24,7 @@ export function CameraPanel({
   status,
   isFullscreen,
   successMessage = null,
+  failureMessage = null,
   onEnterFullscreen,
   onExitFullscreen,
 }: CameraPanelProps) {
@@ -86,6 +90,27 @@ export function CameraPanel({
             <ExpandIcon className="size-[15px] text-white md:size-5" />
           </button>
         )}
+
+        {/* REQ-FACE-006: 카메라 하단에 성공·실패를 잠시 보인다. 전체화면의 성공은 아래 큰 문구가 대신한다. */}
+        {status !== "error" &&
+          (failureMessage || (successMessage && !isFullscreen)) && (
+            <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-col items-center gap-2 md:bottom-4">
+              {successMessage && !isFullscreen && (
+                <StatusBanner
+                  variant="success"
+                  message={successMessage}
+                  compactOnPhone
+                />
+              )}
+              {failureMessage && (
+                <StatusBanner
+                  variant="error"
+                  message={failureMessage}
+                  compactOnPhone
+                />
+              )}
+            </div>
+          )}
 
         {status === "error" && (
           <div className="pointer-events-none absolute inset-x-0 bottom-[10%] flex flex-col items-center gap-2 text-center text-white">

@@ -237,3 +237,21 @@ describe("successMessage", () => {
     expect(successMessage(success!)).toBe("성공");
   });
 });
+
+describe("applyFrame 실패 표시", () => {
+  it("새 실패 행이 생긴 프레임만 failure다", () => {
+    const first = run(INITIAL_RECOGNITION, [unknown("t1", 1)]);
+    const same = run(first.state, [unknown("t1", 1)]);
+    const next = run(same.state, [unknown("t1", 2)]);
+
+    expect([first.failure, same.failure, next.failure]).toEqual([
+      true,
+      false,
+      true,
+    ]);
+  });
+
+  it("성공만 있는 프레임은 failure가 아니다", () => {
+    expect(run(INITIAL_RECOGNITION, [known(101)]).failure).toBe(false);
+  });
+});

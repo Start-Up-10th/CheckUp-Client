@@ -9,6 +9,7 @@ import {
 import { FaceGatewayProvider, type FaceGateway } from "./face-gateway";
 import {
   ERROR_BACKOFF_MS,
+  FAILURE_HOLD_MS,
   FRAME_INTERVAL_MS,
   MAX_CONSECUTIVE_FAILURES,
   QR_NOTICE_HOLD_MS,
@@ -426,6 +427,31 @@ describe("useFaceRecognition 결과", () => {
 
     expect(result.current.status).toBe("running");
     expect(result.current.entries[0].label).toBe("인식 성공");
+  });
+
+  it("실패하면 잠깐 failure를 켜고 지난 뒤 끈다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn<FaceGateway["sendFrame"]>()
+        .mockResolvedValueOnce(
+          frameOf([
+            {
+              trackId: "a",
+              status: "UNKNOWN",
+              attempts: 1,
+              qrRecommended: false,
+            },
+          ]),
+        )
+        .mockResolvedValue(frameOf([])),
+    });
+    const { result } = setup(gateway);
+    await tick();
+    expect(result.current.failure).toBe(true);
+
+    await tick(FAILURE_HOLD_MS);
+
+    expect(result.current.failure).toBe(false);
   });
 
   it("서버가 QR을 권하면 안내를 켜고 일정 시간 뒤 끈다", async () => {

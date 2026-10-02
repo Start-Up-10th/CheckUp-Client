@@ -13,6 +13,9 @@ import type { Purpose } from "@/lib/admin/purpose";
 const DEFAULT_PURPOSE: Purpose = "dorm";
 
 /** REQ-FACE-006 문구. 서버가 한 얼굴의 인식을 반복해 놓쳤다고(qrRecommended) 알릴 때 보인다. */
+/** 인식에 실패한 순간 카메라 하단에 잠깐 보이는 문구. 신원을 붙이지 않는다(REQ-FACE-005). */
+const FAILURE_MESSAGE = "인식 실패";
+
 const QR_NOTICE_MESSAGE = "인식 실패 · 3회 초과 시 QR로 출석";
 
 /**
@@ -94,6 +97,7 @@ export function AdminFaceRecognition() {
             videoRef={videoRef}
             status={status}
             isFullscreen={isFullscreen}
+            failureMessage={recognition.failure ? FAILURE_MESSAGE : null}
             successMessage={
               recognition.success ? successMessage(recognition.success) : null
             }
