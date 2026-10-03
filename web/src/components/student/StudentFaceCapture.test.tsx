@@ -159,6 +159,18 @@ describe("StudentFaceCapture 들어올 때", () => {
     expect(mocks.cameraEnabled).not.toContain(true);
   });
 
+  it("등록 대상이 아니면 안내를 보여 주고 카메라를 켜지 않는다", async () => {
+    mockApi({
+      status: 200,
+      body: { consented: true, eligible: false, enrolled: false },
+    });
+    render(<StudentFaceCapture />);
+    await advance();
+
+    expect(screen.getByText("얼굴 등록 대상이 아니에요")).toBeInTheDocument();
+    expect(mocks.cameraEnabled).not.toContain(true);
+  });
+
   it("상태 확인이 실패해도 촬영은 할 수 있다", async () => {
     mockApi({ status: 500 });
     render(<StudentFaceCapture />);
@@ -306,6 +318,39 @@ describe("StudentFaceCapture 완료", () => {
     fireEvent.click(completeButton());
 
     expect(enrollCalls(fetchMock)).toHaveLength(1);
+  });
+
+  it.each([
+    [
+      "FACE_ENROLLMENT_LOW_LIGHT",
+      "조명이 어두워요. 밝은 곳에서 촬영해 주세요.",
+    ],
+    [
+      "FACE_ENROLLMENT_MULTIPLE_IDENTITIES",
+      "여러 명의 얼굴이 보여요. 본인만 나오게 다시 촬영해 주세요.",
+    ],
+  ])("거절 사유(%s)별 문구를 보여 준다", async (code, message) => {
+    mockApi(READY, [{ status: 422, body: { code } }]);
+    await renderUntilDone();
+
+    fireEvent.click(completeButton());
+    await advance();
+
+    expect(screen.getByText(message)).toBeInTheDocument();
+    expect(completeButton()).toBeDisabled();
+    expect(retakeButton()).toBeEnabled();
+  });
+
+  it("등록 대상이 아니면(403 FACE_ENROLLMENT_NOT_ELIGIBLE) 대상 아님 안내로 바꾼다", async () => {
+    mockApi(READY, [
+      { status: 403, body: { code: "FACE_ENROLLMENT_NOT_ELIGIBLE" } },
+    ]);
+    await renderUntilDone();
+
+    fireEvent.click(completeButton());
+    await advance();
+
+    expect(screen.getByText("얼굴 등록 대상이 아니에요")).toBeInTheDocument();
   });
 
   it("실패 뒤 다시 찍으면 문구가 사라지고 새 영상으로 등록할 수 있다", async () => {
