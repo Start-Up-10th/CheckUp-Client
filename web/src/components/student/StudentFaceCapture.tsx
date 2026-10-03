@@ -27,14 +27,17 @@ const countdownFont = Roboto_Mono({ subsets: ["latin"], weight: ["600"] });
 type Phase = "countdown" | "capturing" | "done";
 
 /** 화면에 들어올 때 서버에서 확인한 결과. checking 동안에는 카메라를 켜지 않는다. */
-type Entry = "checking" | "allowed" | "notStudent";
+type Entry = "checking" | "allowed" | "notStudent" | "notEligible";
 
-/** 등록 실패 종류. rejected는 서버가 영상에서 쓸 얼굴을 찾지 못한 경우(422)다. */
-type Failure = "rejected" | "failed" | "notStudent";
+/** 등록 실패 종류. rejected·lowLight·multipleFaces는 서버가 영상을 거절한 경우(422)다. */
+type Failure =
+  "rejected" | "lowLight" | "multipleFaces" | "failed" | "notStudent";
 
-// rejected·failed 문구는 REQ-FACE-001. 서버가 거절 사유를 422 하나로 줘서 조명 문구는 구분해 쓰지 못한다(#105).
+// rejected·lowLight·failed 문구는 REQ-FACE-001. 여러 명 문구는 명세·Figma에 없어 같은 말투로 정했다.
 const FAILURE_MESSAGES: Record<Failure, string> = {
   rejected: "얼굴 인식에 실패했습니다. 다시 촬영해 주세요.",
+  lowLight: "조명이 어두워요. 밝은 곳에서 촬영해 주세요.",
+  multipleFaces: "여러 명의 얼굴이 보여요. 본인만 나오게 다시 촬영해 주세요.",
   failed: "얼굴 등록에 실패했습니다. 다시 시도해 주세요.",
   notStudent: "학생 계정만 이용할 수 있어요.",
 };
@@ -49,8 +52,9 @@ const CAPTURE_MS = 3000;
  * 카운트다운부터, `완료`는 서버에 등록한 뒤 학생 홈으로 간다. 노트북(md 이상, 239:2)은 카메라를 켜지 않고 안내만 보인다.
  *
  * 들어오면 서버에서 본인 상태를 확인한다(`GET /api/v1/face/me`). 이미 등록했으면 학생 홈으로(다시 바꾸는
- * 기능은 없다), 얼굴 동의가 없으면 동의 화면으로, 로그인이 안 돼 있으면 로그인 화면으로 보낸다. 확인이
- * 실패하면(서버 오류) 촬영은 막지 않는다 — 등록 요청에서 같은 판정을 다시 받는다.
+ * 기능은 없다), 필수 동의가 없으면 동의 화면으로, 로그인이 안 돼 있으면 로그인 화면으로 보낸다. 등록 대상이
+ * 아니면(서버 기준: 기숙사 호실이 배정된 학생만) 카메라를 켜지 않고 안내만 보인다. 확인이 실패하면(서버 오류)
+ * 촬영은 막지 않는다 — 등록 요청에서 같은 판정을 다시 받는다.
  *
  * 개인정보(REQ-FACE-002): `촬영 중` 단계에만 카메라 영상을 메모리에 녹화하고, `완료`를 누르면 그 영상
  * 하나를 서버로 보낸다(`POST /api/v1/face/enrollments`). 영상은 저장·기록하지 않고, 등록 성공·실패·
@@ -80,11 +84,11 @@ export function StudentFaceCapture() {
   useEffect(() => {
     let cancelled = false;
     fetchFaceStatus()
-      .then(({ consented, enrolled }) => {
+      .then(({ consented, eligible, enrolled }) => {
         if (cancelled) return;
         if (enrolled) router.replace("/main");
         else if (!consented) router.replace("/consent");
-        else setEntry("allowed");
+        else setEntry(eligible ? "allowed" : "notEligible");
       })
       .catch((reason: unknown) => {
         if (cancelled) return;
@@ -164,8 +168,10 @@ export function StudentFaceCapture() {
           router.push("/main");
         } else if (result === "consentRequired") {
           router.replace("/consent");
+        } else if (result === "notEligible") {
+          setEntry("notEligible");
         } else {
-          setFailure("rejected");
+          setFailure(result);
         }
       })
       .catch((reason: unknown) => {
@@ -207,6 +213,14 @@ export function StudentFaceCapture() {
             <StudentErrorState
               title="학생 계정만 이용할 수 있어요"
               description="학생 계정으로 로그인해 주세요."
+              onRetry={() => window.location.reload()}
+            />
+          </div>
+        ) : entry === "notEligible" ? (
+          <div className="flex flex-1 items-center justify-center px-[18px]">
+            <StudentErrorState
+              title="얼굴 등록 대상이 아니에요"
+              description="기숙사 호실이 배정된 학생만 등록할 수 있어요."
               onRetry={() => window.location.reload()}
             />
           </div>
