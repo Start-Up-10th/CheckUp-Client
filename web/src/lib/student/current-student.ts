@@ -50,6 +50,11 @@ export function toStudentProfile(
   };
 }
 
+/** 홈 머리 제목. 호실이 배정되지 않아 층을 모르면 Figma에 없어 `기숙사`만 쓴다. */
+export function floorTitle(floor: number | null): string {
+  return floor === null ? "기숙사" : `기숙사 ${floor}층`;
+}
+
 /**
  * REQ-UI-003·004: 화면에 들어올 때 서버에서 본인 정보를 한 번 받는다(`GET /api/v1/auth/me`).
  * 학생은 서버가 로그인 세션으로 정하므로 웹은 학생 ID를 보내지 않는다.

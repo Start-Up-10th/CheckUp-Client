@@ -9,8 +9,10 @@ const roomNumberFont = Roboto_Mono({
 });
 
 type MyRoomCardProps = {
-  floor: number;
-  roomNumber: string;
+  /** 기숙사 층. 받기 전이면 null */
+  floor: number | null;
+  /** 호실 번호. 받기 전이면 null */
+  roomNumber: string | null;
   /** 이름순으로 정렬된 호실 학생 */
   students: RoomMate[];
 };
@@ -37,15 +39,15 @@ export function MyRoomCard({ floor, roomNumber, students }: MyRoomCardProps) {
           내 호실
         </h2>
         <p className="text-xs text-admin-textMuted md:text-[13px]">
-          기숙사 {floor}층
+          {floor === null ? "\u00a0" : `기숙사 ${floor}층`}
         </p>
       </div>
       <div className="flex items-baseline gap-2.5 leading-normal md:gap-3">
         <p
           className={`${roomNumberFont.className} text-[34px] font-semibold tracking-[-0.68px] text-admin-text md:text-[40px] md:font-normal md:tracking-[-0.8px]`}
         >
-          {roomNumber}
-          <span className="sr-only">호</span>
+          {roomNumber ?? "\u00a0"}
+          {roomNumber !== null && <span className="sr-only">호</span>}
         </p>
         <p className="text-[13px] text-admin-textMuted md:text-sm">
           {students.length}인실 · {present}명 출석

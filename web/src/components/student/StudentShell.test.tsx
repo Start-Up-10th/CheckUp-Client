@@ -30,7 +30,7 @@ function unreadCalls(fetchMock: ReturnType<typeof mockUnread>) {
 function renderHome() {
   render(
     <StudentShell>
-      <MainHeader name="김도현" studentNumber="2405" floor={4} />
+      <MainHeader profile={null} />
     </StudentShell>,
   );
 }
