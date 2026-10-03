@@ -24,10 +24,16 @@ afterEach(() => {
 
 describe("fetchFaceStatus", () => {
   it("세션 쿠키와 함께 본인 얼굴 상태를 조회한다", async () => {
-    const fetchMock = mockFetch(200, { consented: true, enrolled: false });
+    const fetchMock = mockFetch(200, {
+      status: "NOT_REGISTERED",
+      consented: true,
+      eligible: false,
+      enrolled: false,
+    });
 
     await expect(fetchFaceStatus()).resolves.toEqual({
       consented: true,
+      eligible: false,
       enrolled: false,
     });
 
@@ -36,11 +42,12 @@ describe("fetchFaceStatus", () => {
     expect(init.credentials).toBe("include");
   });
 
-  it("값이 true가 아니면 아직 안 한 것으로 본다", async () => {
+  it("동의·등록 값이 없으면 아직 안 한 것으로, 등록 대상 값이 없으면 대상으로 본다", async () => {
     mockFetch(200, {});
 
     await expect(fetchFaceStatus()).resolves.toEqual({
       consented: false,
+      eligible: true,
       enrolled: false,
     });
   });
@@ -67,8 +74,8 @@ describe("fetchFaceStatus", () => {
 });
 
 describe("enrollFace", () => {
-  it("영상을 multipart video로 세션 쿠키와 함께 보낸다(학생 ID는 보내지 않는다)", async () => {
-    const fetchMock = mockFetch(201, { status: "registered" });
+  it("영상 원본 바이트를 요청 본문으로 세션 쿠키와 함께 보낸다(학생 ID는 보내지 않는다)", async () => {
+    const fetchMock = mockFetch(201, { status: "REGISTERED" });
 
     await enrollFace(VIDEO);
 
@@ -76,27 +83,23 @@ describe("enrollFace", () => {
     expect(url).toBe("/api/v1/face/enrollments");
     expect(init.method).toBe("POST");
     expect(init.credentials).toBe("include");
-    // Content-Type은 브라우저가 boundary와 함께 붙이므로 직접 정하지 않는다.
-    expect(init.headers).toBeUndefined();
-    const form = init.body as FormData;
-    expect([...form.keys()]).toEqual(["video"]);
-    const file = form.get("video") as File;
-    expect(file.type).toBe("video/webm;codecs=vp8");
-    expect(file.name).toBe("face.webm");
-    expect(file.size).toBe(VIDEO.size);
+    expect(init.body).toBe(VIDEO);
+    // 녹화기가 붙인 코덱 정보는 떼고 서버가 받는 형식만 보낸다.
+    expect(init.headers).toEqual({ "Content-Type": "video/webm" });
   });
 
-  it("mp4 영상은 mp4 파일 이름으로 보낸다", async () => {
-    const fetchMock = mockFetch(201, { status: "registered" });
+  it("mp4 영상은 video/mp4로 보낸다", async () => {
+    const fetchMock = mockFetch(201, { status: "REGISTERED" });
 
-    await enrollFace(new Blob(["test"], { type: "video/mp4" }));
+    await enrollFace(new Blob(["test"], { type: "video/mp4;codecs=avc1" }));
 
-    const form = fetchMock.mock.calls[0][1].body as FormData;
-    expect((form.get("video") as File).name).toBe("face.mp4");
+    expect(fetchMock.mock.calls[0][1].headers).toEqual({
+      "Content-Type": "video/mp4",
+    });
   });
 
   it("201이면 등록됨", async () => {
-    mockFetch(201, { status: "registered" });
+    mockFetch(201, { status: "REGISTERED" });
 
     await expect(enrollFace(VIDEO)).resolves.toBe("registered");
   });
@@ -107,16 +110,27 @@ describe("enrollFace", () => {
     await expect(enrollFace(VIDEO)).resolves.toBe("alreadyRegistered");
   });
 
-  it("영상이 품질 기준에 맞지 않으면(422) 거절", async () => {
-    mockFetch(422, { code: "FACE_ENROLLMENT_REJECTED" });
+  it.each([
+    ["FACE_ENROLLMENT_LOW_LIGHT", "lowLight"],
+    ["FACE_ENROLLMENT_MULTIPLE_IDENTITIES", "multipleFaces"],
+    ["FACE_ENROLLMENT_REJECTED", "rejected"],
+    ["본문 없음", "rejected"],
+  ])("422(%s)는 거절 사유별 결과", async (code, expected) => {
+    mockFetch(422, code === "본문 없음" ? undefined : { code });
 
-    await expect(enrollFace(VIDEO)).resolves.toBe("rejected");
+    await expect(enrollFace(VIDEO)).resolves.toBe(expected);
   });
 
   it("얼굴 동의가 없으면(403 FACE_CONSENT_REQUIRED) 동의 필요", async () => {
     mockFetch(403, { code: "FACE_CONSENT_REQUIRED" });
 
     await expect(enrollFace(VIDEO)).resolves.toBe("consentRequired");
+  });
+
+  it("등록 대상이 아니면(403 FACE_ENROLLMENT_NOT_ELIGIBLE) 대상 아님", async () => {
+    mockFetch(403, { code: "FACE_ENROLLMENT_NOT_ELIGIBLE" });
+
+    await expect(enrollFace(VIDEO)).resolves.toBe("notEligible");
   });
 
   it.each([

@@ -256,7 +256,7 @@ describe("StudentFaceCapture 촬영", () => {
 describe("StudentFaceCapture 완료", () => {
   it("촬영한 영상을 보내고 등록되면 학생 홈으로 간다", async () => {
     const fetchMock = mockApi(READY, [
-      { status: 201, body: { status: "registered" } },
+      { status: 201, body: { status: "REGISTERED" } },
     ]);
     await renderUntilDone();
 
@@ -270,9 +270,9 @@ describe("StudentFaceCapture 완료", () => {
 
     expect(mocks.router.push).toHaveBeenCalledWith("/main");
     const [, init] = enrollCalls(fetchMock)[0];
-    const file = (init!.body as FormData).get("video") as File;
-    expect(file.type).toBe("video/webm");
-    expect(file.size).toBe(4);
+    const video = init!.body as Blob;
+    expect(init!.headers).toEqual({ "Content-Type": "video/webm" });
+    expect(video.size).toBe(4);
   });
 
   it("이미 등록돼 있으면(409) 학생 홈으로 간다", async () => {
@@ -311,7 +311,7 @@ describe("StudentFaceCapture 완료", () => {
   it("실패 뒤 다시 찍으면 문구가 사라지고 새 영상으로 등록할 수 있다", async () => {
     const fetchMock = mockApi(READY, [
       { status: 503, body: { code: "FACE_AI_UNAVAILABLE" } },
-      { status: 201, body: { status: "registered" } },
+      { status: 201, body: { status: "REGISTERED" } },
     ]);
     await renderUntilDone();
 
