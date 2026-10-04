@@ -16,9 +16,8 @@ function face(overrides: Record<string, unknown> = {}) {
     qrRecommended: false,
     recognition: {
       status: "KNOWN",
-      studentId: "1234",
-      score: 0.9,
-      margin: 0.3,
+      studentName: "김도현",
+      studentNumber: 2405,
       attendance: "RECORDED",
     },
     ...overrides,
@@ -120,7 +119,8 @@ describe("sendFaceFrame", () => {
         {
           trackId: "t1",
           status: "KNOWN",
-          studentId: 1234,
+          studentName: "김도현",
+          studentNumber: 2405,
           attendance: "RECORDED",
           attempts: 1,
           qrRecommended: false,
@@ -129,12 +129,12 @@ describe("sendFaceFrame", () => {
     });
   });
 
-  it("UNKNOWN 얼굴은 학생 id와 출석 결과가 없다", async () => {
+  it("UNKNOWN 얼굴은 이름·학번과 출석 결과가 없다", async () => {
     mockFetch(200, {
       frameId: "f-1",
       faces: [
         face({
-          recognition: { status: "UNKNOWN", score: 0.2, margin: 0.01 },
+          recognition: { status: "UNKNOWN" },
           attempts: 2,
           qrRecommended: true,
         }),
@@ -148,25 +148,37 @@ describe("sendFaceFrame", () => {
       attempts: 2,
       qrRecommended: true,
     });
-    expect(unknown.studentId).toBeUndefined();
+    expect(unknown.studentName).toBeUndefined();
+    expect(unknown.studentNumber).toBeUndefined();
     expect(unknown.attendance).toBeUndefined();
   });
 
-  it("KNOWN인데 학생 id를 읽을 수 없으면 신원을 만들지 않고 UNKNOWN으로 둔다", async () => {
-    mockFetch(200, {
-      frameId: "f-1",
-      faces: [
-        face({
-          recognition: { status: "KNOWN", studentId: "abc", score: 0.9 },
-        }),
-      ],
-    });
+  it.each([
+    ["이름이 없음", { studentName: null, studentNumber: 2405 }],
+    ["이름이 빈 문자열", { studentName: "  ", studentNumber: 2405 }],
+    ["학번이 없음", { studentName: "김도현", studentNumber: null }],
+    ["학번이 숫자가 아님", { studentName: "김도현", studentNumber: "x" }],
+    ["이전 형식(studentId만 있음)", { studentId: "1234" }],
+  ])(
+    "KNOWN인데 %s이면 신원을 만들지 않고 UNKNOWN으로 둔다",
+    async (_label, fields) => {
+      mockFetch(200, {
+        frameId: "f-1",
+        faces: [
+          face({
+            recognition: { status: "KNOWN", attendance: "RECORDED", ...fields },
+          }),
+        ],
+      });
 
-    const [broken] = (await sendFaceFrame("s-1", frame, "f-1")).faces;
+      const [broken] = (await sendFaceFrame("s-1", frame, "f-1")).faces;
 
-    expect(broken.status).toBe("UNKNOWN");
-    expect(broken.studentId).toBeUndefined();
-  });
+      expect(broken.status).toBe("UNKNOWN");
+      expect(broken.studentName).toBeUndefined();
+      expect(broken.studentNumber).toBeUndefined();
+      expect(broken.attendance).toBeUndefined();
+    },
+  );
 
   it("모르는 상태 값은 NOT_ATTEMPTED로 둔다", async () => {
     mockFetch(200, {
