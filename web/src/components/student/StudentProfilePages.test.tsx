@@ -37,6 +37,13 @@ const ROSTER = [
 ];
 
 type Reply = { status: number; body?: unknown };
+
+const FACE_ENROLLED = {
+  status: "REGISTERED",
+  consented: true,
+  eligible: true,
+  enrolled: true,
+};
 const toResponse = ({ status, body }: Reply) =>
   new Response(body === undefined ? null : JSON.stringify(body), { status });
 
@@ -45,9 +52,11 @@ function mockMe(
   status: number,
   body?: unknown,
   roster: Reply | "pending" = { status: 200, body: ROSTER },
+  face: Reply = { status: 200, body: FACE_ENROLLED },
 ) {
   const fetchMock = vi.fn(async (...[url]: [string, RequestInit?]) => {
     if (url === "/api/v1/auth/me") return toResponse({ status, body });
+    if (url === "/api/v1/face/me") return toResponse(face);
     if (url.startsWith("/api/v1/room/student")) {
       return roster === "pending"
         ? new Promise<Response>(() => {})
@@ -169,6 +178,63 @@ describe("StudentMain 본인 정보", () => {
     expect(
       await screen.findByText("서버와 연결이 원활하지 않습니다."),
     ).toBeInTheDocument();
+  });
+});
+
+describe("StudentMain 얼굴 등록 확인", () => {
+  const faceCalls = (fetchMock: ReturnType<typeof mockMe>) =>
+    fetchMock.mock.calls.filter(([url]) => url === "/api/v1/face/me");
+
+  it("얼굴을 등록하지 않은 학생은 얼굴 등록 화면으로 보낸다", async () => {
+    mockMe(200, me(), undefined, {
+      status: 200,
+      body: { ...FACE_ENROLLED, status: "NOT_REGISTERED", enrolled: false },
+    });
+    render(<StudentMain />);
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/face"));
+  });
+
+  it("이미 등록한 학생은 홈에 머문다", async () => {
+    const fetchMock = mockMe(200, me());
+    render(<StudentMain />);
+
+    await waitFor(() => expect(faceCalls(fetchMock)).toHaveLength(1));
+    await screen.findByText("2인실 · 1명 출석");
+
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("등록 대상이 아니면(호실 미배정 등) 등록하지 않았어도 보내지 않는다", async () => {
+    const fetchMock = mockMe(200, me(), undefined, {
+      status: 200,
+      body: { ...FACE_ENROLLED, eligible: false, enrolled: false },
+    });
+    render(<StudentMain />);
+
+    await waitFor(() => expect(faceCalls(fetchMock)).toHaveLength(1));
+    await screen.findByText("2인실 · 1명 출석");
+
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("등록 상태 조회가 실패하면 홈을 막지 않는다", async () => {
+    const fetchMock = mockMe(200, me(), undefined, { status: 500 });
+    render(<StudentMain />);
+
+    await waitFor(() => expect(faceCalls(fetchMock)).toHaveLength(1));
+    await screen.findByText("2인실 · 1명 출석");
+
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("학생 정보가 없는 계정은 얼굴 등록 상태를 묻지 않는다", async () => {
+    const fetchMock = mockMe(200, me(null));
+    render(<StudentMain />);
+
+    await screen.findByText("학생 계정만 이용할 수 있어요");
+
+    expect(faceCalls(fetchMock)).toHaveLength(0);
   });
 });
 
