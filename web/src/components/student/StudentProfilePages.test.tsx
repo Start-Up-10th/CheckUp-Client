@@ -21,18 +21,42 @@ const STUDENT = {
   dormitoryFloor: 4,
 };
 
-/** 본인 정보 응답을 정한다. 읽지 않은 알림은 없음으로 답한다. */
-function mockMe(status: number, body?: unknown) {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn(async (...[url]: [string, RequestInit?]) =>
-      url === "/api/v1/auth/me"
-        ? new Response(body === undefined ? null : JSON.stringify(body), {
-            status,
-          })
-        : new Response(JSON.stringify({ hasUnread: false })),
-    ),
-  );
+const ROSTER = [
+  {
+    student_name: "홍길동",
+    student_class: 4,
+    student_number: 2405,
+    attended: true,
+  },
+  {
+    student_name: "고길동",
+    student_class: 4,
+    student_number: 2412,
+    attended: false,
+  },
+];
+
+type Reply = { status: number; body?: unknown };
+const toResponse = ({ status, body }: Reply) =>
+  new Response(body === undefined ? null : JSON.stringify(body), { status });
+
+/** 본인 정보·호실 명단 응답을 정한다. 읽지 않은 알림은 없음으로 답한다. */
+function mockMe(
+  status: number,
+  body?: unknown,
+  roster: Reply | "pending" = { status: 200, body: ROSTER },
+) {
+  const fetchMock = vi.fn(async (...[url]: [string, RequestInit?]) => {
+    if (url === "/api/v1/auth/me") return toResponse({ status, body });
+    if (url.startsWith("/api/v1/room/student")) {
+      return roster === "pending"
+        ? new Promise<Response>(() => {})
+        : toResponse(roster);
+    }
+    return new Response(JSON.stringify({ hasUnread: false }));
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
 }
 
 const me = (student: unknown = STUDENT) => ({
@@ -64,6 +88,41 @@ describe("StudentMain 본인 정보", () => {
     expect(within(card).getByText("412")).toBeInTheDocument();
   });
 
+  it("본인 호실 명단과 오늘 기숙사 입소 출석을 이름순으로 보여 준다", async () => {
+    const fetchMock = mockMe(200, me());
+    render(<StudentMain />);
+
+    const card = screen.getByRole("region", { name: "내 호실" });
+    expect(
+      await within(card).findByText("2인실 · 1명 출석"),
+    ).toBeInTheDocument();
+    // 이름순 번호: 고길동 1번(미출석), 홍길동 2번(출석)
+    expect(card).toHaveTextContent("고길동1번 · 미출석");
+    expect(card).toHaveTextContent("홍길동2번 · 출석");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/room/student?dormitoryRoom=412&purpose=DORMITORY",
+      { credentials: "include" },
+    );
+  });
+
+  it("명단을 받기 전에는 인원 줄을 비워 둔다", async () => {
+    mockMe(200, me(), "pending");
+    render(<StudentMain />);
+
+    const card = screen.getByRole("region", { name: "내 호실" });
+    expect(await within(card).findByText("412")).toBeInTheDocument();
+    expect(within(card).queryByText(/인실/)).not.toBeInTheDocument();
+  });
+
+  it("명단을 받지 못하면 서버 오류 문구를 보여 준다", async () => {
+    mockMe(200, me(), { status: 500 });
+    render(<StudentMain />);
+
+    expect(
+      await screen.findByText("서버와 연결이 원활하지 않습니다."),
+    ).toBeInTheDocument();
+  });
+
   it("받기 전에는 mock 값을 보여 주지 않는다", () => {
     vi.stubGlobal(
       "fetch",
@@ -71,8 +130,7 @@ describe("StudentMain 본인 정보", () => {
     );
     render(<StudentMain />);
 
-    // 같은 호실 명단은 아직 mock이라(서버에 출석 여부 없음) 머리만 본다.
-    expect(within(homeHeader()).queryByText(/김도현/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/김도현/)).not.toBeInTheDocument();
     expect(within(homeHeader()).queryByText(/·/)).not.toBeInTheDocument();
     expect(within(homeHeader()).queryByText(/기숙사/)).not.toBeInTheDocument();
   });
