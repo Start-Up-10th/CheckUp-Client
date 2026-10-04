@@ -1,13 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { StatusBanner } from "@/components/admin/StatusBanner";
 import { useCurrentStudent } from "@/lib/student/current-student";
-import { MOCK_MY_ROOM } from "@/lib/student/mock-room";
 import { MOCK_STUDENT } from "@/lib/student/mock-student";
+import {
+  RoomLoginRequiredError,
+  fetchMyRoomMates,
+} from "@/lib/student/room-roster-api";
 import { MainHeader } from "./MainHeader";
 import { MyRoomCard } from "./MyRoomCard";
+import type { RoomMate } from "./RoomMap";
 import { QrFab } from "./QrFab";
 import { StudentEmptyState } from "./StudentEmptyState";
 import { StudentShell } from "./StudentShell";
@@ -24,8 +28,10 @@ export type MainLoadStatus = "ready" | "error";
  * "지금은 출석 인증을 받고 있지 않습니다."는 QR 결과 문구라 여기서는 쓰지 않는다.
  *
  * 머리의 학번·이름·층과 카드의 층·호실은 공통 틀이 서버에서 받은 본인 정보(`/api/v1/auth/me`)다. 로그인하지
- * 않았으면 로그인 화면으로 보낸다. 같은 호실 학생 명단과 출석 여부는 서버에 출석 여부가 없어 아직 mock이다
- * (CheckUp-server#87). 호실이 배정되지 않았거나 학생이 아닌 계정은 Figma에 없어 공통 빈 상태로 알린다.
+ * 않았으면 로그인 화면으로 보낸다. 같은 호실 학생 명단과 오늘 출석 여부는 본인 호실 번호로 서버에서 받는다
+ * (`/api/v1/room/student`, 기숙사 입소 출석 — 사용자 결정 2026-10-04). 받기 전에는 인원 줄과 배치 그림 안을
+ * 비워 두고, 받지 못하면 서버 오류 문구를 보인다. 호실이 배정되지 않았거나 학생이 아닌 계정은 Figma에 없어
+ * 공통 빈 상태로 알린다.
  */
 export function StudentMain({
   initialStatus = "ready",
@@ -39,6 +45,11 @@ export function StudentMain({
   );
 }
 
+type RosterState =
+  | { status: "loading" }
+  | { status: "ready"; mates: RoomMate[] }
+  | { status: "error" };
+
 /** 공통 틀 안에서 본인 정보를 꺼내 쓰는 홈 본문. */
 function StudentMainContent({
   initialStatus,
@@ -48,6 +59,25 @@ function StudentMainContent({
   const router = useRouter();
   const current = useCurrentStudent();
   const profile = current.status === "ready" ? current.profile : null;
+  const roomNumber = profile?.roomNumber ?? null;
+  const [roster, setRoster] = useState<RosterState>({ status: "loading" });
+
+  useEffect(() => {
+    if (roomNumber === null) return;
+    let cancelled = false;
+    fetchMyRoomMates(roomNumber)
+      .then((mates) => {
+        if (!cancelled) setRoster({ status: "ready", mates });
+      })
+      .catch((reason: unknown) => {
+        if (cancelled) return;
+        if (reason instanceof RoomLoginRequiredError) router.replace("/login");
+        else setRoster({ status: "error" });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [roomNumber, router]);
 
   useEffect(() => {
     if (current.status === "unauthenticated") router.replace("/login");
@@ -57,7 +87,10 @@ function StudentMainContent({
     if (!MOCK_STUDENT.faceRegistered) router.replace("/face");
   }, [router]);
 
-  const showError = initialStatus === "error" || current.status === "error";
+  const showError =
+    initialStatus === "error" ||
+    current.status === "error" ||
+    roster.status === "error";
 
   return (
     <>
@@ -79,7 +112,7 @@ function StudentMainContent({
               <MyRoomCard
                 floor={profile?.floor ?? null}
                 roomNumber={profile?.roomNumber ?? null}
-                students={MOCK_MY_ROOM}
+                students={roster.status === "ready" ? roster.mates : null}
               />
             )}
           </div>
