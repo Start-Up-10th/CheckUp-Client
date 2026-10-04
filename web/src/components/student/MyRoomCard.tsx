@@ -13,8 +13,8 @@ type MyRoomCardProps = {
   floor: number | null;
   /** 호실 번호. 받기 전이면 null */
   roomNumber: string | null;
-  /** 이름순으로 정렬된 호실 학생 */
-  students: RoomMate[];
+  /** 이름순으로 정렬된 호실 학생. 받기 전이거나 받지 못했으면 null이고, 인원 줄과 배치 그림 안을 비워 둔다. */
+  students: RoomMate[] | null;
 };
 
 /**
@@ -24,7 +24,7 @@ type MyRoomCardProps = {
  * 핸드폰 카드 아래 14px 빈 줄은 QR 버튼이 배치 그림을 덜 가리도록 Figma에 있는 여백이다.
  */
 export function MyRoomCard({ floor, roomNumber, students }: MyRoomCardProps) {
-  const present = students.filter((student) => student.present).length;
+  const present = students?.filter((student) => student.present).length ?? 0;
 
   return (
     <section
@@ -50,10 +50,12 @@ export function MyRoomCard({ floor, roomNumber, students }: MyRoomCardProps) {
           {roomNumber !== null && <span className="sr-only">호</span>}
         </p>
         <p className="text-[13px] text-admin-textMuted md:text-sm">
-          {students.length}인실 · {present}명 출석
+          {students === null
+            ? "\u00a0"
+            : `${students.length}인실 · ${present}명 출석`}
         </p>
       </div>
-      <RoomMap students={students} />
+      <RoomMap students={students ?? []} />
       <div aria-hidden="true" className="h-3.5 shrink-0 md:hidden" />
     </section>
   );
