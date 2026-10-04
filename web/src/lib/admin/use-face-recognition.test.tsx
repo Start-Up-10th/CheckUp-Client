@@ -50,9 +50,6 @@ function makeGateway(overrides: Partial<FaceGateway> = {}) {
     createSession: vi.fn(async () => `session-${(sessions += 1)}`),
     closeSession: vi.fn(),
     sendFrame: vi.fn<FaceGateway["sendFrame"]>(async () => frameOf([])),
-    loadStudents: vi.fn(async () => ({
-      101: { studentNumber: 2405, name: "김도현" },
-    })),
     ...overrides,
   } as Mocked<FaceGateway>;
   return gateway;

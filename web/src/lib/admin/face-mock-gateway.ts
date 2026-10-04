@@ -1,11 +1,5 @@
 import type { FaceResult } from "@/lib/admin/face-api";
-import type { FaceGateway, StudentDirectory } from "@/lib/admin/face-gateway";
-
-const DEMO_STUDENTS: StudentDirectory = {
-  101: { studentNumber: 2405, name: "김도현" },
-  102: { studentNumber: 2412, name: "박서연" },
-  103: { studentNumber: 2401, name: "정민수" },
-};
+import type { FaceGateway } from "@/lib/admin/face-gateway";
 
 function known(studentNumber: number, studentName: string): FaceResult {
   return {
@@ -46,7 +40,6 @@ const DEMO_FRAMES: FaceResult[][] = [
  */
 export function createMockFaceGateway(
   frames: FaceResult[][] = DEMO_FRAMES,
-  students: StudentDirectory = DEMO_STUDENTS,
 ): FaceGateway {
   let sessions = 0;
   let sent = 0;
@@ -58,6 +51,5 @@ export function createMockFaceGateway(
       sent += 1;
       return { frameId, faces };
     },
-    loadStudents: async () => students,
   };
 }

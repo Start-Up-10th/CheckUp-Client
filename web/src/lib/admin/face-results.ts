@@ -22,8 +22,6 @@ export const TRACK_MEMORY_MS = 30_000;
 /** 최근 인식 목록에 남기는 최대 개수(당일 임시 기록, REQ-FACE-007). */
 export const MAX_ENTRIES = 30;
 
-export type StudentLabel = { studentNumber: number; name: string };
-
 export type RecognitionState = {
   /** 최신순. */
   entries: RecognitionEntry[];

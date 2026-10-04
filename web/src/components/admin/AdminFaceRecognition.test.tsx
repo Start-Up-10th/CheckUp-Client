@@ -26,8 +26,6 @@ vi.mock("@/lib/admin/admin-session", () => ({
   redirectToAdminLogin: vi.fn(),
 }));
 
-const STUDENTS = { 101: { studentNumber: 2405, name: "김도현" } };
-
 function known(): FaceResult {
   return {
     trackId: "k2405",
@@ -75,14 +73,14 @@ afterEach(() => {
 
 describe("AdminFaceRecognition", () => {
   it("인식 결과가 없으면 최근 인식은 빈 상태다", async () => {
-    renderWith(createMockFaceGateway([[]], STUDENTS));
+    renderWith(createMockFaceGateway([[]]));
     await tick();
 
     expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
   });
 
   it("성공은 `학번 이름`으로, 실패는 신원 없는 인식 실패로 최근 인식에 쌓는다", async () => {
-    renderWith(createMockFaceGateway([[known(), unknown(1)]], STUDENTS));
+    renderWith(createMockFaceGateway([[known(), unknown(1)]]));
     await tick();
 
     expect(screen.getByText("2405 김도현")).toBeInTheDocument();
@@ -91,7 +89,7 @@ describe("AdminFaceRecognition", () => {
   });
 
   it("서버가 QR을 권하면 안내 문구를 보여 주고 시간이 지나면 사라진다", async () => {
-    const gateway = createMockFaceGateway([[]], STUDENTS);
+    const gateway = createMockFaceGateway([[]]);
     vi.spyOn(gateway, "sendFrame")
       .mockResolvedValueOnce({ frameId: "f", faces: [unknown(4)] })
       .mockResolvedValue({ frameId: "f", faces: [] });
@@ -109,7 +107,7 @@ describe("AdminFaceRecognition", () => {
   });
 
   it("실패가 3회 이하이면 QR 안내를 하지 않는다", async () => {
-    renderWith(createMockFaceGateway([[unknown(3)]], STUDENTS));
+    renderWith(createMockFaceGateway([[unknown(3)]]));
     await tick();
 
     expect(
@@ -118,7 +116,7 @@ describe("AdminFaceRecognition", () => {
   });
 
   it("실패하면 카메라 하단에 인식 실패 배너를 잠깐 보이고 사라진다", async () => {
-    const gateway = createMockFaceGateway([[]], STUDENTS);
+    const gateway = createMockFaceGateway([[]]);
     vi.spyOn(gateway, "sendFrame")
       .mockResolvedValueOnce({ frameId: "f", faces: [unknown(1)] })
       .mockResolvedValue({ frameId: "f", faces: [] });
@@ -132,7 +130,7 @@ describe("AdminFaceRecognition", () => {
   });
 
   it("성공하면 카메라 하단에 `성공 · 학번 이름` 배너를 잠깐 보인다", async () => {
-    const gateway = createMockFaceGateway([[]], STUDENTS);
+    const gateway = createMockFaceGateway([[]]);
     vi.spyOn(gateway, "sendFrame")
       .mockResolvedValueOnce({ frameId: "f", faces: [known()] })
       .mockResolvedValue({ frameId: "f", faces: [] });
@@ -147,7 +145,7 @@ describe("AdminFaceRecognition", () => {
 
   it("카메라 허용 전에는 서버에 세션을 만들지 않는다", async () => {
     camera.status = "requesting";
-    const gateway = createMockFaceGateway([[]], STUDENTS);
+    const gateway = createMockFaceGateway([[]]);
     const createSession = vi.spyOn(gateway, "createSession");
 
     renderWith(gateway);
@@ -157,7 +155,7 @@ describe("AdminFaceRecognition", () => {
   });
 
   it("용도 탭을 바꾸면 새 용도로 새 세션을 만들고 이전 기록은 비운다", async () => {
-    const gateway = createMockFaceGateway([[known()]], STUDENTS);
+    const gateway = createMockFaceGateway([[known()]]);
     const createSession = vi.spyOn(gateway, "createSession");
     const closeSession = vi.spyOn(gateway, "closeSession");
     renderWith(gateway);
@@ -173,7 +171,7 @@ describe("AdminFaceRecognition", () => {
   });
 
   it("세션을 만들지 못하면 최근 인식에 오류와 다시 시도를 보여 준다", async () => {
-    const gateway = createMockFaceGateway([[]], STUDENTS);
+    const gateway = createMockFaceGateway([[]]);
     vi.spyOn(gateway, "createSession")
       .mockRejectedValueOnce(new Error("server"))
       .mockResolvedValue("ok");
@@ -187,7 +185,7 @@ describe("AdminFaceRecognition", () => {
   });
 
   it("화면을 떠나면 세션을 종료한다", async () => {
-    const gateway = createMockFaceGateway([[]], STUDENTS);
+    const gateway = createMockFaceGateway([[]]);
     const closeSession = vi.spyOn(gateway, "closeSession");
     const { unmount } = renderWith(gateway);
     await tick();
