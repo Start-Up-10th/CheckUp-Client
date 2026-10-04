@@ -38,6 +38,11 @@ function mockApi(
 ) {
   const queue = [...lists];
   const fetchMock = vi.fn(async (...[url]: [string, RequestInit?]) => {
+    // 공통 틀의 본인 정보·읽지 않은 알림 조회는 목록 응답과 따로 답한다.
+    if (url === "/api/v1/auth/me") return new Response(null, { status: 401 });
+    if (url === "/api/v1/notifications/unread") {
+      return new Response(JSON.stringify({ hasUnread: false }));
+    }
     if (url === "/api/v1/notifications/read") {
       return new Response(null, { status: readStatus });
     }
