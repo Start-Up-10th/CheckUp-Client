@@ -33,7 +33,66 @@ describe("fetchCurrentMember", () => {
       name: "김도현",
       role,
       consented: true,
+      student: null,
     });
+  });
+
+  it("학생 정보를 함께 돌려준다", async () => {
+    const student = {
+      studentId: 1234,
+      grade: 2,
+      classNumber: 4,
+      number: 5,
+      studentNumber: 2405,
+      dormitoryRoom: 412,
+      dormitoryFloor: 4,
+    };
+    mockFetch(200, {
+      name: "김도현",
+      role: "STUDENT",
+      consented: true,
+      student,
+    });
+
+    await expect(fetchCurrentMember()).resolves.toMatchObject({ student });
+  });
+
+  it("호실이 배정되지 않은 학생은 호실·층이 null", async () => {
+    mockFetch(200, {
+      name: "김도현",
+      role: "STUDENT",
+      student: {
+        studentId: 1234,
+        grade: 1,
+        classNumber: 1,
+        number: 1,
+        studentNumber: 1101,
+        dormitoryRoom: null,
+        dormitoryFloor: null,
+      },
+    });
+
+    await expect(fetchCurrentMember()).resolves.toMatchObject({
+      student: { dormitoryRoom: null, dormitoryFloor: null },
+    });
+  });
+
+  it("학생 정보가 null이면(교사) null", async () => {
+    mockFetch(200, { name: "교사", role: "ADMIN", student: null });
+
+    await expect(fetchCurrentMember()).resolves.toMatchObject({
+      student: null,
+    });
+  });
+
+  it("학생 정보가 계약과 다르면 오류", async () => {
+    mockFetch(200, {
+      name: "김도현",
+      role: "STUDENT",
+      student: { studentNumber: "2405" },
+    });
+
+    await expect(fetchCurrentMember()).rejects.toThrow("unexpected response");
   });
 
   it("동의 여부가 없거나 true가 아니면 false로 본다", async () => {
