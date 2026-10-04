@@ -10,10 +10,7 @@ import {
 import { redirectToAdminLogin } from "@/lib/admin/admin-session";
 import { captureFrame } from "@/lib/admin/capture-frame";
 import { FaceApiError } from "@/lib/admin/face-api";
-import {
-  useFaceGateway,
-  type StudentDirectory,
-} from "@/lib/admin/face-gateway";
+import { useFaceGateway } from "@/lib/admin/face-gateway";
 import { applyFrame, INITIAL_RECOGNITION } from "@/lib/admin/face-results";
 import type { RecognitionEntry } from "@/lib/admin/face-results";
 import type { Purpose } from "@/lib/admin/purpose";
@@ -75,7 +72,6 @@ export function useFaceRecognition({
     let sessionId: string | null = null;
     let closedSessionId: string | null = null;
     let state = INITIAL_RECOGNITION;
-    let directory: StudentDirectory = {};
     const timers = new Set<ReturnType<typeof setTimeout>>();
     let qrTimer: ReturnType<typeof setTimeout> | undefined;
     let successTimer: ReturnType<typeof setTimeout> | undefined;
@@ -119,17 +115,12 @@ export function useFaceRecognition({
 
     async function run() {
       try {
-        const [id, students] = await Promise.all([
-          gateway.createSession(purpose),
-          // 이름을 못 받아도 인식은 계속한다(성공 행은 이름 없이 `인식 성공`).
-          gateway.loadStudents().catch(() => ({}) as StudentDirectory),
-        ]);
+        const id = await gateway.createSession(purpose);
         if (cancelled) {
           gateway.closeSession(id);
           return;
         }
         sessionId = id;
-        directory = students;
       } catch (error) {
         fail(error);
         return;
@@ -151,12 +142,7 @@ export function useFaceRecognition({
             );
             if (cancelled) break;
             failures = 0;
-            const outcome = applyFrame(
-              state,
-              result.faces,
-              new Date(),
-              (studentId) => directory[studentId],
-            );
+            const outcome = applyFrame(state, result.faces, new Date());
             state = outcome.state;
             setEntries(state.entries);
             const found = outcome.success;

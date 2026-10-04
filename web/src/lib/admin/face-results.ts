@@ -10,14 +10,9 @@ export type RecognitionEntry = {
   recognizedAt: string;
 };
 
-/** 학생 이름을 알 수 없을 때의 성공 행 문구. 이름을 지어내지 않는다. */
-export const UNNAMED_SUCCESS_LABEL = "인식 성공";
-
-/** 카메라 화면에 잠깐 보이는 성공 문구(REQ-FACE-007 `성공 · 학번 이름`). 이름을 모르면 `성공`만 쓴다. */
+/** 카메라 화면에 잠깐 보이는 성공 문구(REQ-FACE-007 `성공 · 학번 이름`). */
 export function successMessage(entry: RecognitionEntry): string {
-  return entry.label === UNNAMED_SUCCESS_LABEL
-    ? "성공"
-    : `성공 · ${entry.label}`;
+  return `성공 · ${entry.label}`;
 }
 
 /** 같은 학생의 성공을 목록에 다시 올리지 않는 시간. 지나가는 동안 매 프레임 성공이 쌓이지 않게 한다. */
@@ -27,14 +22,12 @@ export const TRACK_MEMORY_MS = 30_000;
 /** 최근 인식 목록에 남기는 최대 개수(당일 임시 기록, REQ-FACE-007). */
 export const MAX_ENTRIES = 30;
 
-export type StudentLabel = { studentNumber: number; name: string };
-
 export type RecognitionState = {
   /** 최신순. */
   entries: RecognitionEntry[];
   /** 트랙별로 마지막으로 본 시도 횟수와 시각. 같은 시도를 프레임마다 실패로 세지 않기 위해 둔다. */
   tracks: Record<string, { attempts: number; seenAt: number }>;
-  /** 학생별 마지막 성공 시각. */
+  /** 학번별 마지막 성공 시각. */
   successAt: Record<number, number>;
   /** 새 항목 id를 만드는 번호. */
   sequence: number;
@@ -68,11 +61,6 @@ function timeLabel(now: Date): string {
   return TIME.format(now);
 }
 
-/** 성공 행의 이름. 학생 명단에서 찾지 못하면 이름을 지어내지 않고 `인식 성공`만 쓴다. */
-function successLabel(label: StudentLabel | undefined): string {
-  return label ? `${label.studentNumber} ${label.name}` : UNNAMED_SUCCESS_LABEL;
-}
-
 /**
  * 프레임 한 장의 인식 결과를 최근 인식 목록에 반영한다(REQ-FACE-005~007). 순수 함수다.
  * - KNOWN(출석 기록됨·이미 출석)은 성공 행이다. 같은 학생은 10초 안에 다시 올리지 않는다. 서버가 거절한
@@ -86,7 +74,6 @@ export function applyFrame(
   prev: RecognitionState,
   faces: FaceResult[],
   now: Date,
-  lookup: (studentId: number) => StudentLabel | undefined,
 ): FrameOutcome {
   const nowMs = now.getTime();
   const tracks: RecognitionState["tracks"] = {};
@@ -108,17 +95,21 @@ export function applyFrame(
     };
     if (face.qrRecommended && face.status === "UNKNOWN") qrRecommended = true;
 
-    if (face.status === "KNOWN" && face.studentId !== undefined) {
+    if (
+      face.status === "KNOWN" &&
+      face.studentNumber !== undefined &&
+      face.studentName !== undefined
+    ) {
       const counted =
         face.attendance === "RECORDED" || face.attendance === "DUPLICATE";
-      const last = successAt[face.studentId];
+      const last = successAt[face.studentNumber];
       if (!counted || (last !== undefined && nowMs - last < SUCCESS_DEDUPE_MS))
         continue;
-      successAt[face.studentId] = nowMs;
+      successAt[face.studentNumber] = nowMs;
       sequence += 1;
       const entry: RecognitionEntry = {
         id: String(sequence),
-        label: successLabel(lookup(face.studentId)),
+        label: `${face.studentNumber} ${face.studentName}`,
         outcome: "success",
         recognizedAt: timeLabel(now),
       };
