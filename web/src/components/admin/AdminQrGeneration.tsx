@@ -5,15 +5,18 @@ import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel";
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
 import { StatusBanner } from "@/components/admin/StatusBanner";
-import { formatCountdown, type QrPurpose } from "@/lib/admin/mock-qr-session";
+import { formatCountdown } from "@/lib/admin/qr-countdown";
+import type { Purpose } from "@/lib/admin/purpose";
+import { redirectToAdminLogin } from "@/lib/admin/admin-session";
 import {
   createQrSession,
   heartbeatQrSession,
   closeQrSession,
+  AdminUnauthorizedError,
   QrSessionNotFoundError,
 } from "@/lib/admin/qr-api";
 
-const DEFAULT_PURPOSE: QrPurpose = "dorm";
+const DEFAULT_PURPOSE: Purpose = "dorm";
 const HEARTBEAT_INTERVAL_MS = 20_000;
 
 type ActiveSession = {
@@ -31,7 +34,7 @@ type ActiveSession = {
  * 목적 전환·페이지 이탈 시 sendBeacon으로 해당 세션만 종료한다(다른 탭·관리자 세션 영향 없음).
  */
 export function AdminQrGeneration() {
-  const [purpose, setPurpose] = useState<QrPurpose>(DEFAULT_PURPOSE);
+  const [purpose, setPurpose] = useState<Purpose>(DEFAULT_PURPOSE);
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [now, setNow] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export function AdminQrGeneration() {
   // ref로 즉시 취소: handleSelectPurpose에서 React 스케줄러 전에 동기적으로 세트한다.
   const cancelRef = useRef(false);
 
-  function handleSelectPurpose(nextPurpose: QrPurpose) {
+  function handleSelectPurpose(nextPurpose: Purpose) {
     cancelRef.current = true;
     setPurpose(nextPurpose);
     setSession(null);
@@ -96,7 +99,13 @@ export function AdminQrGeneration() {
             );
           } catch (err) {
             if (cancelRef.current) return;
-            if (err instanceof QrSessionNotFoundError) {
+            if (err instanceof AdminUnauthorizedError) {
+              // 관리자 세션이 끊기면 만료된 QR을 남기지 않고 로그인으로 보낸다.
+              clearHeartbeat();
+              sessionIdRef.current = null;
+              setSession(null);
+              redirectToAdminLogin();
+            } else if (err instanceof QrSessionNotFoundError) {
               // 서버 세션이 사라진 경우 새 세션을 생성한다.
               sessionIdRef.current = null;
               setSession(null);
@@ -108,8 +117,11 @@ export function AdminQrGeneration() {
             }
           }
         }, HEARTBEAT_INTERVAL_MS);
-      } catch {
-        if (!cancelRef.current) {
+      } catch (err) {
+        if (cancelRef.current) return;
+        if (err instanceof AdminUnauthorizedError) {
+          redirectToAdminLogin();
+        } else {
           setError("QR 자동 생성에 실패했습니다. 새로고침해 주세요.");
         }
       }
@@ -154,7 +166,7 @@ export function AdminQrGeneration() {
         <PurposeTabs selected={purpose} onSelect={handleSelectPurpose} />
       </div>
 
-      {error && <StatusBanner variant="error" message={error} />}
+      {error && <StatusBanner variant="error" message={error} compactOnPhone />}
 
       {session && countdownLabel ? (
         <QrCodeGenerationPanel

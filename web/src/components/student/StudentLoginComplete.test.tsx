@@ -1,0 +1,92 @@
+import { render, waitFor } from "@testing-library/react";
+import { QR_RETURN_URL_KEY } from "@/lib/student/qr-return-url";
+import { StudentLoginComplete } from "./StudentLoginComplete";
+
+const QR_URL = `/qr#t=${"a".repeat(43)}`;
+const originalLocation = window.location;
+let replace: ReturnType<typeof vi.fn>;
+
+function mockMe(status: number, body?: unknown) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(
+      new Response(body === undefined ? null : JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json" },
+      }),
+    ),
+  );
+}
+
+beforeEach(() => {
+  replace = vi.fn();
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: { origin: "http://localhost:3000", replace },
+  });
+});
+
+afterEach(() => {
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: originalLocation,
+  });
+  window.sessionStorage.clear();
+  vi.unstubAllGlobals();
+});
+
+describe("StudentLoginComplete", () => {
+  it("로그인이 안 됐으면 로그인 실패 화면으로", async () => {
+    mockMe(401);
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/login?error=1"));
+  });
+
+  it("서버 오류도 로그인 실패 화면으로", async () => {
+    mockMe(500);
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/login?error=1"));
+  });
+
+  it("관리자는 관리자 홈으로", async () => {
+    mockMe(200, { name: "사감", role: "ADMIN" });
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin"));
+  });
+
+  it("QR 링크로 왔던 학생은 저장한 QR 주소로 돌아가고 값은 지운다", async () => {
+    window.sessionStorage.setItem(QR_RETURN_URL_KEY, QR_URL);
+    mockMe(200, { name: "김도현", role: "STUDENT" });
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith(QR_URL));
+    expect(window.sessionStorage.getItem(QR_RETURN_URL_KEY)).toBeNull();
+  });
+
+  it("QR 링크로 왔던 관리자(기숙사 자치위원)도 저장한 QR 주소로 돌아가고 값은 지운다", async () => {
+    window.sessionStorage.setItem(QR_RETURN_URL_KEY, QR_URL);
+    mockMe(200, { name: "자치위원", role: "ADMIN" });
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith(QR_URL));
+    expect(window.sessionStorage.getItem(QR_RETURN_URL_KEY)).toBeNull();
+  });
+
+  it("아직 동의하지 않은 학생은 개인정보 동의로", async () => {
+    mockMe(200, { name: "김도현", role: "STUDENT", consented: false });
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/consent"));
+  });
+
+  it("이미 동의한 학생은 학생 홈으로", async () => {
+    mockMe(200, { name: "김도현", role: "STUDENT", consented: true });
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/main"));
+  });
+
+  it("로그인이 안 됐으면 저장한 QR 주소를 남겨 둔다(다시 로그인할 때 쓴다)", async () => {
+    window.sessionStorage.setItem(QR_RETURN_URL_KEY, QR_URL);
+    mockMe(401);
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalled());
+    expect(window.sessionStorage.getItem(QR_RETURN_URL_KEY)).toBe(QR_URL);
+  });
+});

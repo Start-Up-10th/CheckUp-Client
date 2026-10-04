@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { StatusBanner } from "@/components/admin/StatusBanner";
+import { LOGIN_START_PATH } from "@/lib/auth/auth-api";
 import { DataGsmLoginButton } from "./DataGsmLoginButton";
 
 /**
@@ -13,16 +13,20 @@ import { DataGsmLoginButton } from "./DataGsmLoginButton";
  *
  * 실패 문구는 핸드폰 Figma state messages(3:42) 문구로 통일한다 — 노트북 Figma의
  * "계정 또는 비밀번호가 올바르지 않습니다."는 비밀번호 입력이 없는 REQ-AUTH-001과 맞지 않는다
- * (사용자 결정 2026-09-26). 위치는 Figma에 없어 핸드폰 아래 32px, 노트북 오른쪽 위 32px·폭 380px
+ * (사용자 결정 2026-09-26). 서버가 계정을 거부한 경우(`login-error.ts`)만 서버 문구를 쓴다
+ * (사용자 결정 2026-10-01). 위치는 Figma에 없어 핸드폰 아래 32px, 노트북 오른쪽 위 32px·폭 380px
  * (학생 홈 서버 오류와 같은 자리)로 둔다.
  */
-export function StudentLogin({ failed = false }: { failed?: boolean }) {
-  const router = useRouter();
-
-  // TODO(REQ-AUTH-001, DEC-001): OAuth 연동 때 백엔드의 DataGSM 인가 시작 주소로 이동한다
-  // (state·콜백 검증·토큰 교환은 백엔드). 실패하면 `/login?error=1`로 돌아오게 한다.
-  // 지금은 화면 개발용으로 학생 최초 이용 흐름의 다음 화면(개인정보 동의)으로 보낸다.
-  const login = () => router.push("/consent");
+export function StudentLogin({
+  failureMessage = null,
+}: {
+  failureMessage?: string | null;
+}) {
+  // 서버 로그인 시작 주소로 페이지째 이동한다(같은 출처 `/api` 프록시). 서버가 state·PKCE를 만들어
+  // DataGSM 로그인으로 보내고, 콜백 검증·토큰 교환·세션 발급도 서버가 한다(REQ-AUTH-001).
+  // 웹은 DataGSM 주소·클라이언트 ID를 직접 만들지 않는다. 앱 안 이동(router)이 아니라 서버 302를
+  // 따라가야 하므로 location을 바꾼다.
+  const login = () => window.location.assign(LOGIN_START_PATH);
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-[106px] bg-[#f5f5f7] px-4 pt-[255px] md:gap-[162px] md:bg-admin-bg md:pt-[225px]">
@@ -37,12 +41,9 @@ export function StudentLogin({ failed = false }: { failed?: boolean }) {
         />
       </h1>
       <DataGsmLoginButton onClick={login} />
-      {failed && (
+      {failureMessage !== null && (
         <div className="fixed inset-x-[18px] bottom-8 z-40 md:inset-x-auto md:bottom-auto md:right-8 md:top-8 md:w-[380px]">
-          <StatusBanner
-            variant="error"
-            message="로그인에 실패했습니다. 다시 시도해 주세요."
-          />
+          <StatusBanner variant="error" message={failureMessage} />
         </div>
       )}
     </main>

@@ -1,12 +1,21 @@
 import type { Purpose } from "@/lib/admin/purpose";
 
-type ApiPurpose = "DORMITORY" | "STUDY_ROOM";
+export type ApiPurpose = "DORMITORY" | "STUDY_ROOM";
 
-const PURPOSE_TO_API: Record<Purpose, ApiPurpose> = {
+export const PURPOSE_TO_API: Record<Purpose, ApiPurpose> = {
   dorm: "DORMITORY",
   study: "STUDY_ROOM",
 };
 
+/** 서버 응답 원본. 시각은 ISO-8601 UTC 문자열이다(하네스 qr-attendance.md "관리자 API 응답"). */
+type QrSessionApiResponse = {
+  sessionId: string;
+  qrUrl: string;
+  tokenExpiresAt: string;
+  serverTime: string;
+};
+
+/** 화면에서 쓰는 형태. 시각은 계산하기 쉽게 unix ms로 바꾼다. */
 export type QrCreateResponse = {
   sessionId: string;
   qrUrl: string;
@@ -20,13 +29,35 @@ export type QrHeartbeatResponse = {
   serverTime: number;
 };
 
+function toEpochMs(iso: string, field: string): number {
+  const ms = Date.parse(iso);
+  if (Number.isNaN(ms)) throw new Error(`invalid ${field}`);
+  return ms;
+}
+
+function toQrSession(body: QrSessionApiResponse): QrCreateResponse {
+  return {
+    sessionId: body.sessionId,
+    qrUrl: body.qrUrl,
+    tokenExpiresAt: toEpochMs(body.tokenExpiresAt, "tokenExpiresAt"),
+    serverTime: toEpochMs(body.serverTime, "serverTime"),
+  };
+}
+
 export class QrSessionNotFoundError extends Error {
   constructor() {
     super("QR session not found");
   }
 }
 
-/** REQ-ATT-003: 페이지 진입·용도 탭 선택 시 새 QR 세션 발급 */
+/** 세션이 없거나 만료돼 서버가 401을 준 경우. 화면은 관리자 로그인으로 보낸다. */
+export class AdminUnauthorizedError extends Error {
+  constructor() {
+    super("admin session expired");
+  }
+}
+
+/** REQ-ATT-003: 페이지 진입·용도 탭 선택 시 새 QR 세션 발급. 401이면 AdminUnauthorizedError */
 export async function createQrSession(
   purpose: Purpose,
 ): Promise<QrCreateResponse> {
@@ -36,11 +67,12 @@ export async function createQrSession(
     credentials: "include",
     body: JSON.stringify({ purpose: PURPOSE_TO_API[purpose] }),
   });
+  if (res.status === 401) throw new AdminUnauthorizedError();
   if (!res.ok) throw new Error(`createQrSession: ${res.status}`);
-  return res.json() as Promise<QrCreateResponse>;
+  return toQrSession((await res.json()) as QrSessionApiResponse);
 }
 
-/** REQ-ATT-004: heartbeat로 qrUrl 교체·세션 유지. 404면 QrSessionNotFoundError */
+/** REQ-ATT-004: heartbeat로 qrUrl 교체·세션 유지. 401이면 AdminUnauthorizedError, 404면 QrSessionNotFoundError */
 export async function heartbeatQrSession(
   sessionId: string,
 ): Promise<QrHeartbeatResponse> {
@@ -48,9 +80,13 @@ export async function heartbeatQrSession(
     `/api/v1/qr/${encodeURIComponent(sessionId)}/heartbeat`,
     { method: "POST", credentials: "include" },
   );
+  if (res.status === 401) throw new AdminUnauthorizedError();
   if (res.status === 404) throw new QrSessionNotFoundError();
   if (!res.ok) throw new Error(`heartbeat: ${res.status}`);
-  return res.json() as Promise<QrHeartbeatResponse>;
+  const { qrUrl, tokenExpiresAt, serverTime } = toQrSession(
+    (await res.json()) as QrSessionApiResponse,
+  );
+  return { qrUrl, tokenExpiresAt, serverTime };
 }
 
 /** REQ-ATT-003: 페이지 이탈·용도 탭 변경 시 해당 세션만 종료 (sendBeacon) */

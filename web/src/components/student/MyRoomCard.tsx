@@ -9,10 +9,12 @@ const roomNumberFont = Roboto_Mono({
 });
 
 type MyRoomCardProps = {
-  floor: number;
-  roomNumber: string;
-  /** 이름순으로 정렬된 호실 학생 */
-  students: RoomMate[];
+  /** 기숙사 층. 받기 전이면 null */
+  floor: number | null;
+  /** 호실 번호. 받기 전이면 null */
+  roomNumber: string | null;
+  /** 이름순으로 정렬된 호실 학생. 받기 전이거나 받지 못했으면 null이고, 인원 줄과 배치 그림 안을 비워 둔다. */
+  students: RoomMate[] | null;
 };
 
 /**
@@ -22,7 +24,7 @@ type MyRoomCardProps = {
  * 핸드폰 카드 아래 14px 빈 줄은 QR 버튼이 배치 그림을 덜 가리도록 Figma에 있는 여백이다.
  */
 export function MyRoomCard({ floor, roomNumber, students }: MyRoomCardProps) {
-  const present = students.filter((student) => student.present).length;
+  const present = students?.filter((student) => student.present).length ?? 0;
 
   return (
     <section
@@ -37,21 +39,23 @@ export function MyRoomCard({ floor, roomNumber, students }: MyRoomCardProps) {
           내 호실
         </h2>
         <p className="text-xs text-admin-textMuted md:text-[13px]">
-          기숙사 {floor}층
+          {floor === null ? "\u00a0" : `기숙사 ${floor}층`}
         </p>
       </div>
       <div className="flex items-baseline gap-2.5 leading-normal md:gap-3">
         <p
           className={`${roomNumberFont.className} text-[34px] font-semibold tracking-[-0.68px] text-admin-text md:text-[40px] md:font-normal md:tracking-[-0.8px]`}
         >
-          {roomNumber}
-          <span className="sr-only">호</span>
+          {roomNumber ?? "\u00a0"}
+          {roomNumber !== null && <span className="sr-only">호</span>}
         </p>
         <p className="text-[13px] text-admin-textMuted md:text-sm">
-          {students.length}인실 · {present}명 출석
+          {students === null
+            ? "\u00a0"
+            : `${students.length}인실 · ${present}명 출석`}
         </p>
       </div>
-      <RoomMap students={students} />
+      <RoomMap students={students ?? []} />
       <div aria-hidden="true" className="h-3.5 shrink-0 md:hidden" />
     </section>
   );

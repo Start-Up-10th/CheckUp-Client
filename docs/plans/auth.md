@@ -12,7 +12,7 @@
 
 - OAuth state·PKCE codeVerifier·콜백 검증, DataGSM 토큰 교환, 서버 세션/JWT 발급
 - `/auth/me`의 학생 ID·이름·학번·호실·관리자 여부·얼굴 등록 상태 반환
-- `DORMITORY_MANAGER` 기반 서버 권한 판정
+- 서버 권한 판정: 학생 `DORMITORY_MANAGER`(자치위원)와 기숙사부 교직원(사감)은 관리자, 그 외 활성 학생은 학생, 비활성·기숙사부 아닌 교직원은 403 거부(SRC-SERVER-ROLE)
 - 로그아웃 시 로그인 세션과 사용자 인증 세션 정리
 - Access Token 재발급 및 refresh token 만료·위조·재사용 거부
 - QR 로그인 복귀 시 원래 QR의 만료·종료·용도 재검사

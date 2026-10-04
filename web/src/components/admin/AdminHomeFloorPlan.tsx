@@ -19,6 +19,13 @@ import {
 
 const DEFAULT_FLOOR: Floor = 4;
 
+/**
+ * 토스트는 오른쪽 위, 헤더의 층 탭 바로 아래 8px에 둬 층 탭과 호실 카드 버튼을 가리지 않는다(통계 카드 위):
+ * 폰 57px(탭 하단 49px), 패드 83px(탭 하단 75px), 컴퓨터 91px(탭 하단 83px). 측정으로 확인했다.
+ */
+const TOAST_POSITION =
+  "inset-x-4 top-[57px] justify-end md:left-[96px] md:right-[22px] md:top-[83px] xl:left-[300px] xl:right-8 xl:top-[91px]";
+
 /** 호실 카드를 누르면 상세(읽기 전용) -> 수정(토글 편집) 2단계로 연다. */
 type DialogStage = "view" | "edit";
 
@@ -83,8 +90,8 @@ export function AdminHomeFloorPlan({
   }
 
   return (
-    <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6">
-      <ToastLayer toast={toast} />
+    <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
+      <ToastLayer toast={toast} positionClassName={TOAST_POSITION} />
 
       {/* 헤더: 제목 좌측 + 층 탭 우측 */}
       <div className="flex w-full items-center justify-between md:items-end">

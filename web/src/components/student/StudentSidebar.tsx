@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import type { CurrentStudentProfile } from "@/lib/student/current-student";
 import { useLogout } from "@/lib/student/use-logout";
 import { MaskIcon } from "./MaskIcon";
 import { StudentSidebarLink, type SidebarTone } from "./StudentSidebarLink";
@@ -19,9 +20,8 @@ const NAV_ITEMS = [
 ];
 
 type StudentSidebarProps = {
-  name: string;
-  studentNumber: string;
-  room: string;
+  /** 본인 정보. 받기 전이거나 받지 못했으면 null이고, 프로필 카드는 비워 둔다(높이는 유지). */
+  profile: CurrentStudentProfile | null;
   hasUnreadNotification: boolean;
   /** QR 카메라 화면만 어두운 사이드바(Figma 228:6)를 쓴다. */
   tone?: SidebarTone;
@@ -36,10 +36,13 @@ type StudentSidebarProps = {
  * 어두운 사이드바(QR 카메라, Figma 228:6)는 Figma 그대로다: 테두리 없음, 프로필 카드 흰 6%.
  * 종은 수정된 Figma(889:5)대로 회색 선에 빨간 점이라 어두운 배경에서도 보인다(bell-unread-dark.svg).
  */
+/** 사이드바 프로필의 호실 문구. 호실이 배정되지 않았으면 Figma에 없어 `호실 미배정`으로 쓴다. */
+function roomLabel(roomNumber: string | null): string {
+  return roomNumber === null ? "호실 미배정" : `${roomNumber}호`;
+}
+
 export function StudentSidebar({
-  name,
-  studentNumber,
-  room,
+  profile,
   hasUnreadNotification,
   tone = "light",
 }: StudentSidebarProps) {
@@ -63,12 +66,14 @@ export function StudentSidebar({
           <p
             className={`text-sm font-bold ${dark ? "text-white" : "text-admin-text"}`}
           >
-            {name}
+            {profile ? profile.name : "\u00a0"}
           </p>
           <p
             className={`text-[11px] ${dark ? "text-white/50" : "text-admin-textMuted"}`}
           >
-            {studentNumber} · {room}
+            {profile
+              ? `${profile.studentNumber} · ${roomLabel(profile.roomNumber)}`
+              : "\u00a0"}
           </p>
         </div>
       </div>
