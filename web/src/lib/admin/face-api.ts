@@ -12,8 +12,10 @@ export type FaceResult = {
   /** 같은 얼굴을 따라가는 익명 트랙. 학생과 무관하다. */
   trackId: string;
   status: RecognitionStatus;
-  /** DataGSM 학생 id. KNOWN일 때만 있다. */
-  studentId?: number;
+  /** 서버가 알려 주는 학생 이름. KNOWN일 때만 있다. */
+  studentName?: string;
+  /** 서버가 알려 주는 학번(화면 표시용). KNOWN일 때만 있다. */
+  studentNumber?: number;
   attendance?: RecognitionAttendance;
   /** 이 트랙의 인식 시도 횟수(서버가 센다). 매 프레임이 아니라 시도 단위다(REQ-FACE-006). */
   attempts: number;
@@ -41,7 +43,8 @@ type FaceApiBody = {
     qrRecommended: boolean;
     recognition: {
       status: string;
-      studentId?: string | null;
+      studentName?: string | null;
+      studentNumber?: number | null;
       attendance?: string | null;
     };
   }>;
@@ -57,17 +60,30 @@ const ATTENDANCES: readonly string[] = [
 
 function toFaceResult(face: FaceApiBody["faces"][number]): FaceResult {
   const raw = face.recognition;
-  const parsedId = raw.studentId ? Number(raw.studentId) : NaN;
+  const studentName =
+    typeof raw.studentName === "string" && raw.studentName.trim() !== ""
+      ? raw.studentName
+      : undefined;
+  const studentNumber =
+    typeof raw.studentNumber === "number" && Number.isFinite(raw.studentNumber)
+      ? raw.studentNumber
+      : undefined;
   let status: RecognitionStatus = STATUSES.includes(raw.status)
     ? (raw.status as RecognitionStatus)
     : "NOT_ATTEMPTED";
-  // KNOWN인데 학생 id를 읽을 수 없으면 신원을 만들지 않고 인식하지 못한 것으로 둔다(REQ-FACE-005).
-  if (status === "KNOWN" && !Number.isFinite(parsedId)) status = "UNKNOWN";
+  // KNOWN인데 이름이나 학번을 읽을 수 없으면 신원을 만들지 않고 인식하지 못한 것으로 둔다(REQ-FACE-005).
+  if (
+    status === "KNOWN" &&
+    (studentName === undefined || studentNumber === undefined)
+  ) {
+    status = "UNKNOWN";
+  }
   const known = status === "KNOWN";
   return {
     trackId: face.trackId,
     status,
-    studentId: known ? parsedId : undefined,
+    studentName: known ? studentName : undefined,
+    studentNumber: known ? studentNumber : undefined,
     attendance:
       known && raw.attendance && ATTENDANCES.includes(raw.attendance)
         ? (raw.attendance as RecognitionAttendance)
