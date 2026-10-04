@@ -69,12 +69,7 @@ export function AdminFaceRecognition() {
             얼굴 인식 생성
           </h1>
         </div>
-        <PurposeTabs
-          selected={purpose}
-          onSelect={setPurpose}
-          labels={{ dorm: "기숙사 입소" }}
-          compactLabels={{ dorm: "기숙사" }}
-        />
+        <PurposeTabs selected={purpose} onSelect={setPurpose} />
       </div>
 
       {recognition.qrNotice && (
