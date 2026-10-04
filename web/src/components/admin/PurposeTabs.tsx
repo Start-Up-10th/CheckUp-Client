@@ -8,7 +8,7 @@ const DEFAULT_LABELS: Record<Purpose, string> = {
 type PurposeTabsProps = {
   selected: Purpose;
   onSelect: (purpose: Purpose) => void;
-  /** 화면별로 라벨이 다를 수 있다 (예: 얼굴 인식 생성 화면은 "기숙사 입소"). */
+  /** 화면별로 라벨이 다를 수 있다. */
   labels?: Partial<Record<Purpose, string>>;
   /** 폰(768px 미만)에서만 쓰는 짧은 라벨 (예: 얼굴 인식 생성 화면 "기숙사"). */
   compactLabels?: Partial<Record<Purpose, string>>;
