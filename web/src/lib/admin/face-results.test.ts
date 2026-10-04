@@ -12,20 +12,12 @@ import {
 // 2026-10-02 22:04 KST
 const NOW = new Date("2026-10-02T13:04:00Z");
 
-const LABELS: Record<number, { studentNumber: number; name: string }> = {
-  101: { studentNumber: 2405, name: "김도현" },
-  102: { studentNumber: 2412, name: "박서연" },
-};
-const lookup = (id: number) => LABELS[id];
-
-function known(
-  studentId: number,
-  overrides: Partial<FaceResult> = {},
-): FaceResult {
+function known(overrides: Partial<FaceResult> = {}): FaceResult {
   return {
-    trackId: `k${studentId}`,
+    trackId: "k2405",
     status: "KNOWN",
-    studentId,
+    studentName: "김도현",
+    studentNumber: 2405,
     attendance: "RECORDED",
     attempts: 1,
     qrRecommended: false,
@@ -48,12 +40,12 @@ function unknown(
 }
 
 function run(state: RecognitionState, faces: FaceResult[], at: Date = NOW) {
-  return applyFrame(state, faces, at, lookup);
+  return applyFrame(state, faces, at);
 }
 
 describe("applyFrame 성공", () => {
   it("KNOWN은 `학번 이름` 성공 행과 한국 시각을 만든다", () => {
-    const { state, success } = run(INITIAL_RECOGNITION, [known(101)]);
+    const { state, success } = run(INITIAL_RECOGNITION, [known()]);
 
     expect(state.entries).toEqual([
       {
@@ -68,7 +60,7 @@ describe("applyFrame 성공", () => {
 
   it("이미 출석(DUPLICATE)도 성공으로 보여 준다", () => {
     const { state } = run(INITIAL_RECOGNITION, [
-      known(101, { attendance: "DUPLICATE" }),
+      known({ attendance: "DUPLICATE" }),
     ]);
 
     expect(state.entries).toHaveLength(1);
@@ -77,7 +69,7 @@ describe("applyFrame 성공", () => {
   it("서버가 거절한 출석(STALE·REJECTED)은 성공 행을 만들지 않는다", () => {
     for (const attendance of ["STALE", "REJECTED"] as const) {
       const { state, success } = run(INITIAL_RECOGNITION, [
-        known(101, { attendance }),
+        known({ attendance }),
       ]);
 
       expect(state.entries).toEqual([]);
@@ -85,18 +77,34 @@ describe("applyFrame 성공", () => {
     }
   });
 
-  it("명단에서 이름을 찾지 못하면 이름을 지어내지 않고 `인식 성공`이다", () => {
-    const { state } = run(INITIAL_RECOGNITION, [known(999)]);
+  it("서로 다른 학생은 같은 시각이어도 각자 성공 행이 생긴다", () => {
+    const { state } = run(INITIAL_RECOGNITION, [
+      known(),
+      known({ trackId: "k2412", studentName: "박서연", studentNumber: 2412 }),
+    ]);
 
-    expect(state.entries[0].label).toBe("인식 성공");
+    expect(state.entries.map((e) => e.label).sort()).toEqual([
+      "2405 김도현",
+      "2412 박서연",
+    ]);
+  });
+
+  it("이름이나 학번이 없는 KNOWN은 성공 행을 만들지 않는다", () => {
+    const { state, success } = run(INITIAL_RECOGNITION, [
+      known({ studentName: undefined }),
+      known({ studentNumber: undefined }),
+    ]);
+
+    expect(state.entries).toEqual([]);
+    expect(success).toBeNull();
   });
 
   it("같은 학생은 10초 안에 다시 올리지 않고 지나면 다시 올린다", () => {
-    const first = run(INITIAL_RECOGNITION, [known(101)]);
+    const first = run(INITIAL_RECOGNITION, [known()]);
     const soon = new Date(NOW.getTime() + SUCCESS_DEDUPE_MS - 1);
-    const again = run(first.state, [known(101)], soon);
+    const again = run(first.state, [known()], soon);
     const later = new Date(NOW.getTime() + SUCCESS_DEDUPE_MS);
-    const afterWindow = run(again.state, [known(101)], later);
+    const afterWindow = run(again.state, [known()], later);
 
     expect(again.state.entries).toHaveLength(1);
     expect(again.success).toBeNull();
@@ -162,7 +170,7 @@ describe("applyFrame 실패", () => {
 
 describe("applyFrame 여러 얼굴", () => {
   it("한 명은 성공, 다른 한 명은 실패로 따로 처리하고 이름·횟수를 섞지 않는다", () => {
-    const { state } = run(INITIAL_RECOGNITION, [known(101), unknown("t9", 1)]);
+    const { state } = run(INITIAL_RECOGNITION, [known(), unknown("t9", 1)]);
 
     expect(state.entries.map((e) => [e.label, e.outcome])).toEqual([
       ["인식 실패", "failure"],
@@ -171,8 +179,8 @@ describe("applyFrame 여러 얼굴", () => {
   });
 
   it("성공한 학생이 있어도 실패 얼굴의 시도는 따로 센다", () => {
-    let state = run(INITIAL_RECOGNITION, [known(101), unknown("t9", 1)]).state;
-    state = run(state, [known(101), unknown("t9", 2)]).state;
+    let state = run(INITIAL_RECOGNITION, [known(), unknown("t9", 1)]).state;
+    state = run(state, [known(), unknown("t9", 2)]).state;
 
     expect(state.entries.filter((e) => e.outcome === "failure")).toHaveLength(
       2,
@@ -195,7 +203,7 @@ describe("applyFrame QR 안내", () => {
   it("성공한 얼굴이나 권하지 않은 얼굴은 QR을 안내하지 않는다", () => {
     expect(
       run(INITIAL_RECOGNITION, [
-        known(101, { qrRecommended: true }),
+        known({ qrRecommended: true }),
         unknown("t1", 2),
       ]).qrRecommended,
     ).toBe(false);
@@ -219,22 +227,16 @@ describe("applyFrame 목록", () => {
       entries: Object.freeze([]) as unknown as RecognitionState["entries"],
     });
 
-    expect(() => run(frozen, [known(101), unknown("t1", 1)])).not.toThrow();
+    expect(() => run(frozen, [known(), unknown("t1", 1)])).not.toThrow();
     expect(INITIAL_RECOGNITION.entries).toEqual([]);
   });
 });
 
 describe("successMessage", () => {
   it("`성공 · 학번 이름`이다", () => {
-    const { success } = run(INITIAL_RECOGNITION, [known(101)]);
+    const { success } = run(INITIAL_RECOGNITION, [known()]);
 
     expect(successMessage(success!)).toBe("성공 · 2405 김도현");
-  });
-
-  it("이름을 모르면 이름 없이 `성공`만 쓴다", () => {
-    const { success } = run(INITIAL_RECOGNITION, [known(999)]);
-
-    expect(successMessage(success!)).toBe("성공");
   });
 });
 
@@ -252,6 +254,6 @@ describe("applyFrame 실패 표시", () => {
   });
 
   it("성공만 있는 프레임은 failure가 아니다", () => {
-    expect(run(INITIAL_RECOGNITION, [known(101)]).failure).toBe(false);
+    expect(run(INITIAL_RECOGNITION, [known()]).failure).toBe(false);
   });
 });
