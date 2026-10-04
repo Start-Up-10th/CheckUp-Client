@@ -7,11 +7,12 @@ const DEMO_STUDENTS: StudentDirectory = {
   103: { studentNumber: 2401, name: "정민수" },
 };
 
-function known(studentId: number): FaceResult {
+function known(studentNumber: number, studentName: string): FaceResult {
   return {
-    trackId: `k${studentId}`,
+    trackId: `k${studentNumber}`,
     status: "KNOWN",
-    studentId,
+    studentName,
+    studentNumber,
     attendance: "RECORDED",
     attempts: 1,
     qrRecommended: false,
@@ -30,13 +31,13 @@ function unknown(trackId: string, attempts: number): FaceResult {
 /** 확인용 페이지가 돌려주는 프레임 순서. 성공 → 실패 → 한 프레임에 성공·실패 → QR 안내까지의 실패 누적이다. */
 const DEMO_FRAMES: FaceResult[][] = [
   [],
-  [known(101)],
+  [known(2405, "김도현")],
   [unknown("a", 1)],
-  [known(102), unknown("b", 1)],
+  [known(2412, "박서연"), unknown("b", 1)],
   [unknown("a", 2)],
   [unknown("a", 3)],
   [unknown("a", 4)],
-  [known(103)],
+  [known(2401, "정민수")],
 ];
 
 /**

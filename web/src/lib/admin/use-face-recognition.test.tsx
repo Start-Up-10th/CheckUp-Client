@@ -28,11 +28,12 @@ const capture = async () => FRAME;
 const captureNothing = async () => null;
 const video = { current: {} as HTMLVideoElement };
 
-function known(studentId: number): FaceResult {
+function known(): FaceResult {
   return {
-    trackId: `k${studentId}`,
+    trackId: "k2405",
     status: "KNOWN",
-    studentId,
+    studentName: "김도현",
+    studentNumber: 2405,
     attendance: "RECORDED",
     attempts: 1,
     qrRecommended: false,
@@ -179,7 +180,7 @@ describe("useFaceRecognition 세션", () => {
 
   it("용도 탭을 바꾸면 이전 세션만 종료하고 새 용도로 새 세션을 만들며 기록을 비운다", async () => {
     const gateway = makeGateway({
-      sendFrame: vi.fn(async () => frameOf([known(101)])),
+      sendFrame: vi.fn(async () => frameOf([known()])),
     });
     const { result, rerender } = setup(gateway);
     await tick();
@@ -402,7 +403,7 @@ describe("useFaceRecognition 프레임 전송", () => {
 describe("useFaceRecognition 결과", () => {
   it("성공은 이름을 붙인 행과 잠깐 보이는 성공 표시를 만든다", async () => {
     const gateway = makeGateway({
-      sendFrame: vi.fn(async () => frameOf([known(101)])),
+      sendFrame: vi.fn(async () => frameOf([known()])),
     });
     const { result } = setup(gateway);
     await tick();
@@ -415,18 +416,6 @@ describe("useFaceRecognition 결과", () => {
 
     await tick(SUCCESS_HOLD_MS);
     expect(result.current.success).toBeNull();
-  });
-
-  it("학생 명단을 받지 못해도 인식은 계속하고 이름 없이 인식 성공으로 둔다", async () => {
-    const gateway = makeGateway({
-      loadStudents: vi.fn().mockRejectedValue(new Error("network")),
-      sendFrame: vi.fn(async () => frameOf([known(101)])),
-    });
-    const { result } = setup(gateway);
-    await tick();
-
-    expect(result.current.status).toBe("running");
-    expect(result.current.entries[0].label).toBe("인식 성공");
   });
 
   it("실패하면 잠깐 failure를 켜고 지난 뒤 끈다", async () => {
