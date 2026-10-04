@@ -1,7 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { MOCK_STUDENT } from "@/lib/student/mock-student";
+import {
+  CurrentStudentContext,
+  useFetchCurrentStudent,
+} from "@/lib/student/current-student";
 import {
   UnreadNotificationContext,
   useFetchUnreadNotification,
@@ -26,13 +29,19 @@ type StudentShellProps = {
  * 읽지 않은 알림 여부(REQ-COM-005)는 틀이 화면에 들어올 때 서버에서 한 번 받아 노트북 사이드바 종에 쓰고,
  * 안쪽 화면(핸드폰 홈 종)에도 내려 준다. 알림 화면에서는 묻지 않고 없음으로 둔다 — 그 화면에 들어온 것이
  * 곧 확인이라 빨간 점을 해제하고, 알림 화면이 서버에 전체 읽음을 보낸다.
+ *
+ * 본인 정보(이름·학번·호실, REQ-UI-003·004)도 틀이 들어올 때 서버에서 한 번 받아(`/api/v1/auth/me`) 노트북
+ * 사이드바 프로필에 쓰고 안쪽 화면(홈 머리·마이페이지)에 내려 준다. 로그인하지 않았을 때 로그인 화면으로
+ * 보낼지는 각 화면이 정한다 — QR 화면은 받은 토큰을 먼저 저장한 뒤 로그인으로 보내야 하기 때문이다.
  */
 export function StudentShell({
   children,
   showTabBar = true,
   sidebarTone = "light",
 }: StudentShellProps) {
-  const student = MOCK_STUDENT;
+  const currentStudent = useFetchCurrentStudent();
+  const profile =
+    currentStudent.status === "ready" ? currentStudent.profile : null;
   const hasUnreadNotification = useFetchUnreadNotification(
     usePathname() !== "/notifications",
   );
@@ -40,9 +49,7 @@ export function StudentShell({
   return (
     <div className="flex min-h-dvh bg-admin-bg">
       <StudentSidebar
-        name={student.name}
-        studentNumber={student.studentNumber}
-        room={`${student.roomNumber}호`}
+        profile={profile}
         hasUnreadNotification={hasUnreadNotification}
         tone={sidebarTone}
       />
@@ -53,9 +60,11 @@ export function StudentShell({
             : ""
         }`}
       >
-        <UnreadNotificationContext.Provider value={hasUnreadNotification}>
-          {children}
-        </UnreadNotificationContext.Provider>
+        <CurrentStudentContext.Provider value={currentStudent}>
+          <UnreadNotificationContext.Provider value={hasUnreadNotification}>
+            {children}
+          </UnreadNotificationContext.Provider>
+        </CurrentStudentContext.Provider>
       </div>
       {showTabBar && <StudentBottomTabBar />}
     </div>
