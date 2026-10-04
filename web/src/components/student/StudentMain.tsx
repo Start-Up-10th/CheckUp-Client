@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StatusBanner } from "@/components/admin/StatusBanner";
 import { useCurrentStudent } from "@/lib/student/current-student";
-import { MOCK_STUDENT } from "@/lib/student/mock-student";
+import { fetchFaceStatus } from "@/lib/student/face-enroll-api";
 import {
   RoomLoginRequiredError,
   fetchMyRoomMates,
@@ -21,7 +21,7 @@ export type MainLoadStatus = "ready" | "error";
 /**
  * 학생 홈(REQ-UI-003). 핸드폰(Figma 5:2)은 흰 헤더 아래 `내 호실` 카드가 하단 탭 위까지 차고,
  * 오른쪽 아래 QR 버튼. 노트북(224:2)은 사이드바 오른쪽 가운데 폭 720px·안쪽 여백 36px에 머리와 카드.
- * 얼굴 미등록이면 얼굴 등록(/face)으로 보낸다(얼굴 등록 여부는 아직 mock). 서버 실패는 `서버와 연결이 원활하지 않습니다.`
+ * 얼굴 미등록이면 얼굴 등록(/face)으로 보낸다. 서버 실패는 `서버와 연결이 원활하지 않습니다.`
  * (Figma state messages 205:263 — 관리자 StatusBanner error와 같은 모양이라 재사용).
  * 메인 토스트 프레임이 Figma에서 지워져 위치는 이전 프레임 값을 따르되, 핸드폰은 QR 버튼과 겹치지
  * 않게 그 위(아래 176px)에 둔다. 노트북은 이전 프레임대로 오른쪽 위 32px, 폭 380px.
@@ -83,9 +83,21 @@ function StudentMainContent({
     if (current.status === "unauthenticated") router.replace("/login");
   }, [current.status, router]);
 
+  // REQ-UI-003: 본인 정보를 받은 학생이 얼굴을 등록하지 않았으면 얼굴 등록으로 보낸다(`GET /api/v1/face/me`).
+  // 등록 대상이 아니면(호실 미배정 등) 등록할 수 없어 보내지 않는다. 조회가 실패하면 홈을 막지 않는다.
+  const isStudent = current.status === "ready" && profile !== null;
   useEffect(() => {
-    if (!MOCK_STUDENT.faceRegistered) router.replace("/face");
-  }, [router]);
+    if (!isStudent) return;
+    let cancelled = false;
+    fetchFaceStatus()
+      .then(({ enrolled, eligible }) => {
+        if (!cancelled && !enrolled && eligible) router.replace("/face");
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isStudent, router]);
 
   const showError =
     initialStatus === "error" ||
