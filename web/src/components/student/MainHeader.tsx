@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import {
+  floorTitle,
+  type CurrentStudentProfile,
+} from "@/lib/student/current-student";
 import { useUnreadNotification } from "@/lib/student/unread-notification";
 
 type MainHeaderProps = {
-  name: string;
-  studentNumber: string;
-  floor: number;
+  /** 본인 정보. 받기 전이거나 받지 못했으면 null이고, 글자 자리는 비워 둔다(높이는 유지). */
+  profile: CurrentStudentProfile | null;
 };
 
 /**
@@ -17,17 +20,17 @@ type MainHeaderProps = {
  * (팀원이 수정한 Figma, 2026-09-25, #29). 빨간 점 없는 종은 Figma에 없어 원본에서 점만 뺐고,
  * 핸드폰 종의 clip 밖 찌꺼기 원은 사이드바 종(#16)처럼 지웠다.
  */
-export function MainHeader({ name, studentNumber, floor }: MainHeaderProps) {
+export function MainHeader({ profile }: MainHeaderProps) {
   const hasUnreadNotification = useUnreadNotification();
   const suffix = hasUnreadNotification ? "-unread" : "";
   return (
     <header className="flex items-center justify-between bg-admin-surface px-[22px] pb-4 pt-[60px] md:bg-transparent md:p-0">
       <div className="flex flex-col gap-0.5 leading-normal">
         <p className="text-[13px] text-admin-textMuted">
-          {studentNumber} · {name}
+          {profile ? `${profile.studentNumber} · ${profile.name}` : "\u00a0"}
         </p>
         <h1 className="text-[27px] font-bold tracking-[-0.81px] text-admin-text md:text-[28px] md:tracking-[-0.84px]">
-          기숙사 {floor}층
+          {profile ? floorTitle(profile.floor) : "\u00a0"}
         </h1>
       </div>
       <Link
