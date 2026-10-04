@@ -5,6 +5,8 @@ import { fetchCurrentMember, type CurrentMember } from "@/lib/auth/auth-api";
 
 /** 학생 화면에 보이는 본인 정보. 서버 `/api/v1/auth/me`의 `student`로 만든다. */
 export type CurrentStudentProfile = {
+  /** DataGSM 학생 id. 본인 봉사 횟수·내역 조회 경로(`/api/v1/users/{studentId}/…`)에 쓴다. 없으면 null */
+  studentId: number | null;
   name: string;
   /** 화면에 표시하는 학번(예: "2405") */
   studentNumber: string;
@@ -42,6 +44,7 @@ export function toStudentProfile(
   const { student } = member;
   if (!student) return null;
   return {
+    studentId: student.studentId,
     name: member.name,
     studentNumber: String(student.studentNumber),
     floor: student.dormitoryFloor,
