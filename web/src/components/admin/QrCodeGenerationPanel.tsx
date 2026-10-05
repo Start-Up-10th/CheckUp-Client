@@ -11,16 +11,16 @@ export function QrCodeGenerationPanel({
   countdownLabel,
 }: QrCodeGenerationPanelProps) {
   return (
-    <div className="flex h-full w-full flex-1 items-center justify-center rounded-[18px] bg-admin-surface md:rounded-panel">
-      <div className="flex flex-col items-center gap-[18px] md:gap-4">
-        <div className="flex size-[180px] items-center justify-center overflow-hidden md:size-[min(300px,70vw)]">
+    <div className="flex h-full w-full flex-1 items-center justify-center rounded-[18px] bg-admin-surface xl:rounded-panel">
+      <div className="flex flex-col items-center gap-[18px] xl:gap-4">
+        <div className="flex size-[180px] items-center justify-center overflow-hidden md:size-[250px] xl:size-[300px]">
           <QRCodeSVG value={qrValue} size={298} className="size-full" />
         </div>
         <div className="flex flex-col items-center gap-1">
-          <p className="font-mono text-[11px] leading-[15px] tracking-[1.76px] text-admin-textFaint md:leading-normal">
+          <p className="font-mono text-[11px] leading-[15px] tracking-[1.76px] text-admin-textFaint">
             남은 유효 시간
           </p>
-          <p className="font-sans text-[38px] font-bold leading-[46px] tracking-[-1.14px] text-admin-text md:font-mono md:leading-normal">
+          <p className="font-sans text-[38px] font-bold leading-[46px] tracking-[-1.14px] text-admin-text md:font-mono">
             {countdownLabel}
           </p>
         </div>
