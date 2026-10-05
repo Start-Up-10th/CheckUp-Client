@@ -98,7 +98,7 @@ export function AdminVolunteerRoster() {
         <FloorTabs selected={floor} onSelect={setFloor} desktopTrack />
       </div>
 
-      <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 transition-all duration-150 md:px-4 focus-within:scale-[1.02] focus-within:bg-admin-surface focus-within:shadow-[0_2px_12px_rgba(0,0,0,0.12)] motion-reduce:transition-none motion-reduce:focus-within:scale-100 xl:h-[46px] xl:w-[420px] xl:gap-2.5">
+      <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 md:px-4 transition-colors focus-within:border-admin-textMuted focus-within:bg-admin-surface motion-reduce:transition-none xl:h-[46px] xl:w-[420px] xl:gap-2.5">
         {/* eslint-disable-next-line @next/next/no-img-element -- Figma 검색 아이콘 원본 SVG */}
         <img
           src="/icons/admin/search.svg"
