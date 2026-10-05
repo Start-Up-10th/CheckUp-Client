@@ -18,6 +18,7 @@ import {
 
 const DEFAULT_PURPOSE: Purpose = "dorm";
 const HEARTBEAT_INTERVAL_MS = 20_000;
+const EXPIRED_MESSAGE = "유효 시간이 만료되었습니다.";
 
 type ActiveSession = {
   sessionId: string;
@@ -110,11 +111,9 @@ export function AdminQrGeneration() {
               sessionIdRef.current = null;
               setSession(null);
               setSessionKey((k) => k + 1);
-            } else {
-              // 일시적 네트워크·서버 오류: 만료된 QR을 유효한 것처럼 표시하지 않는다.
-              setSession(null);
-              setError("QR 갱신에 실패했습니다. 새로고침해 주세요.");
             }
+            // 그 밖의 일시적 오류: 기존 QR을 유지하고 다음 주기에 다시 갱신한다.
+            // 만료 시각은 연장하지 않으므로 만료되면 아래에서 QR을 내리고 안내한다(REQ-ATT-004).
           }
         }, HEARTBEAT_INTERVAL_MS);
       } catch (err) {
@@ -144,13 +143,17 @@ export function AdminQrGeneration() {
     };
   }, [purpose, sessionKey]);
 
-  const countdownLabel = (() => {
-    if (error || !session || now === null) return undefined;
-    const remaining = session.tokenExpiresAt - (now + session.serverTimeOffset);
-    // remaining <= 0이면 undefined를 반환해 만료된 QR을 화면에 남기지 않는다.
-    if (remaining <= 0) return undefined;
-    return formatCountdown(remaining);
-  })();
+  const remaining =
+    session && now !== null
+      ? session.tokenExpiresAt - (now + session.serverTimeOffset)
+      : null;
+  // 만료된 QR은 화면에 남기지 않고 안내만 보여 준다. 갱신이 성공하면 새 QR로 돌아온다.
+  const expired = !error && remaining !== null && remaining <= 0;
+  const countdownLabel =
+    !error && remaining !== null && remaining > 0
+      ? formatCountdown(remaining)
+      : undefined;
+  const bannerMessage = error ?? (expired ? EXPIRED_MESSAGE : null);
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6">
@@ -166,7 +169,9 @@ export function AdminQrGeneration() {
         <PurposeTabs selected={purpose} onSelect={handleSelectPurpose} />
       </div>
 
-      {error && <StatusBanner variant="error" message={error} compactOnPhone />}
+      {bannerMessage && (
+        <StatusBanner variant="error" message={bannerMessage} compactOnPhone />
+      )}
 
       {session && countdownLabel ? (
         <QrCodeGenerationPanel
