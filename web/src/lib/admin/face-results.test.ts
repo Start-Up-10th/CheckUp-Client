@@ -99,7 +99,7 @@ describe("applyFrame 성공", () => {
     expect(success).toBeNull();
   });
 
-  it("같은 학생은 10초 안에 다시 올리지 않고 지나면 다시 올린다", () => {
+  it("같은 학생은 10초 안에 목록에 다시 올리지 않지만 성공 안내는 보이고, 지나면 다시 올린다", () => {
     const first = run(INITIAL_RECOGNITION, [known()]);
     const soon = new Date(NOW.getTime() + SUCCESS_DEDUPE_MS - 1);
     const again = run(first.state, [known()], soon);
@@ -107,7 +107,8 @@ describe("applyFrame 성공", () => {
     const afterWindow = run(again.state, [known()], later);
 
     expect(again.state.entries).toHaveLength(1);
-    expect(again.success).toBeNull();
+    expect(again.success).toMatchObject({ outcome: "success" });
+    expect(again.success?.label).toBe(first.state.entries[0].label);
     expect(afterWindow.state.entries).toHaveLength(2);
   });
 });
