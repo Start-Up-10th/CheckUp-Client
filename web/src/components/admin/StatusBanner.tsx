@@ -28,7 +28,7 @@ const VARIANT_STYLES = {
 } as const;
 
 /**
- * REQ-UI-006 공통 상태 배너: 가로 배너 + 점 아이콘. 테두리는 종류별이다(성공 라임·실패 분홍·안내 회색, Figma
+ * REQ-UI-006 공통 상태 배너: 가로 배너 + 점 아이콘. 높이는 Figma 상태 메시지대로 42px(안여백 14×12, 글자 줄 16)다. 테두리는 종류별이다(성공 라임·실패 분홍·안내 회색, Figma
  * 02 패드·핸드폰, 06, 07 state messages).
  * neutral은 명단 제외 등 담담한 안내에 쓴다(REQ-COM-001). */
 export function StatusBanner({
@@ -51,7 +51,7 @@ export function StatusBanner({
         className={`shrink-0 rounded-full ${compactOnPhone ? "size-1.5 md:size-[7px]" : "size-[7px]"} ${style.dot}`}
       />
       <p
-        className={`${compactOnPhone ? "text-xs leading-4 md:text-[13px] md:leading-normal" : "text-[13px]"} ${style.text}`}
+        className={`${compactOnPhone ? "text-xs leading-4 md:text-[13px] md:leading-4" : "text-[13px] leading-4"} ${style.text}`}
       >
         {message}
       </p>
