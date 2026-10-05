@@ -3,6 +3,7 @@ import {
   fireEvent,
   render as renderPlain,
   screen,
+  waitFor,
   within,
 } from "@testing-library/react";
 import type { ReactElement } from "react";
@@ -220,7 +221,37 @@ describe("AdminVolunteerRoster", () => {
   });
 
   describe("하단 바", () => {
-    it("완료한 학생은 당일 지정 인원에서 빼고 아직 완료하지 않은 지정만 센다", () => {
+    const barLink = () => screen.queryByRole("link", { name: "봉사자 관리 →" });
+
+    it("처음 들어오면 오늘 지정된 학생이 있어도 바가 없다", () => {
+      render(<AdminVolunteerRoster />);
+
+      expect(barLink()).not.toBeInTheDocument();
+    });
+
+    it("봉사자 지정을 누르면 바가 나타나고 지정할 때마다 인원이 늘어난다", async () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      );
+      await screen.findByRole("button", {
+        name: "박서연 당일 봉사자로 지정됨",
+      });
+      const link = barLink()!;
+      expect(link).toHaveAttribute("href", "/admin/volunteers");
+      expect(link.parentElement).toHaveTextContent("당일 지정 3명");
+
+      fireEvent.click(screen.getByRole("button", { name: "3층" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "백도윤 당일 봉사자로 지정" }),
+      );
+      await waitFor(() =>
+        expect(barLink()!.parentElement).toHaveTextContent("당일 지정 4명"),
+      );
+    });
+
+    it("완료한 학생은 인원에서 빼고 아직 완료하지 않은 지정만 센다", async () => {
       let first = true;
       setRoster(
         MOCK_VOLUNTEER_ROSTER.map((student) => {
@@ -234,49 +265,48 @@ describe("AdminVolunteerRoster", () => {
       );
       render(<AdminVolunteerRoster />);
 
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      );
+
+      await waitFor(() =>
+        expect(barLink()!.parentElement).toHaveTextContent("당일 지정 2명"),
+      );
       expect(
-        screen.getByRole("link", { name: "봉사자 관리 →" }).parentElement,
-      ).toHaveTextContent("당일 지정 1명");
-      expect(
-        screen.getByText(/전교생 \d+명 · 당일 지정 1명/),
+        screen.getByText(/전교생 \d+명 · 당일 지정 2명/),
       ).toBeInTheDocument();
     });
 
-    it("지정한 학생이 모두 완료했으면 바를 보이지 않는다", () => {
-      setRoster(
-        MOCK_VOLUNTEER_ROSTER.map((student) =>
-          student.duty === "designated"
-            ? { ...student, duty: "completed" as const }
-            : student,
-        ),
+    it("지정에 실패하면 바가 나타나지 않는다", async () => {
+      const designate = vi.fn().mockRejectedValue(new Error("network"));
+      renderPlain(
+        <VolunteerGatewayProvider value={{ ...mockGateway, designate }}>
+          <AdminVolunteerRoster />
+        </VolunteerGatewayProvider>,
       );
-      render(<AdminVolunteerRoster />);
 
-      expect(
-        screen.queryByRole("link", { name: "봉사자 관리 →" }),
-      ).not.toBeInTheDocument();
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      );
+
+      await screen.findByRole("alert");
+      expect(barLink()).not.toBeInTheDocument();
     });
 
-    it("지정된 학생이 있으면 당일 지정 인원과 봉사자 관리 이동을 보여 준다", () => {
-      render(<AdminVolunteerRoster />);
-
-      const link = screen.getByRole("link", { name: "봉사자 관리 →" });
-      expect(link).toHaveAttribute("href", "/admin/volunteers");
-      expect(link.parentElement).toHaveTextContent("당일 지정 2명");
-    });
-
-    it("지정된 학생이 없으면 바를 보이지 않는다", () => {
-      setRoster(
-        MOCK_VOLUNTEER_ROSTER.map((student) => ({
-          ...student,
-          duty: "none" as const,
-        })),
+    it("봉사자 관리에 다녀와 다시 들어오면 지정하기 전까지 바가 숨겨진다", async () => {
+      const first = render(<AdminVolunteerRoster />);
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
       );
+      await waitFor(() => expect(barLink()).toBeInTheDocument());
+
+      first.unmount();
       render(<AdminVolunteerRoster />);
 
+      expect(barLink()).not.toBeInTheDocument();
       expect(
-        screen.queryByRole("link", { name: "봉사자 관리 →" }),
-      ).not.toBeInTheDocument();
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정됨" }),
+      ).toBeInTheDocument();
     });
   });
 
