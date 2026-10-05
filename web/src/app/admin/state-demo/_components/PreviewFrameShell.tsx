@@ -6,13 +6,15 @@ import { AdminRail } from "@/components/admin/AdminRail";
 
 /**
  * 로그인 없이 보는 확인용 프레임의 안쪽 셸. 폭에 따라 패드 레일(768px 이상) 또는 하단 탭바(767px 이하)가 나온다.
- * 활성 메뉴는 보고 있는 확인용 화면(홈 / 봉사자 관리)에 맞춘다. 실제 관리자 레이아웃과 같은 구성이다.
+ * 활성 메뉴는 보고 있는 확인용 화면(홈 / 봉사자 관리 / 학생 관리)에 맞춘다. 실제 관리자 레이아웃과 같은 구성이다.
  */
 export function PreviewFrameShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const activePath = pathname.endsWith("/home")
     ? "/admin"
-    : "/admin/volunteers";
+    : pathname.endsWith("/students")
+      ? "/admin/students"
+      : "/admin/volunteers";
 
   return (
     <div className="flex h-screen w-full bg-admin-bg">
