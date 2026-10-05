@@ -1,5 +1,6 @@
 "use client";
 
+import { ListRowsSkeleton } from "@/components/admin/ListRowsSkeleton";
 import { useEffect, useMemo, useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { FloorTabs } from "@/components/admin/FloorTabs";
@@ -24,11 +25,10 @@ const DESIGNATE_FAILURE_MESSAGE =
   "당일 봉사자 지정에 실패했습니다. 다시 시도해 주세요.";
 
 /**
- * 토스트는 헤더 조작부(층 탭·검색창) 바로 아래 8px에 둬 탭·검색창·행 버튼을 가리지 않는다: 폰 121px(검색창
- * 하단 113px), 패드 139px(검색창 하단 131px). 컴퓨터는 검색창이 왼쪽 420px라 층 탭(하단 83px) 아래 오른쪽 91px이다.
+ * 토스트의 패드·컴퓨터 세로 위치. 패드는 검색창이 전체 폭이라 가리지 않게 검색창 아래 8px(139px), 컴퓨터는 층 탭 아래 16px(99px,
+ * 검색창은 왼쪽 420px라 겹치지 않음)이다. 핸드폰은 하단 탭바 위(공통).
  */
-const TOAST_POSITION =
-  "inset-x-4 top-[121px] justify-end md:left-[96px] md:right-[22px] md:top-[139px] md:justify-end xl:left-[300px] xl:right-8 xl:top-[91px]";
+const TOAST_TOP = "md:top-[88px] xl:top-[99px]";
 
 /**
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.
@@ -87,7 +87,7 @@ export function AdminVolunteerRoster() {
 
   return (
     <div className="relative flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} positionClassName={TOAST_POSITION} />
+      <ToastLayer toast={toast} topClassName={TOAST_TOP} />
 
       <div className="flex w-full items-end justify-between">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
@@ -103,7 +103,7 @@ export function AdminVolunteerRoster() {
       </div>
 
       <div className="w-full xl:flex xl:h-[49px] xl:items-center">
-        <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 md:px-4 transition-colors focus-within:border-admin-textMuted focus-within:bg-admin-surface motion-reduce:transition-none xl:h-[46px] xl:w-[420px] xl:gap-2.5">
+        <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 md:w-[290px] md:px-4 transition-colors focus-within:border-admin-textMuted focus-within:bg-admin-surface motion-reduce:transition-none xl:h-[46px] xl:w-[420px] xl:gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element -- Figma 검색 아이콘 원본 SVG */}
           <img
             src="/icons/admin/search.svg"
@@ -131,9 +131,7 @@ export function AdminVolunteerRoster() {
         {status === "error" ? (
           <AdminContentState variant="error" onRetry={reload} />
         ) : status !== "ready" ? (
-          <p className="py-6 text-center text-sm text-admin-textMuted">
-            불러오는 중…
-          </p>
+          <ListRowsSkeleton />
         ) : groups.length === 0 ? (
           <p className="py-6 text-center text-sm text-admin-textMuted">
             검색 결과가 없습니다.
