@@ -16,7 +16,7 @@ type RoomGridProps = {
  */
 export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
   return (
-    <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-[14px] md:rounded-[18px] md:px-[20px] md:pb-[46px] md:pt-[20px] xl:flex-1 xl:min-h-0 xl:overflow-visible xl:pb-0 xl:rounded-panel">
+    <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-[14px] xl:gap-4 md:rounded-[18px] md:px-[20px] md:pb-[46px] md:pt-[20px] xl:flex-1 xl:min-h-0 xl:overflow-visible xl:px-[22px] xl:pb-0 xl:pt-[22px] xl:rounded-panel">
       {/* 폰: 한 행. 패드: 범례 아래에 안내 텍스트 2행. 데스크톱: 한 행 100px. */}
       <div className="flex w-full flex-col gap-1.5 xl:h-[100px] xl:flex-row xl:items-center xl:gap-[18px]">
         <div className="flex items-center gap-2.5 md:gap-[10px] xl:gap-[18px]">
@@ -40,7 +40,7 @@ export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
       </div>
 
       <div className="flex w-full flex-1 flex-col xl:min-h-0">
-        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-[92px] md:grid-cols-3 md:gap-[8px] xl:auto-rows-auto xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
+        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-[92px] md:grid-cols-3 md:gap-[8px] xl:gap-[10px] xl:auto-rows-auto xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
           {rooms.map((room) => (
             <RoomCard key={room.number} room={room} onClick={onRoomClick} />
           ))}
