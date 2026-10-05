@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { StatusBanner } from "@/components/admin/StatusBanner";
 import { useCurrentStudent } from "@/lib/student/current-student";
 import {
   VolunteerLoginRequiredError,
@@ -16,6 +17,8 @@ import { StudentShell } from "./StudentShell";
 import { VolunteerCountCard } from "./VolunteerCountCard";
 import { VolunteerHistoryItem } from "./VolunteerHistoryItem";
 import { VolunteerHistorySkeleton } from "./VolunteerHistorySkeleton";
+
+const LOAD_FAILED_MESSAGE = "봉사 활동 내역을 불러오지 못했습니다.";
 
 type LoadState =
   | { status: "loading" }
@@ -129,6 +132,11 @@ function StudentVolunteerContent() {
           )}
         </div>
       </div>
+      {failed && (
+        <div className="pointer-events-none fixed inset-x-[18px] bottom-[18px] z-40 md:inset-x-auto md:bottom-auto md:right-8 md:top-8 md:w-[380px]">
+          <StatusBanner variant="error" message={LOAD_FAILED_MESSAGE} />
+        </div>
+      )}
     </main>
   );
 }
