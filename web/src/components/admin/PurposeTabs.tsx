@@ -33,7 +33,7 @@ export function PurposeTabs({
             type="button"
             aria-pressed={active}
             onClick={() => onSelect(value)}
-            className={`rounded-lg px-2.5 py-1.5 text-[11px] leading-[13px] md:rounded-[10px] md:px-[22px] md:py-[9px] md:text-sm ${
+            className={`rounded-lg px-2.5 py-1.5 text-[11px] leading-[13px] md:rounded-[10px] md:px-4 md:py-[9px] md:text-sm md:leading-[17px] xl:px-[22px] ${
               active
                 ? "bg-admin-surface font-bold text-admin-text"
                 : "font-normal text-admin-textSecondary"
