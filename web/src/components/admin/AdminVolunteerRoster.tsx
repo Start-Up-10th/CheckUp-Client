@@ -29,13 +29,16 @@ const TOAST_POSITION =
 /**
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.
  * 학생 행을 누르면 남은 횟수와 봉사 이력을 보는 상세 다이얼로그가 열리고, 횟수 조정은 학생 관리에서 한다.
- * 오늘 지정된 사람이 있으면 아래에 `당일 지정 N명 · 봉사자 관리 →` 바가 뜬다. 명단에 학생을 추가·제외하는 단계는 없다.
+ * 아래 `당일 지정 N명 · 봉사자 관리 →` 바는 이 화면에서 `봉사자 지정`을 한 뒤에만 뜬다(처음 들어오면 없고, 봉사자 관리에
+ * 다녀와서 다시 들어오면 지정하기 전까지 숨는다). 명단에 학생을 추가·제외하는 단계는 없다.
  */
 export function AdminVolunteerRoster() {
   const { roster, status, updateStudent, reload } = useVolunteerRoster();
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // 이 방문에서 `봉사자 지정`을 한 번이라도 성공했는지. 화면을 떠났다 돌아오면 다시 false다.
+  const [designatedHere, setDesignatedHere] = useState(false);
   const gateway = useVolunteerGateway();
   const singleFlight = useSingleFlight();
   const { toast, showToast } = useToast();
@@ -45,6 +48,8 @@ export function AdminVolunteerRoster() {
   const designatedCount = roster.filter(
     (student) => student.duty === "designated",
   ).length;
+
+  const barVisible = designatedHere && designatedCount > 0;
 
   const groups = useMemo(
     () => groupByRoom(roster, { floor, query }),
@@ -58,6 +63,7 @@ export function AdminVolunteerRoster() {
       try {
         const updated = await gateway.designate(target.id);
         updateStudent(updated);
+        setDesignatedHere(true);
         showToast({
           variant: "success",
           message: "당일 봉사자로 지정했습니다.",
@@ -124,7 +130,7 @@ export function AdminVolunteerRoster() {
           </p>
         ) : (
           <div
-            className={`flex flex-col gap-4 md:gap-[18px] xl:gap-[22px] ${designatedCount > 0 ? "xl:pb-20" : ""}`}
+            className={`flex flex-col gap-4 md:gap-[18px] xl:gap-[22px] ${barVisible ? "xl:pb-20" : ""}`}
           >
             {groups.map((group) => (
               <section
@@ -154,7 +160,7 @@ export function AdminVolunteerRoster() {
         )}
       </div>
 
-      <VolunteerDesignatedBar count={designatedCount} />
+      <VolunteerDesignatedBar count={barVisible ? designatedCount : 0} />
       {selected ? (
         <VolunteerStudentDialog
           key={selected.studentId}
