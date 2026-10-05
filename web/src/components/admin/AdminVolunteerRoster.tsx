@@ -1,5 +1,6 @@
 "use client";
 
+import { ListRowsSkeleton } from "@/components/admin/ListRowsSkeleton";
 import { useEffect, useMemo, useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { FloorTabs } from "@/components/admin/FloorTabs";
@@ -130,9 +131,7 @@ export function AdminVolunteerRoster() {
         {status === "error" ? (
           <AdminContentState variant="error" onRetry={reload} />
         ) : status !== "ready" ? (
-          <p className="py-6 text-center text-sm text-admin-textMuted">
-            불러오는 중…
-          </p>
+          <ListRowsSkeleton />
         ) : groups.length === 0 ? (
           <p className="py-6 text-center text-sm text-admin-textMuted">
             검색 결과가 없습니다.

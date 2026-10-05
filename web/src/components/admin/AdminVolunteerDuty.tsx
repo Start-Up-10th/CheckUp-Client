@@ -1,5 +1,6 @@
 "use client";
 
+import { ListRowsSkeleton } from "@/components/admin/ListRowsSkeleton";
 import Link from "next/link";
 import { useEffect } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
@@ -129,9 +130,7 @@ export function AdminVolunteerDuty({
           {status === "error" ? (
             <AdminContentState variant="error" onRetry={reload} />
           ) : status !== "ready" ? (
-            <p className="py-6 text-center text-sm text-admin-textMuted">
-              불러오는 중…
-            </p>
+            <ListRowsSkeleton />
           ) : today.length === 0 ? (
             <StatusBanner
               variant="neutral"

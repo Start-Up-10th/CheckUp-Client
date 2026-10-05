@@ -1,5 +1,6 @@
 "use client";
 
+import { ListRowsSkeleton } from "@/components/admin/ListRowsSkeleton";
 import { useEffect, useMemo, useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { StatusBanner } from "@/components/admin/StatusBanner";
@@ -99,9 +100,7 @@ export function AdminStudentManagement() {
         {status === "error" ? (
           <AdminContentState variant="error" onRetry={reload} />
         ) : status !== "ready" ? (
-          <p className="py-6 text-center text-sm text-admin-textMuted">
-            불러오는 중…
-          </p>
+          <ListRowsSkeleton />
         ) : groups.length === 0 ? (
           <StatusBanner variant="neutral" message={NO_RESULT_MESSAGE} />
         ) : (
