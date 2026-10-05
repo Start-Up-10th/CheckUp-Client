@@ -42,17 +42,21 @@ function StateMessage({
   onRetry?: () => void;
 }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center md:h-[220px] md:flex-none xl:h-auto xl:flex-1">
       {icon}
       <div className="flex flex-col items-center gap-1.5">
-        <p className="text-[19px] font-bold text-admin-text">{title}</p>
-        <p className="text-sm text-admin-textMuted">{description}</p>
+        <p className="text-[19px] font-bold leading-[23px] text-admin-text">
+          {title}
+        </p>
+        <p className="text-sm leading-[17px] text-admin-textMuted">
+          {description}
+        </p>
       </div>
       {onRetry && (
         <button
           type="button"
           onClick={onRetry}
-          className="rounded-xl bg-admin-text px-6 py-[13px] text-[15px] text-white"
+          className="rounded-xl bg-admin-text px-6 py-[13px] text-[15px] leading-[18px] text-white"
         >
           다시 시도
         </button>
@@ -79,7 +83,7 @@ export function RecentRecognitionsList({
     <div
       className={`flex w-full flex-col gap-2 rounded-[16px] bg-admin-surface p-3.5 md:gap-2.5 md:rounded-[18px] md:p-5 xl:rounded-panel xl:p-[22px] xl:h-full xl:w-auto xl:min-w-[280px] xl:flex-[626] ${
         fillsHeight
-          ? "flex-1"
+          ? "flex-1 md:h-[304px] md:flex-none xl:h-auto xl:flex-1"
           : status === "loading"
             ? "flex-none"
             : "h-[126px] flex-none md:h-[304px] xl:h-auto"
@@ -95,8 +99,8 @@ export function RecentRecognitionsList({
           aria-label="최근 인식을 불러오는 중"
           className="flex flex-col gap-2 md:gap-2.5"
         >
-          <div className="h-[26px] rounded-lg bg-[#e7e7e9] md:h-[46px] md:rounded-xl" />
-          <div className="h-[26px] rounded-lg bg-[#e7e7e9] md:h-[46px] md:rounded-xl" />
+          <div className="h-[26px] rounded-lg bg-[#e7e7e9] md:h-10 md:rounded-[10px] xl:h-[46px] xl:rounded-xl" />
+          <div className="h-[26px] rounded-lg bg-[#e7e7e9] md:h-10 md:rounded-[10px] xl:h-[46px] xl:rounded-xl" />
         </div>
       ) : status === "error" ? (
         <StateMessage
