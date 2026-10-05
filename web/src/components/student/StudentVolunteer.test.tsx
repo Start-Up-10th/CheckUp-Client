@@ -96,10 +96,16 @@ describe("StudentVolunteer", () => {
     render(<StudentVolunteer />);
 
     expect(await screen.findByText("불러오지 못했어요")).toBeInTheDocument();
+    expect(
+      screen.getByText("봉사 활동 내역을 불러오지 못했습니다."),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
     expect(await screen.findAllByRole("listitem")).toHaveLength(2);
+    expect(
+      screen.queryByText("봉사 활동 내역을 불러오지 못했습니다."),
+    ).not.toBeInTheDocument();
   });
 
   it("본인 정보를 받지 못하면 오류를 보여 준다", async () => {
