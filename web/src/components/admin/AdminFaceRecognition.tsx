@@ -59,13 +59,13 @@ export function AdminFaceRecognition() {
   }
 
   return (
-    <div className="flex min-h-full w-full flex-col gap-3.5 px-4 py-3.5 md:h-full md:gap-4 md:px-[22px] md:py-6">
+    <div className="flex min-h-full w-full flex-col gap-3.5 px-4 py-3.5 md:h-auto md:min-h-full md:gap-4 md:px-[22px] md:py-6 xl:h-full xl:gap-5 xl:px-8 xl:py-7">
       <div className="flex w-full items-center justify-between md:items-end">
-        <div className="flex flex-col gap-1">
-          <p className="hidden font-mono text-[10px] tracking-[1.8px] text-admin-textFaint md:block xl:text-[11px] xl:tracking-[1.98px]">
+        <div className="flex flex-col gap-1 md:gap-[3px] xl:gap-1">
+          <p className="hidden font-mono text-[10px] tracking-[1.8px] text-admin-textFaint md:block md:leading-[13px] xl:text-[11px] xl:leading-[15px] xl:tracking-[1.98px]">
             FACE RECOGNITION
           </p>
-          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-normal md:tracking-[-0.78px] xl:text-[30px] xl:tracking-[-0.9px]">
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-[31px] md:tracking-[-0.78px] xl:text-[30px] xl:leading-[36px] xl:tracking-[-0.9px]">
             얼굴 인식 생성
           </h1>
         </div>
@@ -81,10 +81,10 @@ export function AdminFaceRecognition() {
         />
       )}
 
-      <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:gap-4 xl:flex-row">
+      <div className="flex w-full flex-1 flex-col gap-3.5 md:min-h-0 md:gap-4 xl:grid xl:grid-cols-[910fr_626fr] xl:gap-5">
         <div
           ref={panelWrapperRef}
-          className={`flex min-h-[240px] w-full flex-1 md:min-h-0 xl:block xl:h-auto xl:min-w-0 xl:flex-[910] ${
+          className={`flex min-h-[240px] w-full flex-1 md:h-[636px] md:min-h-0 md:flex-none xl:block xl:h-auto xl:flex-1 xl:min-w-0 xl:flex-[910] ${
             recentFillsScreen ? "max-md:hidden" : ""
           }`}
         >
