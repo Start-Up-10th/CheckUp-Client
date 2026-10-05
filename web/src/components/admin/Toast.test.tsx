@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { ToastLayer } from "./Toast";
+import { act, render, screen } from "@testing-library/react";
+import { ToastLayer, useToast } from "./Toast";
 
 const toast = { variant: "success", message: "저장했습니다." } as const;
 
@@ -69,5 +69,41 @@ describe("ToastLayer 위치", () => {
     const { container } = render(<ToastLayer toast={null} />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("useToast 표시 시간", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  function Host({ variant }: { variant: "success" | "neutral" | "error" }) {
+    const { toast, showToast } = useToast();
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => showToast({ variant, message: "메시지" })}
+        >
+          띄우기
+        </button>
+        {toast ? <p>{toast.message}</p> : null}
+      </>
+    );
+  }
+
+  it.each([
+    ["success", 2000],
+    ["neutral", 2000],
+    ["error", 4000],
+  ] as const)("%s 메시지는 %dms 뒤에 사라진다", (variant, duration) => {
+    render(<Host variant={variant} />);
+    act(() => screen.getByRole("button", { name: "띄우기" }).click());
+    expect(screen.getByText("메시지")).toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(duration - 1));
+    expect(screen.getByText("메시지")).toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(1));
+    expect(screen.queryByText("메시지")).not.toBeInTheDocument();
   });
 });

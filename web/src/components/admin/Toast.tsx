@@ -3,7 +3,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { StatusBanner } from "@/components/admin/StatusBanner";
 
-const TOAST_DURATION_MS = 2500;
+/**
+ * 노션 기능명세서 `로그인 성공 안내`(상태 메시지 표시 규격): 성공 메시지는 2초 뒤 자동으로 사라지고 오류 메시지는 4초 동안
+ * 유지한다. 안내(neutral)는 명세에 없어 성공과 같이 2초다. 닫기 동작은 Figma에 없어 두지 않는다.
+ */
+const TOAST_DURATION_MS: Record<ToastMessage["variant"], number> = {
+  success: 2000,
+  neutral: 2000,
+  error: 4000,
+};
 
 export type ToastMessage = {
   variant: "success" | "error" | "neutral";
@@ -18,7 +26,10 @@ export function useToast() {
 
   useEffect(() => {
     if (!toast) return;
-    const timer = setTimeout(() => setToast(null), TOAST_DURATION_MS);
+    const timer = setTimeout(
+      () => setToast(null),
+      TOAST_DURATION_MS[toast.variant],
+    );
     return () => clearTimeout(timer);
   }, [toast]);
 
