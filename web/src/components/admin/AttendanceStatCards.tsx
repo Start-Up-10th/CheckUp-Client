@@ -20,19 +20,19 @@ export function AttendanceStatCards({
 }: AttendanceStatCardsProps) {
   return (
     <div className="flex w-full items-start gap-2 md:gap-[29px] xl:gap-[14px]">
-      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-admin-attendance-border bg-admin-attendance-bg p-3 md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:px-4 md:py-[14px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)] xl:px-[clamp(15px,calc(15px+(100vw-1280px)/320),17px)] xl:py-[clamp(13px,calc(13px+(100vw-1280px)/320),15px)]">
+      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-admin-attendance-border bg-admin-attendance-bg p-3 md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:px-[15px] md:py-[13px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)] xl:px-[clamp(15px,calc(15px+(100vw-1280px)/320),17px)] xl:py-[clamp(13px,calc(13px+(100vw-1280px)/320),15px)]">
         <p className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs md:leading-[14px] md:text-admin-attendance-textMuted xl:text-admin-textMuted">
           출석
         </p>
-        <p className="text-lg font-bold leading-[22px] text-admin-attendance-text md:text-[22px] md:leading-normal xl:text-[clamp(22px,calc(22px+(100vw-1280px)/320),24px)] xl:leading-[29px] xl:text-admin-text">
+        <p className="text-lg font-bold leading-[22px] text-admin-attendance-text md:text-[22px] md:leading-[26px] xl:text-[clamp(22px,calc(22px+(100vw-1280px)/320),24px)] xl:leading-[29px] xl:text-admin-text">
           {present}
         </p>
       </div>
-      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-transparent bg-admin-surface p-3 md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:px-4 md:py-[14px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)] xl:px-[clamp(15px,calc(15px+(100vw-1280px)/320),17px)] xl:py-[clamp(13px,calc(13px+(100vw-1280px)/320),15px)]">
+      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-transparent bg-admin-surface p-3 md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:px-[15px] md:py-[13px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)] xl:px-[clamp(15px,calc(15px+(100vw-1280px)/320),17px)] xl:py-[clamp(13px,calc(13px+(100vw-1280px)/320),15px)]">
         <p className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs md:leading-[14px] xl:text-admin-textMuted">
           미출석
         </p>
-        <p className="text-lg font-bold leading-[22px] text-admin-text md:text-[22px] md:leading-normal xl:text-[clamp(22px,calc(22px+(100vw-1280px)/320),24px)] xl:leading-[29px] xl:text-admin-text">
+        <p className="text-lg font-bold leading-[22px] text-admin-text md:text-[22px] md:leading-[26px] xl:text-[clamp(22px,calc(22px+(100vw-1280px)/320),24px)] xl:leading-[29px] xl:text-admin-text">
           {absent}
         </p>
       </div>
