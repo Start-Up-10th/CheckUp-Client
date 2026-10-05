@@ -400,7 +400,10 @@ describe("useFaceRecognition 프레임 전송", () => {
 describe("useFaceRecognition 결과", () => {
   it("성공은 이름을 붙인 행과 잠깐 보이는 성공 표시를 만든다", async () => {
     const gateway = makeGateway({
-      sendFrame: vi.fn(async () => frameOf([known()])),
+      sendFrame: vi
+        .fn<FaceGateway["sendFrame"]>()
+        .mockResolvedValueOnce(frameOf([known()]))
+        .mockResolvedValue(frameOf([])),
     });
     const { result } = setup(gateway);
     await tick();
@@ -413,6 +416,18 @@ describe("useFaceRecognition 결과", () => {
 
     await tick(SUCCESS_HOLD_MS);
     expect(result.current.success).toBeNull();
+  });
+
+  it("같은 학생이 계속 비치는 동안에는 목록에 한 번만 올리고 성공 표시는 유지한다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi.fn(async () => frameOf([known()])),
+    });
+    const { result } = setup(gateway);
+    await tick();
+    await tick(SUCCESS_HOLD_MS);
+
+    expect(result.current.entries).toHaveLength(1);
+    expect(result.current.success?.label).toBe("2405 김도현");
   });
 
   it("실패하면 잠깐 failure를 켜고 지난 뒤 끈다", async () => {
