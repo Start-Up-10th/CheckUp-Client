@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { FloorTabs } from "@/components/admin/FloorTabs";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
@@ -14,6 +14,10 @@ import { groupByRoom } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
 
 const DEFAULT_FLOOR: Floor = 4;
+
+/** 명단을 서버에서 받지 못했을 때(Figma 07 state messages). */
+const LIST_FAILURE_MESSAGE =
+  "학생 명단을 불러오지 못했습니다. 다시 시도해 주세요.";
 
 /** 서버가 이유를 알려 주지 않은 지정 실패(Figma 07 state messages). */
 const DESIGNATE_FAILURE_MESSAGE =
@@ -55,6 +59,12 @@ export function AdminVolunteerRoster() {
     () => groupByRoom(roster, { floor, query }),
     [roster, floor, query],
   );
+
+  useEffect(() => {
+    if (status === "error") {
+      showToast({ variant: "error", message: LIST_FAILURE_MESSAGE });
+    }
+  }, [status, showToast]);
 
   function handleDesignate(studentId: string) {
     const target = roster.find((student) => student.studentId === studentId);
