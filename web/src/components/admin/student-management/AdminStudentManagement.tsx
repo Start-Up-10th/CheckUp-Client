@@ -25,7 +25,7 @@ const COUNT_FAILURE_MESSAGE =
   "봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.";
 
 /** 토스트의 패드·컴퓨터 세로 위치. 봉사자 명단 편집(07)과 같다: 패드는 검색창 아래, 컴퓨터는 층 탭 아래 16px. */
-const TOAST_TOP = "md:top-[139px] xl:top-[99px]";
+const TOAST_TOP = "md:top-[88px] xl:top-[99px]";
 
 /**
  * 학생 관리(Figma 08). 전체 학생을 층 탭·검색으로 거르고 호실별로 보여 준다. 학생을 누르면 상세 다이얼로그에서

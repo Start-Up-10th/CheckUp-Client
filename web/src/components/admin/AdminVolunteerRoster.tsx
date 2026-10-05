@@ -27,7 +27,7 @@ const DESIGNATE_FAILURE_MESSAGE =
  * 토스트의 패드·컴퓨터 세로 위치. 패드는 검색창이 전체 폭이라 가리지 않게 검색창 아래 8px(139px), 컴퓨터는 층 탭 아래 16px(99px,
  * 검색창은 왼쪽 420px라 겹치지 않음)이다. 핸드폰은 하단 탭바 위(공통).
  */
-const TOAST_TOP = "md:top-[139px] xl:top-[99px]";
+const TOAST_TOP = "md:top-[88px] xl:top-[99px]";
 
 /**
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.
@@ -102,7 +102,7 @@ export function AdminVolunteerRoster() {
       </div>
 
       <div className="w-full xl:flex xl:h-[49px] xl:items-center">
-        <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 md:px-4 transition-colors focus-within:border-admin-textMuted focus-within:bg-admin-surface motion-reduce:transition-none xl:h-[46px] xl:w-[420px] xl:gap-2.5">
+        <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 md:w-[250px] md:px-4 transition-colors focus-within:border-admin-textMuted focus-within:bg-admin-surface motion-reduce:transition-none xl:h-[46px] xl:w-[420px] xl:gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element -- Figma 검색 아이콘 원본 SVG */}
           <img
             src="/icons/admin/search.svg"
