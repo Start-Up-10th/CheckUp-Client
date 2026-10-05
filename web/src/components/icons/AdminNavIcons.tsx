@@ -108,6 +108,32 @@ export function VolunteerIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Figma icon/people (1150:46) — 학생 관리. 다른 메뉴 아이콘과 달리 선 두께가 1.53이다. */
+export function PeopleIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 18 18"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <circle
+        cx="9"
+        cy="4.86"
+        r="2.295"
+        stroke="currentColor"
+        strokeWidth="1.53"
+      />
+      <path
+        d="M2.7 16.2C2.7 12.12 4.8 10.08 9 10.08C13.2 10.08 15.3 12.12 15.3 16.2"
+        stroke="currentColor"
+        strokeWidth="1.53"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /** Figma icon/bell (469:1055) — 알림 벨. 뱃지 점은 사용 측에서 overlay로 추가한다. */
 export function BellIcon(props: SVGProps<SVGSVGElement>) {
   return (
