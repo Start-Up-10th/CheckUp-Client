@@ -96,11 +96,26 @@ export function CameraPanel({
           (failureMessage || (successMessage && !isFullscreen)) && (
             <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-col items-center gap-2 md:bottom-4">
               {successMessage && !isFullscreen && (
-                <StatusBanner
-                  variant="success"
-                  message={successMessage}
-                  compactOnPhone
-                />
+                <>
+                  <StatusBanner
+                    variant="success"
+                    message={successMessage}
+                    compactOnPhone
+                    className="xl:hidden"
+                  />
+                  {/* 컴퓨터(Figma 16:26 `성공 칩`): 흰 칩 + 초록 체크 원 + 굵은 초록 글자. 같은 문구라 화면 읽기에는 배너만 쓴다. */}
+                  <div
+                    aria-hidden="true"
+                    className="hidden items-center gap-[9px] rounded-xl border border-admin-border bg-admin-surface px-[13px] py-[11px] xl:flex"
+                  >
+                    <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-admin-attendance-text text-[11px] font-bold leading-none text-white">
+                      ✓
+                    </span>
+                    <span className="text-[13px] font-bold leading-4 text-admin-attendance-text">
+                      {successMessage}
+                    </span>
+                  </div>
+                </>
               )}
               {failureMessage && (
                 <StatusBanner
