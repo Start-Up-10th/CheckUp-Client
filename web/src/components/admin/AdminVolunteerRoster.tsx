@@ -41,8 +41,9 @@ export function AdminVolunteerRoster() {
   const { toast, showToast } = useToast();
   const selected =
     roster.find((student) => student.studentId === selectedId) ?? null;
+  // 봉사자 관리(06)가 보여 주는 사람과 같게, 완료한 학생은 빼고 아직 완료하지 않은 지정만 센다.
   const designatedCount = roster.filter(
-    (student) => student.duty !== "none",
+    (student) => student.duty === "designated",
   ).length;
 
   const groups = useMemo(
