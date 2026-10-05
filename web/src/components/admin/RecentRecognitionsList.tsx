@@ -77,15 +77,15 @@ export function RecentRecognitionsList({
 
   return (
     <div
-      className={`flex w-full flex-col gap-2 rounded-[16px] bg-admin-surface p-3.5 md:gap-2.5 md:rounded-panel md:p-[22px] xl:h-full xl:w-auto xl:min-w-[280px] xl:flex-[626] ${
+      className={`flex w-full flex-col gap-2 rounded-[16px] bg-admin-surface p-3.5 md:gap-2.5 md:rounded-[18px] md:p-5 xl:rounded-panel xl:p-[22px] xl:h-full xl:w-auto xl:min-w-[280px] xl:flex-[626] ${
         fillsHeight
           ? "flex-1"
           : status === "loading"
             ? "flex-none"
-            : "h-[126px] flex-none md:h-auto"
+            : "h-[126px] flex-none md:h-[304px] xl:h-auto"
       }`}
     >
-      <p className="text-xs leading-[14px] text-admin-textSecondary md:text-sm">
+      <p className="text-xs leading-[14px] text-admin-textSecondary md:text-sm md:leading-[17px]">
         최근 인식
       </p>
 
@@ -126,13 +126,13 @@ export function RecentRecognitionsList({
           {entries.map((entry) => (
             <div
               key={entry.id}
-              className="flex w-full items-center justify-between rounded-[10px] bg-admin-rowSurface px-3 py-[9px] md:rounded-xl md:px-3.5 md:py-3"
+              className="flex w-full items-center justify-between rounded-[10px] bg-admin-rowSurface px-3 py-[9px] md:rounded-xl md:px-3.5 md:py-[13px] xl:py-3"
             >
-              <p className="text-[13px] leading-4 text-admin-text md:text-sm md:leading-[17px]">
+              <p className="text-[13px] leading-4 text-admin-text md:text-[15px] md:font-medium md:leading-[18px] xl:text-sm xl:font-normal xl:leading-[17px]">
                 {entry.label}
               </p>
               <p
-                className={`font-mono text-[11px] leading-[15px] md:text-xs ${
+                className={`font-mono text-[11px] leading-[15px] md:text-[13px] md:leading-[17px] xl:text-xs xl:leading-4 ${
                   entry.outcome === "success"
                     ? "text-admin-attendance-text"
                     : "text-admin-danger-text"
