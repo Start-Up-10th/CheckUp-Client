@@ -216,6 +216,43 @@ describe("AdminVolunteerRoster", () => {
   });
 
   describe("하단 바", () => {
+    it("완료한 학생은 당일 지정 인원에서 빼고 아직 완료하지 않은 지정만 센다", () => {
+      let first = true;
+      setRoster(
+        MOCK_VOLUNTEER_ROSTER.map((student) => {
+          if (student.duty !== "designated") return student;
+          const next = first
+            ? { ...student, duty: "completed" as const }
+            : student;
+          first = false;
+          return next;
+        }),
+      );
+      render(<AdminVolunteerRoster />);
+
+      expect(
+        screen.getByRole("link", { name: "봉사자 관리 →" }).parentElement,
+      ).toHaveTextContent("당일 지정 1명");
+      expect(
+        screen.getByText(/전교생 \d+명 · 당일 지정 1명/),
+      ).toBeInTheDocument();
+    });
+
+    it("지정한 학생이 모두 완료했으면 바를 보이지 않는다", () => {
+      setRoster(
+        MOCK_VOLUNTEER_ROSTER.map((student) =>
+          student.duty === "designated"
+            ? { ...student, duty: "completed" as const }
+            : student,
+        ),
+      );
+      render(<AdminVolunteerRoster />);
+
+      expect(
+        screen.queryByRole("link", { name: "봉사자 관리 →" }),
+      ).not.toBeInTheDocument();
+    });
+
     it("지정된 학생이 있으면 당일 지정 인원과 봉사자 관리 이동을 보여 준다", () => {
       render(<AdminVolunteerRoster />);
 
