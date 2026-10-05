@@ -185,7 +185,7 @@ describe("AdminVolunteerDuty", () => {
     );
   });
 
-  it("목록 조회에 실패하면 오류 상태를 보여 준다", async () => {
+  it("목록 조회에 실패하면 오류 상태와 목록 조회 실패 문구를 보여 준다", async () => {
     resetRoster();
     const list = vi.fn().mockRejectedValue(new Error("network"));
 
@@ -195,7 +195,12 @@ describe("AdminVolunteerDuty", () => {
       </VolunteerGatewayProvider>,
     );
 
-    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(await screen.findByText("불러오지 못했어요")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "당일 봉사자 목록을 불러오지 못했습니다. 다시 시도해 주세요.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("목록을 받는 동안에는 빈 안내 대신 불러오는 중을 보여 준다", () => {
