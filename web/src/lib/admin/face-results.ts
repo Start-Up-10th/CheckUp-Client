@@ -63,7 +63,7 @@ function timeLabel(now: Date): string {
 
 /**
  * 프레임 한 장의 인식 결과를 최근 인식 목록에 반영한다(REQ-FACE-005~007). 순수 함수다.
- * - KNOWN(출석 기록됨·이미 출석)은 성공 행이다. 같은 학생은 10초 안에 다시 올리지 않는다. 서버가 거절한
+ * - KNOWN(출석 기록됨·이미 출석)은 성공 행이다. 같은 학생은 10초 안에 목록에 다시 올리지 않지만 성공 안내(success)는 낸다. 서버가 거절한
  *   출석(STALE·REJECTED)은 성공으로 세지 않는다.
  * - UNKNOWN은 신원 없는 `인식 실패` 행이다. 트랙의 시도 횟수(attempts)가 늘었을 때만 올리고, 서버가 센 시도
  *   단위를 쓴다(매 프레임을 실패 1회로 세지 않는다).
@@ -102,9 +102,18 @@ export function applyFrame(
     ) {
       const counted =
         face.attendance === "RECORDED" || face.attendance === "DUPLICATE";
+      if (!counted) continue;
       const last = successAt[face.studentNumber];
-      if (!counted || (last !== undefined && nowMs - last < SUCCESS_DEDUPE_MS))
+      if (last !== undefined && nowMs - last < SUCCESS_DEDUPE_MS) {
+        // 같은 학생이 다시 인식됐다: 목록에는 다시 올리지 않지만 성공 안내는 보인다(REQ-FACE-005).
+        success ??= {
+          id: String(sequence),
+          label: `${face.studentNumber} ${face.studentName}`,
+          outcome: "success",
+          recognizedAt: timeLabel(now),
+        };
         continue;
+      }
       successAt[face.studentNumber] = nowMs;
       sequence += 1;
       const entry: RecognitionEntry = {
