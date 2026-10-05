@@ -13,7 +13,7 @@ export function StudentSearchField({
 }: StudentSearchFieldProps) {
   return (
     <div className="w-full xl:flex xl:h-[49px] xl:items-center">
-      <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 md:w-[250px] md:px-4 xl:h-[46px] xl:w-[420px] xl:gap-2.5 transition-colors focus-within:border-admin-textMuted focus-within:bg-admin-surface motion-reduce:transition-none">
+      <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 md:w-[290px] md:px-4 xl:h-[46px] xl:w-[420px] xl:gap-2.5 transition-colors focus-within:border-admin-textMuted focus-within:bg-admin-surface motion-reduce:transition-none">
         {/* eslint-disable-next-line @next/next/no-img-element -- Figma 검색 아이콘 원본 SVG */}
         <img
           src="/icons/admin/search.svg"

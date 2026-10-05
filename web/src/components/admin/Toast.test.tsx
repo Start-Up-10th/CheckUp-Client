@@ -35,12 +35,12 @@ describe("ToastLayer 위치", () => {
     expect(layerOf()).not.toHaveClass("md:top-[87px]");
   });
 
-  it("폭은 핸드폰 전체(354), 패드 360, 컴퓨터 400이다", () => {
+  it("폭은 핸드폰 전체(354), 패드 320, 컴퓨터 400이다", () => {
     render(<ToastLayer toast={toast} />);
 
     expect(screen.getByRole("status").parentElement).toHaveClass(
       "w-full",
-      "md:w-[360px]",
+      "md:w-[320px]",
       "xl:w-[400px]",
     );
   });

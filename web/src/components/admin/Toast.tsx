@@ -44,7 +44,7 @@ export function useToast() {
 /**
  * 위치 규칙(노션 기능명세서 `로그인 성공 안내`, 상태 메시지 위치와 폭):
  * - 핸드폰(<md): 하단 탭바(60px) 바로 위 18px = bottom-[78px], 좌우 18px 여백으로 폭 354.
- * - 패드(md): 레일(96px)을 뺀 콘텐츠 영역의 우측 상단(오른쪽 22px), 폭 360.
+ * - 패드(md): 레일(96px)을 뺀 콘텐츠 영역의 우측 상단(오른쪽 22px), 폭 320.
  * - 컴퓨터(xl): 사이드바(300px)를 뺀 콘텐츠 영역의 우측 상단(오른쪽 32px), 폭 400.
  * 패드·컴퓨터의 세로 위치(`topClassName`, 기본은 패드 87px·컴퓨터 99px = 층 탭 아래 16px)는 화면의 조작부(층 탭·검색창·
  * 버튼)를 가리지 않게 화면마다 정한다(예: 패드 07·08은 검색창이 전체 폭이라 검색창 아래).
@@ -71,7 +71,7 @@ export function ToastLayer({
     <div
       className={`pointer-events-none fixed z-50 flex ${BASE_POSITION} ${topClassName}`}
     >
-      <div className="pointer-events-auto w-full md:w-[360px] xl:w-[400px]">
+      <div className="pointer-events-auto w-full md:w-[320px] xl:w-[400px]">
         <StatusBanner
           variant={toast.variant}
           message={toast.message}
