@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import { RootRedirect } from "@/components/RootRedirect";
 
-// 역할 분기(DEC-001) 전까지 학생 로그인으로 리다이렉트한다.
+// 앱 첫 화면 — 로그인 상태에 따라 첫 화면으로 보낸다(DEC-001, PWA start_url).
 export default function RootPage() {
-  redirect("/login");
+  return <RootRedirect />;
 }
