@@ -18,7 +18,7 @@ export function RoomGrid({ rooms, onRoomClick }: RoomGridProps) {
   return (
     <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-[14px] xl:gap-4 md:rounded-[18px] md:px-[20px] md:pb-[46px] md:pt-[20px] xl:flex-1 xl:min-h-0 xl:overflow-visible xl:px-[22px] xl:pb-0 xl:pt-[22px] xl:rounded-panel">
       {/* 폰: 한 행. 패드: 범례 아래에 안내 텍스트 2행. 데스크톱: 한 행 100px. */}
-      <div className="flex w-full flex-col gap-1.5 xl:h-[100px] xl:flex-row xl:items-center xl:gap-[18px]">
+      <div className="flex w-full flex-col gap-1.5 md:h-6 md:justify-center xl:h-[100px] xl:flex-row xl:items-center xl:justify-start xl:gap-[18px]">
         <div className="flex items-center gap-2.5 md:gap-[10px] xl:gap-[18px]">
           <div className="flex items-center gap-[5px] md:gap-[7px]">
             <span className="size-2 rounded-[3px] border border-admin-attendance-border bg-admin-attendance-bg md:size-[9px]" />
