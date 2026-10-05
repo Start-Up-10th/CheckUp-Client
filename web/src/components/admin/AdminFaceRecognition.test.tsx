@@ -137,7 +137,8 @@ describe("AdminFaceRecognition", () => {
     renderWith(gateway);
     await tick();
 
-    expect(screen.getByText("성공 · 2405 김도현")).toBeInTheDocument();
+    // 배너(화면 읽기용)와 컴퓨터용 칩이 같은 문구를 그린다.
+    expect(screen.getByRole("status")).toHaveTextContent("성공 · 2405 김도현");
 
     await tick(5_000);
     expect(screen.queryByText("성공 · 2405 김도현")).not.toBeInTheDocument();

@@ -43,7 +43,7 @@ export function FloorTabs({
             } ${
               active
                 ? `bg-admin-attendance-bg text-admin-attendance-text md:border-admin-attendance-border ${desktopTrack ? "font-bold xl:border-transparent xl:font-medium" : "font-bold"}`
-                : `bg-admin-surface font-normal text-admin-ghost-text md:border-transparent ${desktopTrack ? "xl:text-[#3a3a3c]" : "xl:border-admin-border xl:text-admin-text"}`
+                : `bg-admin-surface font-normal text-admin-ghost-text md:border-transparent ${desktopTrack ? "xl:text-[#3a3a3c]" : "xl:border-admin-border xl:text-[#3a3a3c]"}`
             }`}
           >
             {floor}층
