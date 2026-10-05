@@ -1,5 +1,6 @@
 "use client";
 
+import { ListRowsSkeleton } from "@/components/admin/ListRowsSkeleton";
 import { useEffect, useMemo, useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { StatusBanner } from "@/components/admin/StatusBanner";
@@ -24,9 +25,8 @@ const COUNT_SUCCESS_MESSAGE = "봉사 횟수를 변경했습니다.";
 const COUNT_FAILURE_MESSAGE =
   "봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.";
 
-/** 토스트는 봉사자 명단 편집과 같은 자리(헤더 조작부 바로 아래)에 둔다. 헤더·검색창 높이가 같다. */
-const TOAST_POSITION =
-  "inset-x-4 top-[121px] justify-end md:left-[96px] md:right-[22px] md:top-[139px] md:justify-end xl:left-[300px] xl:right-8 xl:top-[91px]";
+/** 토스트의 패드·컴퓨터 세로 위치. 봉사자 명단 편집(07)과 같다: 패드는 검색창 아래, 컴퓨터는 층 탭 아래 16px. */
+const TOAST_TOP = "md:top-[88px] xl:top-[99px]";
 
 /**
  * 학생 관리(Figma 08). 전체 학생을 층 탭·검색으로 거르고 호실별로 보여 준다. 학생을 누르면 상세 다이얼로그에서
@@ -76,7 +76,7 @@ export function AdminStudentManagement() {
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} positionClassName={TOAST_POSITION} />
+      <ToastLayer toast={toast} topClassName={TOAST_TOP} />
 
       <div className="flex w-full items-end justify-between">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
@@ -100,9 +100,7 @@ export function AdminStudentManagement() {
         {status === "error" ? (
           <AdminContentState variant="error" onRetry={reload} />
         ) : status !== "ready" ? (
-          <p className="py-6 text-center text-sm text-admin-textMuted">
-            불러오는 중…
-          </p>
+          <ListRowsSkeleton />
         ) : groups.length === 0 ? (
           <StatusBanner variant="neutral" message={NO_RESULT_MESSAGE} />
         ) : (
