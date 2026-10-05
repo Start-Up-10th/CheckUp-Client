@@ -32,11 +32,11 @@ export function CameraPanel({
 
   return (
     <div
-      className={`flex h-full w-full flex-col gap-3 bg-[#1c1c1e] max-md:h-auto max-md:self-stretch md:gap-[18px] ${isFullscreen ? "" : "rounded-[18px] p-4 md:rounded-[20px] md:p-6"}`}
+      className={`flex h-full w-full flex-col gap-3 bg-[#1c1c1e] max-md:h-auto max-md:self-stretch md:gap-[14px] xl:gap-[18px] ${isFullscreen ? "" : "rounded-[18px] p-4 md:p-5 xl:rounded-[20px] xl:p-6"}`}
     >
       {!isFullscreen && (
         <div className="flex w-full items-center justify-between">
-          <p className="text-xs leading-[14px] text-white/70 md:text-sm">
+          <p className="text-xs leading-[14px] text-white/70 md:text-sm md:leading-[17px]">
             카메라 화면
           </p>
           {live && (
