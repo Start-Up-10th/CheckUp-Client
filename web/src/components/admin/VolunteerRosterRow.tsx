@@ -14,7 +14,7 @@ type VolunteerRosterRowProps = {
  * - 컴퓨터(xl): 이름·학번·최근 활동이 한 줄, 오른쪽에 횟수와 지정 버튼.
  * - 패드(md~xl): 왼쪽에 이름·학번 위, 최근 활동 아래, 오른쪽에 횟수와 지정 버튼.
  * - 핸드폰: 두 줄. 위에 이름·학번과 오른쪽 끝 최근 활동, 아래에 횟수와 오른쪽 끝 지정 버튼.
- * 버튼 라벨은 지정 전 `봉사자 지정`, 지정 후 `지정됨`이다. 완료한 지정은 Figma에 디자인이 없어 `지정됨`과 같은
+ * 버튼 라벨은 지정 전 `봉사자 지정`, 지정 후 `지정됨`이다. 남은 횟수가 0회인 학생의 `봉사자 지정`은 회색 비활성이다. 완료한 지정은 Figma에 디자인이 없어 `지정됨`과 같은
  * 스타일에 `완료됨`으로 표시한다.
  */
 export function VolunteerRosterRow({
@@ -23,6 +23,9 @@ export function VolunteerRosterRow({
   onDesignate,
 }: VolunteerRosterRowProps) {
   const designated = student.duty !== "none";
+  // 남은 봉사 횟수가 0회면 봉사할 일이 없어 지정할 수 없다(Figma `당일 봉사자 지정 (비활성)`). 학생 관리에서 횟수를
+  // 추가하면 다시 활성이 된다.
+  const noCount = !designated && student.count === 0;
 
   return (
     <div
@@ -69,11 +72,14 @@ export function VolunteerRosterRow({
               ? `${student.name} ${student.duty === "completed" ? "봉사 완료" : "당일 봉사자로 지정됨"}`
               : `${student.name} 당일 봉사자로 지정`
           }
+          disabled={noCount}
           onClick={() => onDesignate?.(student.studentId)}
           className={`relative w-[76px] rounded-[7px] px-2.5 py-[5px] text-[11px] font-bold leading-[13px] md:w-[85px] md:rounded-lg md:px-3 md:py-1.5 md:text-xs md:leading-[14px] xl:w-[91px] xl:rounded-[10px] xl:px-3.5 xl:py-[9px] xl:text-[13px] xl:leading-4 ${
             designated
               ? "border border-admin-attendance-border bg-admin-surface text-admin-attendance-text"
-              : "bg-admin-accent-bg text-admin-accent-text"
+              : noCount
+                ? "bg-admin-border text-admin-textFaint"
+                : "bg-admin-accent-bg text-admin-accent-text"
           }`}
         >
           {student.duty === "none"
