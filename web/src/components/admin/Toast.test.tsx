@@ -8,35 +8,44 @@ function layerOf() {
 }
 
 describe("ToastLayer 위치", () => {
-  it("기본은 컴퓨터에서 하단 중앙, 패드는 오른쪽 위, 폰은 탭바 위다", () => {
+  it("기본은 핸드폰 탭바 위 18px, 패드·컴퓨터는 우측 상단이다", () => {
     render(<ToastLayer toast={toast} />);
 
     expect(layerOf()).toHaveClass(
-      "xl:bottom-7",
-      "xl:justify-center",
-      "md:top-7",
       "bottom-[78px]",
+      "inset-x-[18px]",
+      "md:right-[22px]",
+      "md:top-[87px]",
+      "xl:right-8",
+      "xl:top-[99px]",
     );
-  });
-
-  it("positionClassName을 주면 기본 위치 대신 그 위치만 쓴다", () => {
-    render(
-      <ToastLayer
-        toast={toast}
-        positionClassName="inset-x-4 top-[63px] md:top-[79px] xl:top-[91px]"
-      />,
-    );
-
-    expect(layerOf()).toHaveClass(
-      "top-[63px]",
-      "md:top-[79px]",
-      "xl:top-[91px]",
-    );
-    expect(layerOf()).not.toHaveClass("bottom-[78px]");
     expect(layerOf()).not.toHaveClass("xl:bottom-7");
   });
 
-  it("관리자 토스트는 기본으로 핸드폰 폭에서 작은 크기이고 패드 이상은 Figma 크기다", () => {
+  it("topClassName을 주면 패드·컴퓨터의 세로 위치만 바꾼다", () => {
+    render(
+      <ToastLayer toast={toast} topClassName="md:top-[139px] xl:top-[99px]" />,
+    );
+
+    expect(layerOf()).toHaveClass(
+      "md:top-[139px]",
+      "bottom-[78px]",
+      "md:right-[22px]",
+    );
+    expect(layerOf()).not.toHaveClass("md:top-[87px]");
+  });
+
+  it("폭은 핸드폰 전체(354), 패드 360, 컴퓨터 400이다", () => {
+    render(<ToastLayer toast={toast} />);
+
+    expect(screen.getByRole("status").parentElement).toHaveClass(
+      "w-full",
+      "md:w-[360px]",
+      "xl:w-[400px]",
+    );
+  });
+
+  it("관리자 토스트는 기본으로 핸드폰 폭에서 글자·여백이 작고 패드 이상은 Figma 크기다", () => {
     render(<ToastLayer toast={toast} />);
 
     const banner = screen.getByRole("status");
@@ -45,16 +54,13 @@ describe("ToastLayer 위치", () => {
       "text-xs",
       "md:text-[13px]",
     );
-    expect(banner.parentElement).toHaveClass("w-fit", "md:w-full");
   });
 
-  it("compactOnPhone을 끄면 핸드폰에서도 Figma 크기와 전체 폭이다", () => {
+  it("compactOnPhone을 끄면 핸드폰에서도 Figma 크기다", () => {
     render(<ToastLayer toast={toast} compactOnPhone={false} />);
 
     const banner = screen.getByRole("status");
     expect(banner).toHaveClass("px-3.5", "py-3");
-    expect(banner.parentElement).toHaveClass("w-full");
-    expect(banner.parentElement).not.toHaveClass("w-fit");
   });
 
   it("토스트 종류에 맞는 테두리를 쓴다", () => {
