@@ -123,7 +123,7 @@ export function AdminVolunteerRoster() {
           </p>
         ) : (
           <div
-            className={`flex flex-col gap-4 md:gap-[18px] xl:gap-[22px] ${designatedCount > 0 ? "pb-16 xl:pb-20" : ""}`}
+            className={`flex flex-col gap-4 md:gap-[18px] xl:gap-[22px] ${designatedCount > 0 ? "xl:pb-20" : ""}`}
           >
             {groups.map((group) => (
               <section
