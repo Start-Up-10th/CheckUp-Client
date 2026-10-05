@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { AdminFloorPlanSkeleton } from "@/components/admin/AdminFloorPlanSkeleton";
 import { FloorTabs } from "@/components/admin/FloorTabs";
@@ -19,12 +19,13 @@ import {
 
 const DEFAULT_FLOOR: Floor = 4;
 
+const LOAD_FAILED_MESSAGE = "전개도를 불러오지 못했습니다.";
+const SAVE_FAILED_MESSAGE = "전개도 변경에 실패했습니다. 다시 시도해 주세요.";
+
 /**
- * 토스트는 오른쪽 위, 헤더의 층 탭 바로 아래 8px에 둬 층 탭과 호실 카드 버튼을 가리지 않는다(통계 카드 위):
- * 폰 57px(탭 하단 49px), 패드 83px(탭 하단 75px), 컴퓨터 91px(탭 하단 83px). 측정으로 확인했다.
+ * 토스트의 패드·컴퓨터 세로 위치. 패드는 층 탭 아래 8px(83px), 컴퓨터는 층 탭 아래 16px(99px)이다. 핸드폰은 하단 탭바 위(공통).
  */
-const TOAST_POSITION =
-  "inset-x-4 top-[57px] justify-end md:left-[96px] md:right-[22px] md:top-[83px] xl:left-[300px] xl:right-8 xl:top-[91px]";
+const TOAST_TOP = "md:top-[83px] xl:top-[99px]";
 
 /** 호실 카드를 누르면 상세(읽기 전용) -> 수정(토글 편집) 2단계로 연다. */
 type DialogStage = "view" | "edit";
@@ -32,11 +33,14 @@ type DialogStage = "view" | "edit";
 export function AdminHomeFloorPlan({
   isLoading = false,
   loadFailed = false,
+  saveRoom,
 }: {
   /** 전개도 데이터 로딩 중. 실제 조회 연결 전까지 기본은 false다. */
   isLoading?: boolean;
   /** 전개도 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
   loadFailed?: boolean;
+  /** 호실 출석 저장. 실패(reject)하면 다이얼로그를 유지하고 실패 안내를 띄운다. 서버 연결 전까지 기본은 항상 성공이다. */
+  saveRoom?: (roomNumber: string, students: Student[]) => Promise<void>;
 }) {
   const [selectedFloor, setSelectedFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [roomsByFloor, setRoomsByFloor] = useState(MOCK_FLOOR_ROOMS);
@@ -49,6 +53,11 @@ export function AdminHomeFloorPlan({
     () => summarizeAttendance(rooms),
     [rooms],
   );
+
+  useEffect(() => {
+    if (loadFailed)
+      showToast({ variant: "error", message: LOAD_FAILED_MESSAGE });
+  }, [loadFailed, showToast]);
 
   if (isLoading) return <AdminFloorPlanSkeleton />;
   const dialogRoom =
@@ -69,7 +78,7 @@ export function AdminHomeFloorPlan({
     setDialogStage("view");
   }
 
-  function handleSaveRoom(roomNumber: string, students: Student[]) {
+  async function handleSaveRoom(roomNumber: string, students: Student[]) {
     const current = rooms.find((room) => room.number === roomNumber);
     const unchanged = current?.students.every(
       (student, index) => student.present === students[index]?.present,
@@ -77,6 +86,12 @@ export function AdminHomeFloorPlan({
     if (unchanged) {
       closeDialog();
       showToast({ variant: "neutral", message: "변경된 내용이 없습니다." });
+      return;
+    }
+    try {
+      await saveRoom?.(roomNumber, students);
+    } catch {
+      showToast({ variant: "error", message: SAVE_FAILED_MESSAGE });
       return;
     }
     setRoomsByFloor((prev) => ({
@@ -91,7 +106,7 @@ export function AdminHomeFloorPlan({
 
   return (
     <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} positionClassName={TOAST_POSITION} />
+      <ToastLayer toast={toast} topClassName={TOAST_TOP} />
 
       {/* 헤더: 제목 좌측 + 층 탭 우측 */}
       <div className="flex w-full items-center justify-between md:items-end">
