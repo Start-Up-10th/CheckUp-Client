@@ -7,7 +7,7 @@ type AttendanceStatCardsProps = {
  * REQ-UI-001: 출석/미출석 2개 카드만 표시한다. 총원 통계 카드는 추가하지 않는다.
  *
  * Figma 실제 디자인 토큰 대조(2026-10):
- * - 핸드폰(280:26): 세로 스택 · p-3 · rounded-[12px] · 라벨 회색 10px · 출석 숫자 진한 올리브 18px · 미출석 숫자 검정 18px · 미출석 테두리 없음.
+ * - 핸드폰(280:26): 세로 스택 · p-3(테두리 1px 포함이라 padding은 11) · rounded-[12px] · 라벨 회색 10px · 출석 숫자 진한 올리브 18px · 미출석 숫자 검정 18px · 미출석 테두리 없음.
  * - 패드(52:53): 가로(items-baseline justify-between) · px-4 py-[14px] · rounded-[14px] · 라벨 12px · 숫자 22px. 출석은 라임 배경·초록 테두리(#dcefad)·라벨 올리브(#6b8f22)·숫자 진한 올리브, 미출석은 흰 배경·테두리 없음·라벨 회색(#8e8e93)·숫자 검정(#1c1c1e). 카드 간격 29px.
  * - 데스크톱(16:445): 세로 스택 · px-[18px] py-[16px](테두리 1px 포함이라 padding은 17·15) · rounded-2xl(16) · 라벨 회색 12px · 숫자 검정 24px · 미출석 테두리 없음.
  *
@@ -20,7 +20,7 @@ export function AttendanceStatCards({
 }: AttendanceStatCardsProps) {
   return (
     <div className="flex w-full items-start gap-2 md:gap-[29px] xl:gap-[14px]">
-      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-admin-attendance-border bg-admin-attendance-bg p-3 md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:px-[15px] md:py-[13px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)] xl:px-[clamp(15px,calc(15px+(100vw-1280px)/320),17px)] xl:py-[clamp(13px,calc(13px+(100vw-1280px)/320),15px)]">
+      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-admin-attendance-border bg-admin-attendance-bg p-[11px] md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:px-[15px] md:py-[13px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)] xl:px-[clamp(15px,calc(15px+(100vw-1280px)/320),17px)] xl:py-[clamp(13px,calc(13px+(100vw-1280px)/320),15px)]">
         <p className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs md:leading-[14px] md:text-admin-attendance-textMuted xl:text-admin-textMuted">
           출석
         </p>
@@ -28,7 +28,7 @@ export function AttendanceStatCards({
           {present}
         </p>
       </div>
-      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-transparent bg-admin-surface p-3 md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:px-[15px] md:py-[13px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)] xl:px-[clamp(15px,calc(15px+(100vw-1280px)/320),17px)] xl:py-[clamp(13px,calc(13px+(100vw-1280px)/320),15px)]">
+      <div className="flex flex-1 flex-col gap-1 rounded-xl border border-transparent bg-admin-surface p-[11px] md:flex-row md:items-baseline md:justify-between md:rounded-[14px] md:px-[15px] md:py-[13px] xl:flex-col xl:items-start xl:justify-normal xl:rounded-[clamp(14px,calc(14px+(100vw-1280px)/320),16px)] xl:px-[clamp(15px,calc(15px+(100vw-1280px)/320),17px)] xl:py-[clamp(13px,calc(13px+(100vw-1280px)/320),15px)]">
         <p className="text-[10px] leading-[12px] text-admin-textMuted md:text-xs md:leading-[14px] xl:text-admin-textMuted">
           미출석
         </p>
