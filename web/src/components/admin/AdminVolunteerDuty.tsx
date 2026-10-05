@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { StatusBanner } from "@/components/admin/StatusBanner";
 import {
@@ -18,6 +19,10 @@ import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 /** 서버가 이유를 알려 주지 않은 실패(Figma 06 state messages). */
 const FAILURE_MESSAGE = "처리에 실패했습니다. 다시 시도해 주세요.";
+
+/** 당일 봉사자 목록을 받지 못했을 때(Figma 06 state messages). */
+const LIST_FAILURE_MESSAGE =
+  "당일 봉사자 목록을 불러오지 못했습니다. 다시 시도해 주세요.";
 
 /**
  * 토스트는 헤더 조작부(`+ 명단에서 지정` 버튼) 바로 아래, 목록 행 위에 둔다. 폰 58px(버튼 하단 50px + 8px),
@@ -43,6 +48,12 @@ export function AdminVolunteerDuty({
   const { toast, showToast } = useToast();
   const today = designatedToday(roster);
   const dayLabel = operatingDayLabel(new Date());
+
+  useEffect(() => {
+    if (status === "error") {
+      showToast({ variant: "error", message: LIST_FAILURE_MESSAGE });
+    }
+  }, [status, showToast]);
 
   /** 서버에 요청하고, 서버가 돌려준 학생 상태를 명단에 넣는다. 실패는 상태 메시지로 알린다. */
   function runDutyAction(
