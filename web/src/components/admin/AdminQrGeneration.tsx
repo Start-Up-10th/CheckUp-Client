@@ -156,13 +156,13 @@ export function AdminQrGeneration() {
   const bannerMessage = error ?? (expired ? EXPIRED_MESSAGE : null);
 
   return (
-    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6">
+    <div className="flex h-full w-full flex-col gap-3.5 px-4 pb-[7px] pt-3.5 md:gap-[22px] md:px-[22px] md:pb-[22px] md:pt-6 xl:gap-5 xl:px-8 xl:pb-7 xl:pt-7">
       <div className="flex w-full items-center justify-between md:items-end">
-        <div className="flex flex-col gap-1">
-          <p className="hidden font-mono text-[10px] tracking-[1.8px] text-admin-textFaint md:block xl:text-[11px] xl:tracking-[1.98px]">
+        <div className="flex flex-col gap-1 md:gap-[3px] xl:gap-1">
+          <p className="hidden font-mono text-[10px] tracking-[1.8px] text-admin-textFaint md:block md:leading-[13px] xl:text-[11px] xl:leading-[15px] xl:tracking-[1.98px]">
             QR ISSUE
           </p>
-          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-normal md:tracking-[-0.78px] xl:text-[30px] xl:tracking-[-0.9px]">
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-[31px] md:tracking-[-0.78px] xl:text-[30px] xl:leading-[36px] xl:tracking-[-0.9px]">
             QR 코드 생성
           </h1>
         </div>
