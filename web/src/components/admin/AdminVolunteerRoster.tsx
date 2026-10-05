@@ -153,9 +153,7 @@ export function AdminVolunteerRoster() {
         )}
       </div>
 
-      {designatedCount > 0 ? (
-        <VolunteerDesignatedBar count={designatedCount} />
-      ) : null}
+      <VolunteerDesignatedBar count={designatedCount} />
       {selected ? (
         <VolunteerStudentDialog
           key={selected.studentId}
