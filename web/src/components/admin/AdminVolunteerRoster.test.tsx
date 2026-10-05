@@ -127,7 +127,7 @@ describe("AdminVolunteerRoster", () => {
     ).toBeInTheDocument();
   });
 
-  it("명단 조회에 실패하면 오류 상태를 보여 주고 다시 시도하면 불러온다", async () => {
+  it("명단 조회에 실패하면 오류 상태와 명단 조회 실패 문구를 보여 주고 다시 시도하면 불러온다", async () => {
     resetRoster();
     const list = vi
       .fn()
@@ -140,7 +140,10 @@ describe("AdminVolunteerRoster", () => {
       </VolunteerGatewayProvider>,
     );
 
-    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(await screen.findByText("불러오지 못했어요")).toBeInTheDocument();
+    expect(
+      screen.getByText("학생 명단을 불러오지 못했습니다. 다시 시도해 주세요."),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
     expect(
       await screen.findByRole("region", { name: "412호" }),
