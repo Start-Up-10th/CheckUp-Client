@@ -157,6 +157,8 @@ describe("AdminFaceRecognition", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
 
     await tick(5_000);
+    // 사라지는 애니메이션(200ms) 동안은 마지막 토스트를 그린다.
+    await tick(500);
     expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
   });
 
