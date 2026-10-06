@@ -59,7 +59,7 @@ describe("CameraPanel 하단 성공·실패 배너", () => {
 });
 
 describe("CameraPanel 인식 서버 오류", () => {
-  it("인식 서버에 연결하지 못하면 공통 오류와 다시 시도를 보인다", () => {
+  it("인식 서버에 연결하지 못하면 오류 배너와 다시 시도를 보인다", () => {
     const onRetry = vi.fn();
     renderPanel({ recognitionFailed: true, onRetry });
 

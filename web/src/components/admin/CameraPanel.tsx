@@ -1,5 +1,4 @@
 import type { RefObject } from "react";
-import { AdminContentState } from "@/components/admin/AdminContentState";
 import { StatusBanner } from "@/components/admin/StatusBanner";
 import type { CameraStatus } from "@/lib/admin/use-camera-stream";
 
@@ -10,7 +9,7 @@ type CameraPanelProps = {
   successMessage?: string | null;
   /** 방금 인식에 실패했을 때의 문구. 있으면 카메라 하단에 실패 배너로 잠깐 보인다(REQ-FACE-006). */
   failureMessage?: string | null;
-  /** 인식 서버 연결 실패. 카메라 영역에 공통 오류 상태와 다시 시도를 보인다. */
+  /** 인식 서버 연결 실패. 카메라 하단에 오류 배너와 다시 시도를 보인다. */
   recognitionFailed?: boolean;
   onRetry?: () => void;
 };
@@ -97,10 +96,27 @@ export function CameraPanel({
           </div>
         )}
 
+        {/* 인식 서버 연결 실패: Figma에 없는 상태라 다른 성공·실패 표시처럼 카메라 하단의 작은 배너로 보인다. */}
         {recognitionFailed && status !== "error" && onRetry && (
-          <div className="absolute inset-0 flex items-center justify-center bg-[#2c2c2f]/90">
-            <div className="rounded-panel bg-admin-surface px-6">
-              <AdminContentState variant="error" onRetry={onRetry} />
+          <div className="absolute inset-x-3 bottom-3 flex justify-center md:bottom-4">
+            <div
+              role="alert"
+              className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-xl border border-admin-danger-border bg-admin-danger-bg px-3.5 py-2.5"
+            >
+              <span className="size-[7px] shrink-0 rounded-full bg-admin-danger-text" />
+              <span className="text-[13px] font-bold leading-4 text-admin-danger-text">
+                불러오지 못했어요
+              </span>
+              <span className="text-[13px] leading-4 text-admin-danger-text">
+                네트워크 연결을 확인하고 다시 시도해 주세요.
+              </span>
+              <button
+                type="button"
+                onClick={onRetry}
+                className="rounded-lg bg-admin-text px-3 py-1.5 text-xs leading-4 text-white"
+              >
+                다시 시도
+              </button>
             </div>
           </div>
         )}
