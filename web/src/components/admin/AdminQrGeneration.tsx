@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel";
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
 import { StatusBanner } from "@/components/admin/StatusBanner";
@@ -16,8 +15,10 @@ import {
   QrSessionNotFoundError,
 } from "@/lib/admin/qr-api";
 
-const DEFAULT_PURPOSE: Purpose = "dorm";
+/** 용도 탭이 없어서(Figma 2026-10-06, DEC-036) QR은 기숙사 용도로 고정한다. */
+const PURPOSE: Purpose = "dorm";
 const HEARTBEAT_INTERVAL_MS = 20_000;
+const EXPIRED_MESSAGE = "유효 시간이 만료되었습니다.";
 
 type ActiveSession = {
   sessionId: string;
@@ -27,14 +28,13 @@ type ActiveSession = {
 };
 
 /**
- * REQ-ATT-003: 페이지 진입/목적 전환마다 새 QR 세션을 즉시 발급한다. 생성/종료 버튼은 없다.
+ * REQ-ATT-003: 페이지 진입마다 새 QR 세션을 즉시 발급한다. 생성/종료 버튼과 용도 탭은 없다(DEC-036).
  * REQ-ATT-004: heartbeat(~20s)로 qrUrl을 교체하고 "남은 유효 시간" mm:ss를 보여준다.
  *
  * serverTimeOffset으로 브라우저 시계 오차를 보정해 tokenExpiresAt 기준 카운트다운을 계산한다.
- * 목적 전환·페이지 이탈 시 sendBeacon으로 해당 세션만 종료한다(다른 탭·관리자 세션 영향 없음).
+ * 페이지 이탈 시 sendBeacon으로 해당 세션만 종료한다(다른 탭·관리자 세션 영향 없음).
  */
 export function AdminQrGeneration() {
-  const [purpose, setPurpose] = useState<Purpose>(DEFAULT_PURPOSE);
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [now, setNow] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,15 +43,8 @@ export function AdminQrGeneration() {
 
   const sessionIdRef = useRef<string | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // ref로 즉시 취소: handleSelectPurpose에서 React 스케줄러 전에 동기적으로 세트한다.
+  // ref로 즉시 취소: 언마운트 정리에서 React 스케줄러 전에 동기적으로 세트한다.
   const cancelRef = useRef(false);
-
-  function handleSelectPurpose(nextPurpose: Purpose) {
-    cancelRef.current = true;
-    setPurpose(nextPurpose);
-    setSession(null);
-    setError(null);
-  }
 
   useEffect(() => {
     cancelRef.current = false;
@@ -66,7 +59,7 @@ export function AdminQrGeneration() {
     async function startSession() {
       clearHeartbeat();
       try {
-        const data = await createQrSession(purpose);
+        const data = await createQrSession(PURPOSE);
         if (cancelRef.current) {
           closeQrSession(data.sessionId);
           return;
@@ -110,11 +103,9 @@ export function AdminQrGeneration() {
               sessionIdRef.current = null;
               setSession(null);
               setSessionKey((k) => k + 1);
-            } else {
-              // 일시적 네트워크·서버 오류: 만료된 QR을 유효한 것처럼 표시하지 않는다.
-              setSession(null);
-              setError("QR 갱신에 실패했습니다. 새로고침해 주세요.");
             }
+            // 그 밖의 일시적 오류: 기존 QR을 유지하고 다음 주기에 다시 갱신한다.
+            // 만료 시각은 연장하지 않으므로 만료되면 아래에서 QR을 내리고 안내한다(REQ-ATT-004).
           }
         }, HEARTBEAT_INTERVAL_MS);
       } catch (err) {
@@ -142,31 +133,36 @@ export function AdminQrGeneration() {
         sessionIdRef.current = null;
       }
     };
-  }, [purpose, sessionKey]);
+  }, [sessionKey]);
 
-  const countdownLabel = (() => {
-    if (error || !session || now === null) return undefined;
-    const remaining = session.tokenExpiresAt - (now + session.serverTimeOffset);
-    // remaining <= 0이면 undefined를 반환해 만료된 QR을 화면에 남기지 않는다.
-    if (remaining <= 0) return undefined;
-    return formatCountdown(remaining);
-  })();
+  const remaining =
+    session && now !== null
+      ? session.tokenExpiresAt - (now + session.serverTimeOffset)
+      : null;
+  // 만료된 QR은 화면에 남기지 않고 안내만 보여 준다. 갱신이 성공하면 새 QR로 돌아온다.
+  const expired = !error && remaining !== null && remaining <= 0;
+  const countdownLabel =
+    !error && remaining !== null && remaining > 0
+      ? formatCountdown(remaining)
+      : undefined;
+  const bannerMessage = error ?? (expired ? EXPIRED_MESSAGE : null);
 
   return (
-    <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6">
+    <div className="flex h-full w-full flex-col gap-3.5 px-4 pb-[7px] pt-3.5 md:gap-[22px] md:px-[22px] md:pb-[22px] md:pt-6 xl:gap-5 xl:px-8 xl:pb-7 xl:pt-7">
       <div className="flex w-full items-center justify-between md:items-end">
-        <div className="flex flex-col gap-1">
-          <p className="hidden font-mono text-[10px] tracking-[1.8px] text-admin-textFaint md:block xl:text-[11px] xl:tracking-[1.98px]">
+        <div className="flex flex-col gap-1 md:gap-[3px] xl:gap-1">
+          <p className="hidden font-mono text-[10px] tracking-[1.8px] text-admin-textFaint md:block md:leading-[13px] xl:text-[11px] xl:leading-[15px] xl:tracking-[1.98px]">
             QR ISSUE
           </p>
-          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-normal md:tracking-[-0.78px] xl:text-[30px] xl:tracking-[-0.9px]">
+          <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-[31px] md:tracking-[-0.78px] xl:text-[30px] xl:leading-[36px] xl:tracking-[-0.9px]">
             QR 코드 생성
           </h1>
         </div>
-        <PurposeTabs selected={purpose} onSelect={handleSelectPurpose} />
       </div>
 
-      {error && <StatusBanner variant="error" message={error} compactOnPhone />}
+      {bannerMessage && (
+        <StatusBanner variant="error" message={bannerMessage} compactOnPhone />
+      )}
 
       {session && countdownLabel ? (
         <QrCodeGenerationPanel

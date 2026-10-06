@@ -8,7 +8,9 @@ import {
 } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
+import { VolunteerApiError } from "@/lib/admin/volunteer-api";
 import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
+import { VolunteerHistoryGatewayProvider } from "@/lib/admin/volunteer-history-gateway";
 import { createMockVolunteerGateway } from "@/lib/admin/volunteer-mock-gateway";
 import { resetRoster, setRoster } from "@/lib/admin/volunteer-roster-store";
 import { AdminVolunteerRoster } from "./AdminVolunteerRoster";
@@ -77,15 +79,14 @@ describe("AdminVolunteerRoster", () => {
     ).toHaveTextContent("봉사자 지정");
   });
 
-  it("횟수가 0이면 −는 비활성화한다", () => {
+  it("행에는 횟수 글자만 있고 −/+ 버튼은 없다", () => {
     render(<AdminVolunteerRoster />);
 
+    const row = screen.getByRole("group", { name: "박서연" });
+    expect(within(row).getByText("1회")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "이지후 봉사 1회 차감" }),
-    ).toBeDisabled();
-    expect(
-      screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
-    ).toBeEnabled();
+      screen.queryByRole("button", { name: /봉사 1회 (차감|추가)/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("호실 번호로 검색하면 그 호실만 남긴다", () => {
@@ -127,7 +128,7 @@ describe("AdminVolunteerRoster", () => {
     ).toBeInTheDocument();
   });
 
-  it("명단 조회에 실패하면 오류 상태를 보여 주고 다시 시도하면 불러온다", async () => {
+  it("명단 조회에 실패하면 오류 상태와 명단 조회 실패 문구를 보여 주고 다시 시도하면 불러온다", async () => {
     resetRoster();
     const list = vi
       .fn()
@@ -140,7 +141,10 @@ describe("AdminVolunteerRoster", () => {
       </VolunteerGatewayProvider>,
     );
 
-    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(await screen.findByText("불러오지 못했어요")).toBeInTheDocument();
+    expect(
+      screen.getByText("학생 명단을 불러오지 못했습니다. 다시 시도해 주세요."),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
     expect(
       await screen.findByRole("region", { name: "412호" }),
@@ -148,92 +152,161 @@ describe("AdminVolunteerRoster", () => {
     expect(list).toHaveBeenCalledTimes(2);
   });
 
-  describe("횟수 가감", () => {
-    it("+를 누르면 횟수가 늘고 성공 문구를 보여 준다", async () => {
+  describe("학생 상세", () => {
+    it("학생 행을 누르면 남은 횟수와 봉사 이력을 보여 준다", async () => {
       render(<AdminVolunteerRoster />);
 
-      fireEvent.click(
-        screen.getByRole("button", { name: "박서연 봉사 1회 추가" }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
 
-      expect(await screen.findByRole("status")).toHaveTextContent(
-        "봉사 횟수를 변경했습니다.",
-      );
-      const row = screen.getByRole("group", { name: "박서연" });
-      expect(within(row).getByText("2회")).toBeInTheDocument();
+      const dialog = screen.getByRole("dialog", { name: "김도현" });
+      expect(within(dialog).getByText("2405 · 412호")).toBeInTheDocument();
+      expect(within(dialog).getByText("남은 봉사 횟수")).toBeInTheDocument();
+      expect(within(dialog).getByText("3회")).toBeInTheDocument();
+      expect(await within(dialog).findByText("도서관 정리 봉사")).toBeVisible();
+      expect(within(dialog).getAllByText("+1회").length).toBeGreaterThan(0);
+      expect(within(dialog).getByText("−1회")).toBeInTheDocument();
     });
 
-    it("−를 누르면 횟수가 줄고 같은 성공 문구를 보여 준다", async () => {
+    it("닫기를 누르면 다이얼로그가 닫힌다", () => {
       render(<AdminVolunteerRoster />);
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
 
-      fireEvent.click(
-        screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
-      );
+      fireEvent.click(screen.getByRole("button", { name: "닫기" }));
 
-      expect(await screen.findByRole("status")).toHaveTextContent(
-        "봉사 횟수를 변경했습니다.",
-      );
-      const row = screen.getByRole("group", { name: "박서연" });
-      expect(within(row).getByText("0회")).toBeInTheDocument();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
-    it("1회에서 −로 0회가 되면 −가 비활성화된다", async () => {
+    it("지정 버튼을 눌러도 상세 다이얼로그는 열리지 않는다", async () => {
       render(<AdminVolunteerRoster />);
 
       fireEvent.click(
-        screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      );
+
+      await screen.findByRole("status");
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("이력이 없으면 안내 문구를 보여 준다", async () => {
+      renderPlain(
+        <VolunteerGatewayProvider value={mockGateway}>
+          <VolunteerHistoryGatewayProvider value={{ list: async () => [] }}>
+            <AdminVolunteerRoster />
+          </VolunteerHistoryGatewayProvider>
+        </VolunteerGatewayProvider>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+
+      expect(
+        await screen.findByText("봉사 이력이 없습니다."),
+      ).toBeInTheDocument();
+    });
+
+    it("이력 조회에 실패하면 오류 문구를 보여 준다", async () => {
+      renderPlain(
+        <VolunteerGatewayProvider value={mockGateway}>
+          <VolunteerHistoryGatewayProvider
+            value={{ list: () => Promise.reject(new Error("fail")) }}
+          >
+            <AdminVolunteerRoster />
+          </VolunteerHistoryGatewayProvider>
+        </VolunteerGatewayProvider>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "봉사 이력을 불러오지 못했습니다. 다시 시도해 주세요.",
+      );
+    });
+  });
+
+  describe("하단 바", () => {
+    const barLink = () => screen.queryByRole("link", { name: "봉사자 관리 →" });
+
+    it("처음 들어오면 오늘 지정된 학생이 있어도 바가 없다", () => {
+      render(<AdminVolunteerRoster />);
+
+      expect(barLink()).not.toBeInTheDocument();
+    });
+
+    it("봉사자 지정을 누르면 바가 나타나고 지정할 때마다 인원이 늘어난다", async () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      );
+      await screen.findByRole("button", {
+        name: "박서연 당일 봉사자로 지정됨",
+      });
+      const link = barLink()!;
+      expect(link).toHaveAttribute("href", "/admin/volunteers");
+      expect(link.parentElement).toHaveTextContent("당일 지정 3명");
+
+      fireEvent.click(screen.getByRole("button", { name: "3층" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "백도윤 당일 봉사자로 지정" }),
+      );
+      await waitFor(() =>
+        expect(barLink()!.parentElement).toHaveTextContent("당일 지정 4명"),
+      );
+    });
+
+    it("완료한 학생은 인원에서 빼고 아직 완료하지 않은 지정만 센다", async () => {
+      let first = true;
+      setRoster(
+        MOCK_VOLUNTEER_ROSTER.map((student) => {
+          if (student.duty !== "designated") return student;
+          const next = first
+            ? { ...student, duty: "completed" as const }
+            : student;
+          first = false;
+          return next;
+        }),
+      );
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
       );
 
       await waitFor(() =>
-        expect(
-          screen.getByRole("button", { name: "박서연 봉사 1회 차감" }),
-        ).toBeDisabled(),
+        expect(barLink()!.parentElement).toHaveTextContent("당일 지정 2명"),
       );
+      expect(
+        screen.getByText(/전교생 \d+명 · 당일 지정 2명/),
+      ).toBeInTheDocument();
     });
 
-    it("서버가 실패하면 횟수 변경 실패 오류 문구를 보여 주고 횟수는 그대로다", async () => {
-      const adjustCount = vi.fn().mockRejectedValue(new Error("network"));
+    it("지정에 실패하면 바가 나타나지 않는다", async () => {
+      const designate = vi.fn().mockRejectedValue(new Error("network"));
       renderPlain(
-        <VolunteerGatewayProvider value={{ ...mockGateway, adjustCount }}>
+        <VolunteerGatewayProvider value={{ ...mockGateway, designate }}>
           <AdminVolunteerRoster />
         </VolunteerGatewayProvider>,
       );
 
       fireEvent.click(
-        screen.getByRole("button", { name: "박서연 봉사 1회 추가" }),
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
       );
 
-      expect(await screen.findByRole("alert")).toHaveTextContent(
-        "봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.",
-      );
-      const row = screen.getByRole("group", { name: "박서연" });
-      expect(within(row).getByText("1회")).toBeInTheDocument();
+      await screen.findByRole("alert");
+      expect(barLink()).not.toBeInTheDocument();
     });
 
-    it("누른 방향과 학생의 서버 ID로 한 번만 요청한다", async () => {
-      const adjustCount = vi
-        .fn()
-        .mockImplementation((id: number, delta: 1 | -1) =>
-          mockGateway.adjustCount(id, delta),
-        );
-      renderPlain(
-        <VolunteerGatewayProvider value={{ ...mockGateway, adjustCount }}>
-          <AdminVolunteerRoster />
-        </VolunteerGatewayProvider>,
+    it("봉사자 관리에 다녀와 다시 들어오면 지정하기 전까지 바가 숨겨진다", async () => {
+      const first = render(<AdminVolunteerRoster />);
+      fireEvent.click(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
       );
-      const seoyeon = MOCK_VOLUNTEER_ROSTER.find(
-        (student) => student.name === "박서연",
-      )!;
-      const button = screen.getByRole("button", {
-        name: "박서연 봉사 1회 추가",
-      });
+      await waitFor(() => expect(barLink()).toBeInTheDocument());
 
-      fireEvent.click(button);
-      fireEvent.click(button);
-      await screen.findByRole("status");
+      first.unmount();
+      render(<AdminVolunteerRoster />);
 
-      expect(adjustCount).toHaveBeenCalledTimes(1);
-      expect(adjustCount).toHaveBeenCalledWith(seoyeon.id, 1);
+      expect(barLink()).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정됨" }),
+      ).toBeInTheDocument();
     });
   });
 
@@ -269,19 +342,44 @@ describe("AdminVolunteerRoster", () => {
       expect(within(row).getByText("1회")).toBeInTheDocument();
     });
 
-    it("서버가 봉사 없음(NO_VOLUNTEER_LEFT)으로 막으면 봉사가 없다고 알린다", async () => {
-      render(<AdminVolunteerRoster />);
+    it("남은 횟수가 0회인 학생의 지정 버튼은 비활성이라 눌러도 요청이 나가지 않는다", () => {
+      const designate = vi.fn();
+      renderPlain(
+        <VolunteerGatewayProvider value={{ ...mockGateway, designate }}>
+          <AdminVolunteerRoster />
+        </VolunteerGatewayProvider>,
+      );
+      const button = screen.getByRole("button", {
+        name: "이지후 당일 봉사자로 지정",
+      });
+
+      expect(button).toBeDisabled();
+      expect(button).toHaveClass("bg-admin-border", "text-admin-textFaint");
+      fireEvent.click(button);
+
+      expect(designate).not.toHaveBeenCalled();
+      expect(
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
+      ).toBeEnabled();
+    });
+
+    it("서버가 봉사 없음(NO_VOLUNTEER_LEFT)으로 막으면(화면 횟수가 낡은 경우) 봉사가 없다고 알린다", async () => {
+      const designate = vi
+        .fn()
+        .mockRejectedValue(new VolunteerApiError(409, "NO_VOLUNTEER_LEFT"));
+      renderPlain(
+        <VolunteerGatewayProvider value={{ ...mockGateway, designate }}>
+          <AdminVolunteerRoster />
+        </VolunteerGatewayProvider>,
+      );
 
       fireEvent.click(
-        screen.getByRole("button", { name: "이지후 당일 봉사자로 지정" }),
+        screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
       );
 
       expect(await screen.findByRole("status")).toHaveTextContent(
         "봉사가 없습니다.",
       );
-      expect(
-        screen.getByRole("button", { name: "이지후 당일 봉사자로 지정" }),
-      ).toHaveTextContent("봉사자 지정");
     });
 
     it("서버가 이미 지정됨(ALREADY_ON_DUTY)으로 막으면 이미 지정됐다고 알린다", async () => {
