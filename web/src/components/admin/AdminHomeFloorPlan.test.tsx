@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Room } from "@/lib/admin/floor-types";
+import { RoomApiError } from "@/lib/admin/room-api";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import {
   type RoomGateway,
@@ -132,8 +133,10 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
 });
 
 describe("AdminHomeFloorPlan 호실 수정", () => {
-  it("저장하면 안내를 보이고 다이얼로그를 닫는다", async () => {
-    renderWith();
+  it("저장하면 바뀐 학생만 서버에 보내고 안내와 카드 인원을 갱신한다", async () => {
+    const gateway = createMockRoomGateway();
+    const save = vi.spyOn(gateway, "save");
+    renderWith(gateway);
 
     await changeFirstRoomAndSave();
 
@@ -141,5 +144,67 @@ describe("AdminHomeFloorPlan 호실 수정", () => {
       await screen.findByText("출석 상태를 저장했습니다."),
     ).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][0]).toBe("402");
+    expect(save.mock.calls[0][1]).toHaveLength(1);
+    expect(save.mock.calls[0][1][0].present).toBe(false);
+    expect(screen.getByRole("button", { name: /^402/ })).toHaveTextContent(
+      "3/4명",
+    );
+  });
+
+  it("바꾼 게 없으면 서버에 보내지 않고 안내만 한다", async () => {
+    const gateway = createMockRoomGateway();
+    const save = vi.spyOn(gateway, "save");
+    renderWith(gateway);
+
+    fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
+    fireEvent.click(await screen.findByRole("button", { name: "수정" }));
+    fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    expect(
+      await screen.findByText("변경된 내용이 없습니다."),
+    ).toBeInTheDocument();
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it("저장이 실패하면 실패 문구를 보이고 다이얼로그를 유지한다", async () => {
+    const gateway = createMockRoomGateway();
+    gateway.save = vi.fn().mockRejectedValue(new Error("fail"));
+    renderWith(gateway);
+
+    await changeFirstRoomAndSave();
+
+    expect(
+      await screen.findByText(
+        "전개도 변경에 실패했습니다. 다시 시도해 주세요.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.queryByText("출석 상태를 저장했습니다.")).toBeNull();
+  });
+
+  it("서버가 호실 학생이 아니라고 하면 다이얼로그를 닫고 현황을 다시 받는다", async () => {
+    const gateway = createMockRoomGateway();
+    gateway.save = vi
+      .fn()
+      .mockRejectedValue(new RoomApiError(400, "STUDENT_NOT_IN_ROOM"));
+    const floor = vi.spyOn(gateway, "floor");
+    renderWith(gateway);
+
+    await changeFirstRoomAndSave();
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(floor).toHaveBeenCalledTimes(2));
+  });
+
+  it("저장 중 로그인이 끊겼으면(401) 관리자 로그인으로 보낸다", async () => {
+    const gateway = createMockRoomGateway();
+    gateway.save = vi.fn().mockRejectedValue(new AdminUnauthorizedError());
+    renderWith(gateway);
+
+    await changeFirstRoomAndSave();
+
+    await waitFor(() => expect(redirectToAdminLogin).toHaveBeenCalledTimes(1));
   });
 });

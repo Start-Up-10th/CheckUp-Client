@@ -18,12 +18,14 @@ import {
   type Student,
 } from "@/lib/admin/floor-types";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
+import { RoomApiError } from "@/lib/admin/room-api";
 import { useRoomGateway } from "@/lib/admin/room-gateway";
 
 const DEFAULT_FLOOR: Floor = 4;
 
 const LOAD_FAILED_MESSAGE = "전개도를 불러오지 못했습니다.";
 const ROOM_LOAD_FAILED_MESSAGE = "호실 명단을 불러오지 못했습니다.";
+const SAVE_FAILED_MESSAGE = "전개도 변경에 실패했습니다. 다시 시도해 주세요.";
 
 /** 호실 카드를 누르면 상세(읽기 전용) -> 수정(토글 편집) 2단계로 연다. */
 type DialogStage = "view" | "edit";
@@ -48,6 +50,8 @@ export function AdminHomeFloorPlan() {
   const [dialogStage, setDialogStage] = useState<DialogStage>("view");
   // 호실 명단 요청이 겹칠 때 가장 최근 요청만 받아들이기 위한 번호.
   const roomRequest = useRef(0);
+  // 저장 요청이 끝나기 전의 중복 저장을 막는다.
+  const saving = useRef(false);
   const { toast, showToast } = useToast();
 
   useEffect(() => {
@@ -127,14 +131,44 @@ export function AdminHomeFloorPlan() {
   }
 
   async function handleSaveRoom(roomNumber: string, students: Student[]) {
-    const current = dialogRoom;
-    const unchanged = current?.students.every(
-      (student, index) => student.present === students[index]?.present,
-    );
-    if (unchanged) {
+    if (!dialogRoom || saving.current) return;
+    // 서버에는 출석 상태가 바뀐 학생만 보낸다.
+    const changes = students
+      .filter((student) => {
+        const before = dialogRoom.students.find(
+          (item) => item.studentId === student.studentId,
+        );
+        return before !== undefined && before.present !== student.present;
+      })
+      .map((student) => ({
+        studentId: student.studentId,
+        present: student.present,
+      }));
+    if (changes.length === 0) {
       closeDialog();
       showToast({ variant: "neutral", message: "변경된 내용이 없습니다." });
       return;
+    }
+    saving.current = true;
+    try {
+      await gateway.save(roomNumber, changes);
+    } catch (error) {
+      if (error instanceof AdminUnauthorizedError) {
+        redirectToAdminLogin();
+        return;
+      }
+      showToast({ variant: "error", message: SAVE_FAILED_MESSAGE });
+      // 서버의 호실 명단과 어긋났으면(호실 학생이 아님) 이 다이얼로그의 명단은 낡았으므로 닫고 현황을 다시 받는다.
+      if (
+        error instanceof RoomApiError &&
+        error.code === "STUDENT_NOT_IN_ROOM"
+      ) {
+        closeDialog();
+        retryLoad();
+      }
+      return;
+    } finally {
+      saving.current = false;
     }
     const presentCount = students.filter((student) => student.present).length;
     setLoaded((prev) =>
