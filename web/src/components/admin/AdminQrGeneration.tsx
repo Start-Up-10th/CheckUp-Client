@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PurposeTabs } from "@/components/admin/PurposeTabs";
 import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel";
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
 import { StatusBanner } from "@/components/admin/StatusBanner";
@@ -16,7 +15,8 @@ import {
   QrSessionNotFoundError,
 } from "@/lib/admin/qr-api";
 
-const DEFAULT_PURPOSE: Purpose = "dorm";
+/** 용도 탭이 없어서(Figma 2026-10-06, DEC-036) QR은 기숙사 용도로 고정한다. */
+const PURPOSE: Purpose = "dorm";
 const HEARTBEAT_INTERVAL_MS = 20_000;
 const EXPIRED_MESSAGE = "유효 시간이 만료되었습니다.";
 
@@ -28,14 +28,13 @@ type ActiveSession = {
 };
 
 /**
- * REQ-ATT-003: 페이지 진입/목적 전환마다 새 QR 세션을 즉시 발급한다. 생성/종료 버튼은 없다.
+ * REQ-ATT-003: 페이지 진입마다 새 QR 세션을 즉시 발급한다. 생성/종료 버튼과 용도 탭은 없다(DEC-036).
  * REQ-ATT-004: heartbeat(~20s)로 qrUrl을 교체하고 "남은 유효 시간" mm:ss를 보여준다.
  *
  * serverTimeOffset으로 브라우저 시계 오차를 보정해 tokenExpiresAt 기준 카운트다운을 계산한다.
- * 목적 전환·페이지 이탈 시 sendBeacon으로 해당 세션만 종료한다(다른 탭·관리자 세션 영향 없음).
+ * 페이지 이탈 시 sendBeacon으로 해당 세션만 종료한다(다른 탭·관리자 세션 영향 없음).
  */
 export function AdminQrGeneration() {
-  const [purpose, setPurpose] = useState<Purpose>(DEFAULT_PURPOSE);
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [now, setNow] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,15 +43,8 @@ export function AdminQrGeneration() {
 
   const sessionIdRef = useRef<string | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // ref로 즉시 취소: handleSelectPurpose에서 React 스케줄러 전에 동기적으로 세트한다.
+  // ref로 즉시 취소: 언마운트 정리에서 React 스케줄러 전에 동기적으로 세트한다.
   const cancelRef = useRef(false);
-
-  function handleSelectPurpose(nextPurpose: Purpose) {
-    cancelRef.current = true;
-    setPurpose(nextPurpose);
-    setSession(null);
-    setError(null);
-  }
 
   useEffect(() => {
     cancelRef.current = false;
@@ -67,7 +59,7 @@ export function AdminQrGeneration() {
     async function startSession() {
       clearHeartbeat();
       try {
-        const data = await createQrSession(purpose);
+        const data = await createQrSession(PURPOSE);
         if (cancelRef.current) {
           closeQrSession(data.sessionId);
           return;
@@ -141,7 +133,7 @@ export function AdminQrGeneration() {
         sessionIdRef.current = null;
       }
     };
-  }, [purpose, sessionKey]);
+  }, [sessionKey]);
 
   const remaining =
     session && now !== null
@@ -166,7 +158,6 @@ export function AdminQrGeneration() {
             QR 코드 생성
           </h1>
         </div>
-        <PurposeTabs selected={purpose} onSelect={handleSelectPurpose} />
       </div>
 
       {bannerMessage && (
