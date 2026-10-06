@@ -101,19 +101,19 @@ export function CameraPanel({
           <div className="absolute inset-x-3 bottom-3 flex justify-center md:bottom-4">
             <div
               role="alert"
-              className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-2 rounded-xl border border-admin-danger-border bg-admin-danger-bg px-3.5 py-2.5"
+              className="flex w-full items-center gap-2 rounded-[10px] border border-admin-danger-border bg-admin-danger-bg px-3 py-2.5 md:w-auto md:gap-[9px] md:rounded-xl md:px-3.5 md:py-3"
             >
-              <span className="size-[7px] shrink-0 rounded-full bg-admin-danger-text" />
-              <span className="text-[13px] font-bold leading-4 text-admin-danger-text">
-                불러오지 못했어요
-              </span>
-              <span className="text-[13px] leading-4 text-admin-danger-text">
-                네트워크 연결을 확인하고 다시 시도해 주세요.
-              </span>
+              <span className="size-1.5 shrink-0 rounded-full bg-admin-danger-text md:size-[7px]" />
+              <p className="min-w-0 flex-1 break-keep text-xs leading-4 text-admin-danger-text md:flex-none md:text-[13px]">
+                <span className="font-bold">불러오지 못했어요</span>
+                <span className="block md:ml-2 md:inline">
+                  네트워크 연결을 확인하고 다시 시도해 주세요.
+                </span>
+              </p>
               <button
                 type="button"
                 onClick={onRetry}
-                className="rounded-lg bg-admin-text px-3 py-1.5 text-xs leading-4 text-white"
+                className="shrink-0 rounded-lg bg-admin-text px-2.5 py-1.5 text-[11px] leading-4 text-white md:ml-1 md:px-3 md:text-xs"
               >
                 다시 시도
               </button>
