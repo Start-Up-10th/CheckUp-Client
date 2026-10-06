@@ -42,53 +42,30 @@ export function useToast() {
 }
 
 /**
- * 위치 규칙(노션 기능명세서 `로그인 성공 안내`, 상태 메시지 위치와 폭):
- * - 핸드폰(<md): 하단 탭바(60px) 바로 위 18px = bottom-[78px], 좌우 18px 여백으로 폭 354.
- * - 패드(md): 레일(96px)을 뺀 콘텐츠 영역의 우측 상단(오른쪽 22px), 폭 320.
- * - 컴퓨터(xl): 사이드바(300px)를 뺀 콘텐츠 영역의 우측 상단(오른쪽 32px), 폭 400.
- * 패드·컴퓨터의 세로 위치(`topClassName`, 기본은 패드 87px·컴퓨터 99px = 층 탭 아래 16px)는 화면의 조작부(층 탭·검색창·
- * 버튼)를 가리지 않게 화면마다 정한다(예: 패드 07·08은 검색창이 전체 폭이라 검색창 아래).
+ * 위치 규칙(사용자 결정 2026-10-07, 핸드폰·패드·컴퓨터 공통): 화면 위쪽 가운데에 뜬다.
+ * - 폭: 핸드폰(<md)은 좌우 18px을 뺀 전체 폭이되 354px을 넘지 않고, 패드(md)는 320, 컴퓨터(xl)는 400이다.
+ * - 위: 핸드폰 12px, 패드 20px, 컴퓨터 24px. 노치·상태바가 있는 기기는 `env(safe-area-inset-top)`만큼 더 내린다.
+ * - 문구가 길면 줄 바꿈하고(폭은 그대로), 토스트 바깥은 `pointer-events-none`이라 아래 화면 조작을 막지 않는다.
+ * - 알림 역할은 StatusBanner가 가진다(오류 `alert`, 그 밖 `status`). 모달(z-40) 위에 표시되도록 z-50이다.
  * `compactOnPhone`은 핸드폰 폭에서 글자·여백을 줄이고(관리자 핸드폰 상태 메시지 크기 통일, 사용자 결정 2026-10-02),
- * 패드 이상은 Figma 크기 그대로다. 모달(z-40) 위에 표시되도록 z-50을 유지한다.
+ * 패드 이상은 Figma 크기 그대로다.
  * 전체화면 카메라(얼굴 인식 전체화면) 중 토스트는 Fullscreen API 제약으로 별도 처리가 필요하며 현재 미구현.
  */
-const BASE_POSITION = `md:inset-x-auto md:bottom-auto md:left-[96px] md:right-[22px] md:justify-end
-  xl:left-[300px] xl:right-8`;
-const PHONE_BOTTOM = "justify-center bottom-[78px] inset-x-[18px]";
-/**
- * 핸드폰에서도 오른쪽 상단에 둔다(얼굴 인식). 제목(왼쪽 약 145px)과 카메라 카드(위 54px) 사이 빈 곳에 맞춰 위 4px, 오른쪽 18px에
- * 붙이고, 문구와 상관없이 폭 190px로 고정하고 높이는 최소 36px(다른 토스트와 같은 한 줄 높이)에서 줄 수를 따른다. 긴 문구는 두 줄로 줄 바꿈한다(글자 크기는 다른 토스트와 같다).
- */
-const PHONE_TOP_RIGHT = "justify-end top-1 inset-x-[18px]";
-
 export function ToastLayer({
   toast,
-  topClassName = "md:top-[87px] xl:top-[99px]",
   compactOnPhone = true,
-  phoneTopRight = false,
 }: {
   toast: ToastMessage | null;
-  /** 패드·컴퓨터에서 토스트의 위쪽 위치 클래스(`md:top-[…] xl:top-[…]`). */
-  topClassName?: string;
   compactOnPhone?: boolean;
-  /** true면 핸드폰에서도 하단 탭바 위가 아니라 오른쪽 상단에 보인다. */
-  phoneTopRight?: boolean;
 }) {
   if (!toast) return null;
   return (
-    <div
-      className={`pointer-events-none fixed z-50 flex ${phoneTopRight ? PHONE_TOP_RIGHT : PHONE_BOTTOM} ${BASE_POSITION} ${topClassName}`}
-    >
-      <div
-        className={`pointer-events-auto ${phoneTopRight ? "w-[190px] max-w-full" : "w-full"} md:w-[320px] md:max-w-none xl:w-[400px]`}
-      >
+    <div className="pointer-events-none fixed inset-x-[18px] top-[calc(env(safe-area-inset-top)+12px)] z-50 flex justify-center md:top-[calc(env(safe-area-inset-top)+20px)] xl:top-[calc(env(safe-area-inset-top)+24px)]">
+      <div className="pointer-events-auto w-full max-w-[354px] md:w-[320px] md:max-w-none xl:w-[400px]">
         <StatusBanner
           variant={toast.variant}
           message={toast.message}
           compactOnPhone={compactOnPhone}
-          className={
-            phoneTopRight ? "max-md:min-h-9 max-md:!py-1.5" : undefined
-          }
         />
       </div>
     </div>

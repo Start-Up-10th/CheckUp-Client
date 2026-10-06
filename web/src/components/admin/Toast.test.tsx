@@ -8,40 +8,38 @@ function layerOf() {
 }
 
 describe("ToastLayer 위치", () => {
-  it("기본은 핸드폰 탭바 위 18px, 패드·컴퓨터는 우측 상단이다", () => {
+  it("핸드폰·패드·컴퓨터 모두 위쪽 가운데에 뜬다", () => {
     render(<ToastLayer toast={toast} />);
 
     expect(layerOf()).toHaveClass(
-      "bottom-[78px]",
       "inset-x-[18px]",
-      "md:right-[22px]",
-      "md:top-[87px]",
-      "xl:right-8",
-      "xl:top-[99px]",
+      "justify-center",
+      "md:top-[calc(env(safe-area-inset-top)+20px)]",
+      "xl:top-[calc(env(safe-area-inset-top)+24px)]",
     );
-    expect(layerOf()).not.toHaveClass("xl:bottom-7");
+    expect(layerOf().className).toContain(
+      "top-[calc(env(safe-area-inset-top)+12px)]",
+    );
+    expect(layerOf()).not.toHaveClass("bottom-[78px]", "md:right-[22px]");
   });
 
-  it("topClassName을 주면 패드·컴퓨터의 세로 위치만 바꾼다", () => {
-    render(
-      <ToastLayer toast={toast} topClassName="md:top-[139px] xl:top-[99px]" />,
-    );
-
-    expect(layerOf()).toHaveClass(
-      "md:top-[139px]",
-      "bottom-[78px]",
-      "md:right-[22px]",
-    );
-    expect(layerOf()).not.toHaveClass("md:top-[87px]");
-  });
-
-  it("폭은 핸드폰 전체(354), 패드 320, 컴퓨터 400이다", () => {
+  it("폭은 핸드폰 전체(최대 354), 패드 320, 컴퓨터 400이다", () => {
     render(<ToastLayer toast={toast} />);
 
     expect(screen.getByRole("status").parentElement).toHaveClass(
       "w-full",
+      "max-w-[354px]",
       "md:w-[320px]",
       "xl:w-[400px]",
+    );
+  });
+
+  it("토스트 바깥은 아래 화면 조작을 막지 않는다", () => {
+    render(<ToastLayer toast={toast} />);
+
+    expect(layerOf()).toHaveClass("pointer-events-none");
+    expect(screen.getByRole("status").parentElement).toHaveClass(
+      "pointer-events-auto",
     );
   });
 
