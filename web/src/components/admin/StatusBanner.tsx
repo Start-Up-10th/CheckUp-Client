@@ -7,6 +7,8 @@ type StatusBannerProps = {
    * 켠다(기본 꺼짐). 패드 이상은 같은 크기다.
    */
   compactOnPhone?: boolean;
+  /** 메시지 오른쪽의 글자 버튼(예: 다시 시도). 줄 높이가 같아 배너 높이(42px)는 그대로다. */
+  action?: { label: string; onClick: () => void };
 };
 
 const VARIANT_STYLES = {
@@ -36,6 +38,7 @@ export function StatusBanner({
   message,
   className,
   compactOnPhone = false,
+  action,
 }: StatusBannerProps) {
   const style = VARIANT_STYLES[variant];
   return (
@@ -43,8 +46,8 @@ export function StatusBanner({
       role={variant === "error" ? "alert" : "status"}
       className={`flex items-center border ${
         compactOnPhone
-          ? "gap-2 rounded-[10px] px-3 py-2.5 md:gap-[9px] md:rounded-xl md:px-3.5 md:py-3"
-          : "gap-[9px] rounded-xl px-3.5 py-3"
+          ? `gap-2 rounded-[10px] px-3 md:gap-[9px] md:rounded-xl md:px-3.5 ${action ? "py-1.5 md:py-2" : "py-2.5 md:py-3"}`
+          : `gap-[9px] rounded-xl px-3.5 ${action ? "py-2" : "py-3"}`
       } ${style.box} ${className ?? ""}`}
     >
       <span
@@ -55,6 +58,15 @@ export function StatusBanner({
       >
         {message}
       </p>
+      {action && (
+        <button
+          type="button"
+          onClick={action.onClick}
+          className={`ml-1 shrink-0 rounded-lg bg-admin-text py-1 text-white ${compactOnPhone ? "px-2.5 text-[11px] leading-4 md:px-3 md:text-xs" : "px-3 text-xs leading-4"}`}
+        >
+          {action.label}
+        </button>
+      )}
     </div>
   );
 }
