@@ -1,58 +1,47 @@
 import type { RefObject } from "react";
 import { StatusBanner } from "@/components/admin/StatusBanner";
-import { CloseIcon, ExpandIcon } from "@/components/icons/CameraIcons";
 import type { CameraStatus } from "@/lib/admin/use-camera-stream";
 
 type CameraPanelProps = {
   videoRef: RefObject<HTMLVideoElement | null>;
   status: CameraStatus;
-  isFullscreen: boolean;
-  /** 방금 인식에 성공했을 때의 문구(`성공 · 학번 이름`). 있으면 `인식 대기 중`을 대신한다. */
+  /** 방금 인식에 성공했을 때의 문구(`성공 · 학번 이름`). */
   successMessage?: string | null;
-  /** 방금 인식에 실패했을 때의 문구. 있으면 카메라 하단에 실패 배너로 잠깐 보인다(REQ-FACE-006). */
-  failureMessage?: string | null;
-  onEnterFullscreen: () => void;
-  onExitFullscreen: () => void;
+  /** 인식 서버 연결 실패. 카메라 하단에 Figma 상태 메시지 크기의 오류 배너와 다시 시도를 보인다. */
+  recognitionFailed?: boolean;
+  onRetry?: () => void;
 };
 
 /**
  * REQ-FACE-004/007: 카메라는 자동 실행되고 시작 버튼은 없다. LIVE는 허용된 뒤에만 표시한다.
- * 전체화면은 표시 모드일 뿐이며(같은 video 엘리먼트를 그대로 유지) 새 인식 세션을 만들지 않는다.
+ * 전체화면 모드·전체화면 버튼은 없다(Figma 2026-10-06 사용자 수정, DEC-036).
  */
 export function CameraPanel({
   videoRef,
   status,
-  isFullscreen,
   successMessage = null,
-  failureMessage = null,
-  onEnterFullscreen,
-  onExitFullscreen,
+  recognitionFailed = false,
+  onRetry,
 }: CameraPanelProps) {
   const live = status === "granted";
 
   return (
-    <div
-      className={`flex h-full w-full flex-col gap-3 bg-[#1c1c1e] max-md:h-auto max-md:self-stretch md:gap-[18px] ${isFullscreen ? "" : "rounded-[18px] p-4 md:rounded-[20px] md:p-6"}`}
-    >
-      {!isFullscreen && (
-        <div className="flex w-full items-center justify-between">
-          <p className="text-xs leading-[14px] text-white/70 md:text-sm">
-            카메라 화면
-          </p>
-          {live && (
-            <div className="flex items-center gap-1.5 md:gap-2">
-              <span className="size-1.5 rounded-full bg-admin-accent-bg md:size-[7px]" />
-              <span className="text-[10px] leading-3 text-admin-accent-bg md:text-xs">
-                LIVE
-              </span>
-            </div>
-          )}
-        </div>
-      )}
+    <div className="flex h-full w-full flex-col gap-3 rounded-[18px] bg-[#1c1c1e] p-4 md:gap-[14px] md:p-5 xl:gap-[18px] xl:rounded-[20px] xl:p-6">
+      <div className="flex w-full items-center justify-between">
+        <p className="text-xs leading-[14px] text-white/70 md:text-sm md:leading-[17px]">
+          카메라 화면
+        </p>
+        {live && (
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <span className="size-1.5 rounded-full bg-admin-accent-bg md:size-[7px]" />
+            <span className="text-[10px] leading-3 text-admin-accent-bg md:text-xs">
+              LIVE
+            </span>
+          </div>
+        )}
+      </div>
 
-      <div
-        className={`relative min-h-0 flex-1 overflow-hidden rounded-[14px] bg-[#2c2c2f] md:rounded-[16px] ${isFullscreen ? "max-md:rounded-none max-md:bg-[#1c1c1e]" : ""}`}
-      >
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-[14px] bg-[#2c2c2f] md:rounded-[16px]">
         <video
           ref={videoRef}
           autoPlay
@@ -61,80 +50,52 @@ export function CameraPanel({
           className="size-full object-cover"
         />
 
-        {isFullscreen ? (
-          <>
-            <button
-              type="button"
-              onClick={onExitFullscreen}
-              aria-label="전체화면 닫기"
-              className="absolute left-5 top-5 flex size-10 items-center justify-center rounded-full bg-white/[0.14] md:left-[27px] md:top-[23px] md:size-11"
-            >
-              <CloseIcon className="size-[18px] text-white md:size-5" />
-            </button>
-            {live && (
-              <div className="absolute right-6 top-6 flex items-center gap-1.5 md:left-1/2 md:right-auto md:top-[30px] md:-translate-x-1/2 md:gap-2">
-                <span className="size-[7px] rounded-full bg-admin-accent-bg md:size-[9px]" />
-                <span className="text-xs leading-[14px] text-admin-accent-bg md:text-sm">
-                  LIVE
-                </span>
-              </div>
-            )}
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={onEnterFullscreen}
-            aria-label="전체화면으로 보기"
-            className="absolute right-2.5 top-2.5 flex size-8 items-center justify-center rounded-[13px] bg-white/[0.14] md:right-4 md:top-4 md:size-11"
-          >
-            <ExpandIcon className="size-[15px] text-white md:size-5" />
-          </button>
-        )}
-
-        {/* REQ-FACE-006: 카메라 하단에 성공·실패를 잠시 보인다. 전체화면의 성공은 아래 큰 문구가 대신한다. */}
-        {status !== "error" &&
-          (failureMessage || (successMessage && !isFullscreen)) && (
-            <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-col items-center gap-2 md:bottom-4">
-              {successMessage && !isFullscreen && (
+        {/* REQ-FACE-006: 카메라 하단에 성공을 잠시 보인다. 인식 실패는 오른쪽 상단 토스트로 보인다. */}
+        {status !== "error" && successMessage && (
+          <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-col items-center gap-2 md:bottom-4">
+            {successMessage && (
+              <>
                 <StatusBanner
                   variant="success"
                   message={successMessage}
                   compactOnPhone
+                  className="xl:hidden"
                 />
-              )}
-              {failureMessage && (
-                <StatusBanner
-                  variant="error"
-                  message={failureMessage}
-                  compactOnPhone
-                />
-              )}
-            </div>
-          )}
+                {/* 컴퓨터(Figma 16:26 `성공 칩`): 흰 칩 + 초록 체크 원 + 굵은 초록 글자. 같은 문구라 화면 읽기에는 배너만 쓴다. */}
+                <div
+                  aria-hidden="true"
+                  className="hidden items-center gap-[9px] rounded-xl border border-admin-border bg-admin-surface px-[13px] py-[11px] xl:flex"
+                >
+                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-admin-attendance-text text-[11px] font-bold leading-none text-white">
+                    ✓
+                  </span>
+                  <span className="text-[13px] font-bold leading-4 text-admin-attendance-text">
+                    {successMessage}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {status === "error" && (
           <div className="pointer-events-none absolute inset-x-0 bottom-[10%] flex flex-col items-center gap-2 text-center text-white">
-            <p
-              className={
-                isFullscreen ? "text-lg font-medium" : "text-sm font-medium"
-              }
-            >
+            <p className="text-sm font-medium">
               카메라를 자동으로 실행하지 못했습니다.
             </p>
           </div>
         )}
 
-        {/* REQ-FACE-007: 대기 문구는 Figma 전체화면(115:5)에만 있고 일반 화면 목업은 비어 있다 — 디자인대로 전체화면에만 표시한다. */}
-        {status !== "error" && isFullscreen && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-[28.8%] flex flex-col items-center gap-1.5 text-center text-white md:bottom-[10%] md:gap-2">
-            <p className="text-[26px] font-bold leading-[31px] tracking-[-0.52px] md:text-[52px] md:font-medium md:leading-normal md:tracking-normal">
-              {successMessage ?? "인식 대기 중"}
-            </p>
-            {!successMessage && (
-              <p className="text-[13px] leading-4 opacity-50 md:text-base">
-                가이드 안에 얼굴을 맞춰 주세요
-              </p>
-            )}
+        {/* 인식 서버 연결 실패: Figma에 없는 상태라 다른 성공·실패 표시처럼 카메라 하단에 Figma 상태 메시지(StatusBanner)와 같은 크기로 보인다. */}
+        {recognitionFailed && status !== "error" && onRetry && (
+          <div className="absolute inset-x-3 bottom-3 flex justify-center md:bottom-4">
+            <StatusBanner
+              variant="error"
+              message="불러오지 못했어요"
+              compactOnPhone
+              action={{ label: "다시 시도", onClick: onRetry }}
+              className="w-fit"
+            />
           </div>
         )}
       </div>

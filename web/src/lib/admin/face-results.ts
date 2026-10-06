@@ -19,6 +19,8 @@ export function successMessage(entry: RecognitionEntry): string {
 export const SUCCESS_DEDUPE_MS = 10_000;
 /** 화면에서 사라진 얼굴 트랙의 시도 횟수를 기억하는 시간. 잠깐 놓쳤다 돌아와도 실패를 다시 세지 않는다. */
 export const TRACK_MEMORY_MS = 30_000;
+/** 한 얼굴이 이만큼 실패하면 QR 출석 안내를 보인다. */
+export const QR_NOTICE_ATTEMPTS = 3;
 /** 최근 인식 목록에 남기는 최대 개수(당일 임시 기록, REQ-FACE-007). */
 export const MAX_ENTRIES = 30;
 
@@ -63,7 +65,7 @@ function timeLabel(now: Date): string {
 
 /**
  * 프레임 한 장의 인식 결과를 최근 인식 목록에 반영한다(REQ-FACE-005~007). 순수 함수다.
- * - KNOWN(출석 기록됨·이미 출석)은 성공 행이다. 같은 학생은 10초 안에 다시 올리지 않는다. 서버가 거절한
+ * - KNOWN(출석 기록됨·이미 출석)은 성공 행이다. 같은 학생은 10초 안에 목록에 다시 올리지 않지만 성공 안내(success)는 낸다. 서버가 거절한
  *   출석(STALE·REJECTED)은 성공으로 세지 않는다.
  * - UNKNOWN은 신원 없는 `인식 실패` 행이다. 트랙의 시도 횟수(attempts)가 늘었을 때만 올리고, 서버가 센 시도
  *   단위를 쓴다(매 프레임을 실패 1회로 세지 않는다).
@@ -93,7 +95,13 @@ export function applyFrame(
       attempts: Math.max(seenAttempts, face.attempts),
       seenAt: nowMs,
     };
-    if (face.qrRecommended && face.status === "UNKNOWN") qrRecommended = true;
+    // 서버 권고가 없어도 같은 얼굴이 3회 실패하면 QR 안내를 보인다(사용자 결정 2026-10-06, DEC-004 수정).
+    if (
+      face.status === "UNKNOWN" &&
+      (face.qrRecommended || face.attempts >= QR_NOTICE_ATTEMPTS)
+    ) {
+      qrRecommended = true;
+    }
 
     if (
       face.status === "KNOWN" &&
@@ -102,9 +110,18 @@ export function applyFrame(
     ) {
       const counted =
         face.attendance === "RECORDED" || face.attendance === "DUPLICATE";
+      if (!counted) continue;
       const last = successAt[face.studentNumber];
-      if (!counted || (last !== undefined && nowMs - last < SUCCESS_DEDUPE_MS))
+      if (last !== undefined && nowMs - last < SUCCESS_DEDUPE_MS) {
+        // 같은 학생이 다시 인식됐다: 목록에는 다시 올리지 않지만 성공 안내는 보인다(REQ-FACE-005).
+        success ??= {
+          id: String(sequence),
+          label: `${face.studentNumber} ${face.studentName}`,
+          outcome: "success",
+          recognizedAt: timeLabel(now),
+        };
         continue;
+      }
       successAt[face.studentNumber] = nowMs;
       sequence += 1;
       const entry: RecognitionEntry = {

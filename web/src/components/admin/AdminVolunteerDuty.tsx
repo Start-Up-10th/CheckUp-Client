@@ -1,6 +1,8 @@
 "use client";
 
+import { ListRowsSkeleton } from "@/components/admin/ListRowsSkeleton";
 import Link from "next/link";
+import { useEffect } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { StatusBanner } from "@/components/admin/StatusBanner";
 import {
@@ -19,12 +21,15 @@ import type { RosterStudent } from "@/lib/admin/volunteer-types";
 /** 서버가 이유를 알려 주지 않은 실패(Figma 06 state messages). */
 const FAILURE_MESSAGE = "처리에 실패했습니다. 다시 시도해 주세요.";
 
+/** 당일 봉사자 목록을 받지 못했을 때(Figma 06 state messages). */
+const LIST_FAILURE_MESSAGE =
+  "당일 봉사자 목록을 불러오지 못했습니다. 다시 시도해 주세요.";
+
 /**
- * 토스트는 헤더 조작부(`+ 명단에서 지정` 버튼) 바로 아래, 목록 행 위에 둔다. 폰 58px(버튼 하단 50px + 8px),
- * 패드 89px(헤더 하단 81px + 8px), 컴퓨터는 버튼이 아래 줄(103px)에 있어 제목 줄 오른쪽 위 28px이다.
+ * 토스트의 패드·컴퓨터 세로 위치. 패드는 헤더의 `+ 명단에서 지정` 버튼 아래 8px(89px), 컴퓨터는 버튼이 아래 줄(103px)에 있어
+ * 그 위 28px이다. 핸드폰은 하단 탭바 위(공통).
  */
-const TOAST_POSITION =
-  "inset-x-4 top-[58px] justify-end md:left-[96px] md:right-[22px] md:top-[89px] md:justify-end xl:left-[300px] xl:right-8 xl:top-7";
+const TOAST_TOP = "md:top-[89px] xl:top-7";
 
 /**
  * REQ-COM-006: 봉사자 관리(Figma 06). 오늘 운영일의 당일 봉사자 목록이다. `완료`는 봉사를 마친 것으로
@@ -43,6 +48,12 @@ export function AdminVolunteerDuty({
   const { toast, showToast } = useToast();
   const today = designatedToday(roster);
   const dayLabel = operatingDayLabel(new Date());
+
+  useEffect(() => {
+    if (status === "error") {
+      showToast({ variant: "error", message: LIST_FAILURE_MESSAGE });
+    }
+  }, [status, showToast]);
 
   /** 서버에 요청하고, 서버가 돌려준 학생 상태를 명단에 넣는다. 실패는 상태 메시지로 알린다. */
   function runDutyAction(
@@ -80,7 +91,7 @@ export function AdminVolunteerDuty({
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} positionClassName={TOAST_POSITION} />
+      <ToastLayer toast={toast} topClassName={TOAST_TOP} />
 
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 md:min-h-[57px] xl:min-h-0 xl:gap-y-5">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
@@ -119,9 +130,7 @@ export function AdminVolunteerDuty({
           {status === "error" ? (
             <AdminContentState variant="error" onRetry={reload} />
           ) : status !== "ready" ? (
-            <p className="py-6 text-center text-sm text-admin-textMuted">
-              불러오는 중…
-            </p>
+            <ListRowsSkeleton />
           ) : today.length === 0 ? (
             <StatusBanner
               variant="neutral"
