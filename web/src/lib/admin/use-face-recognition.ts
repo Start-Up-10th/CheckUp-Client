@@ -98,6 +98,18 @@ export function useFaceRecognition({
       return setTimeout(hide, ms);
     }
 
+    let qrActive = false;
+    let failurePending = false;
+    function showFailure() {
+      failurePending = false;
+      failureTimer = hold(
+        () => setFailure(true),
+        () => setFailure(false),
+        FAILURE_HOLD_MS,
+        failureTimer,
+      );
+    }
+
     const takeFrame =
       capture ??
       ((video: HTMLVideoElement) => {
@@ -154,21 +166,24 @@ export function useFaceRecognition({
                 successTimer,
               );
             }
-            if (outcome.failure) {
-              failureTimer = hold(
-                () => setFailure(true),
-                () => setFailure(false),
-                FAILURE_HOLD_MS,
-                failureTimer,
-              );
-            }
             if (outcome.qrRecommended) {
+              qrActive = true;
               qrTimer = hold(
                 () => setQrNotice(true),
-                () => setQrNotice(false),
+                () => {
+                  qrActive = false;
+                  setQrNotice(false);
+                  // QR 안내에 밀려 기다리던 인식 실패 표시를 이어서 보인다.
+                  if (failurePending) showFailure();
+                },
                 QR_NOTICE_HOLD_MS,
                 qrTimer,
               );
+            }
+            if (outcome.failure) {
+              // QR 안내가 떠 있으면 같은 자리를 쓰므로 안내가 끝난 뒤에 보인다.
+              if (qrActive) failurePending = true;
+              else showFailure();
             }
           } catch (error) {
             if (cancelled) break;
