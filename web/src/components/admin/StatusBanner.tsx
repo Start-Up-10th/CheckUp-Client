@@ -46,8 +46,8 @@ export function StatusBanner({
       role={variant === "error" ? "alert" : "status"}
       className={`flex items-center border ${
         compactOnPhone
-          ? "gap-2 rounded-[10px] px-3 py-2.5 md:gap-[9px] md:rounded-xl md:px-3.5 md:py-3"
-          : "gap-[9px] rounded-xl px-3.5 py-3"
+          ? `gap-2 rounded-[10px] px-3 md:gap-[9px] md:rounded-xl md:px-3.5 ${action ? "py-1.5 md:py-2" : "py-2.5 md:py-3"}`
+          : `gap-[9px] rounded-xl px-3.5 ${action ? "py-2" : "py-3"}`
       } ${style.box} ${className ?? ""}`}
     >
       <span
@@ -62,7 +62,7 @@ export function StatusBanner({
         <button
           type="button"
           onClick={action.onClick}
-          className={`ml-1 underline underline-offset-2 ${compactOnPhone ? "text-xs leading-4 md:text-[13px] md:leading-4" : "text-[13px] leading-4"} font-bold ${style.text}`}
+          className={`ml-1 shrink-0 rounded-lg bg-admin-text py-1 text-white ${compactOnPhone ? "px-2.5 text-[11px] leading-4 md:px-3 md:text-xs" : "px-3 text-xs leading-4"}`}
         >
           {action.label}
         </button>
