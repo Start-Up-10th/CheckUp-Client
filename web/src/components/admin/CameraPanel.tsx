@@ -106,9 +106,6 @@ export function CameraPanel({
               <span className="size-1.5 shrink-0 rounded-full bg-admin-danger-text md:size-[7px]" />
               <p className="min-w-0 flex-1 break-keep text-xs leading-4 text-admin-danger-text md:flex-none md:text-[13px]">
                 <span className="font-bold">불러오지 못했어요</span>
-                <span className="hidden md:ml-2 md:inline">
-                  네트워크 연결을 확인하고 다시 시도해 주세요.
-                </span>
               </p>
               <button
                 type="button"
