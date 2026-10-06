@@ -14,6 +14,12 @@ export type Room = {
   present: number;
 };
 
+/** 호실 상세·수정 다이얼로그가 보는 호실: 번호와 서버에서 받은 학생 명단. */
+export type RoomDetail = {
+  number: string;
+  students: Student[];
+};
+
 export function roomAttendance(room: Room) {
   return { assigned: room.assigned, present: room.present };
 }

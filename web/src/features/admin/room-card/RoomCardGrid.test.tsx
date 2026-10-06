@@ -1,15 +1,12 @@
 import { render, screen, within } from "@testing-library/react";
-import type { Room } from "@/lib/admin/mock-floor-data";
+import type { Room } from "@/lib/admin/floor-types";
 import { RoomCardGrid } from "./RoomCardGrid";
 
 function room(number: string, presence: boolean[]): Room {
   return {
     number,
-    students: presence.map((present, index) => ({
-      studentId: `${number}-${index + 1}`,
-      name: `학생${index + 1}`,
-      present,
-    })),
+    assigned: presence.length,
+    present: presence.filter(Boolean).length,
   };
 }
 
