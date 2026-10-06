@@ -12,14 +12,14 @@ export function AdminFloorPlanSkeleton() {
           {/* h1: text-[22px] leading-[26px] / md:text-[26px] leading-normal(39px) */}
           <div className="h-[26px] w-28 rounded-lg bg-admin-bg md:h-[39px] md:w-36" />
         </div>
-        {/* FloorTabs: mobile=pill 트랙, md=개별 버튼 */}
-        <div className="flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 md:gap-2 md:rounded-none md:bg-transparent md:p-0">
+        {/* FloorTabs: 모든 폭에서 회색 트랙 안 세그먼트 */}
+        <div className="flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 md:gap-1.5 md:rounded-[14px] md:p-[5px] xl:gap-2 xl:rounded-[16px] xl:p-1.5">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
               // mobile: px-3 py-[7px] → h-7(28px), 실측 ~44px 폭
-              // md: px-[22px] py-[9px] leading-[17px] → h-[35px], ~68px 폭
-              className="h-7 w-[44px] rounded-lg bg-admin-surface md:h-[35px] md:w-[68px] md:rounded-control md:border md:border-admin-border"
+              // md: px-[15px] py-2 leading-[17px] → h-[35px], ~53px 폭 / xl: px-[22px] py-2.5 → h-[37px], ~68px 폭
+              className="h-7 w-[44px] rounded-lg bg-admin-surface md:h-[35px] md:w-[53px] md:rounded-[10px] xl:h-[37px] xl:w-[68px] xl:rounded-control"
             />
           ))}
         </div>
