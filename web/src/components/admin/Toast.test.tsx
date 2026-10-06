@@ -1,5 +1,5 @@
 import { act, render, screen } from "@testing-library/react";
-import { ToastLayer, useToast } from "./Toast";
+import { TOAST_EXIT_MS, ToastLayer, useToast } from "./Toast";
 
 const toast = { variant: "success", message: "저장했습니다." } as const;
 
@@ -8,40 +8,38 @@ function layerOf() {
 }
 
 describe("ToastLayer 위치", () => {
-  it("기본은 핸드폰 탭바 위 18px, 패드·컴퓨터는 우측 상단이다", () => {
+  it("핸드폰·패드·컴퓨터 모두 위쪽 가운데에 뜬다", () => {
     render(<ToastLayer toast={toast} />);
 
     expect(layerOf()).toHaveClass(
-      "bottom-[78px]",
       "inset-x-[18px]",
-      "md:right-[22px]",
-      "md:top-[87px]",
-      "xl:right-8",
-      "xl:top-[99px]",
+      "justify-center",
+      "md:top-[calc(env(safe-area-inset-top)+20px)]",
+      "xl:top-[calc(env(safe-area-inset-top)+24px)]",
     );
-    expect(layerOf()).not.toHaveClass("xl:bottom-7");
+    expect(layerOf().className).toContain(
+      "top-[calc(env(safe-area-inset-top)+12px)]",
+    );
+    expect(layerOf()).not.toHaveClass("bottom-[78px]", "md:right-[22px]");
   });
 
-  it("topClassName을 주면 패드·컴퓨터의 세로 위치만 바꾼다", () => {
-    render(
-      <ToastLayer toast={toast} topClassName="md:top-[139px] xl:top-[99px]" />,
-    );
-
-    expect(layerOf()).toHaveClass(
-      "md:top-[139px]",
-      "bottom-[78px]",
-      "md:right-[22px]",
-    );
-    expect(layerOf()).not.toHaveClass("md:top-[87px]");
-  });
-
-  it("폭은 핸드폰 전체(354), 패드 320, 컴퓨터 400이다", () => {
+  it("폭은 핸드폰 전체(최대 354), 패드 320, 컴퓨터 400이다", () => {
     render(<ToastLayer toast={toast} />);
 
     expect(screen.getByRole("status").parentElement).toHaveClass(
       "w-full",
+      "max-w-[354px]",
       "md:w-[320px]",
       "xl:w-[400px]",
+    );
+  });
+
+  it("토스트 바깥은 아래 화면 조작을 막지 않는다", () => {
+    render(<ToastLayer toast={toast} />);
+
+    expect(layerOf()).toHaveClass("pointer-events-none");
+    expect(screen.getByRole("status").parentElement).toHaveClass(
+      "pointer-events-auto",
     );
   });
 
@@ -75,6 +73,32 @@ describe("ToastLayer 위치", () => {
     const { container } = render(<ToastLayer toast={null} />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("ToastLayer 애니메이션", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("나타날 때 위에서 내려오는 애니메이션을 쓰고 동작 줄이기에서는 끈다", () => {
+    render(<ToastLayer toast={toast} />);
+
+    expect(screen.getByRole("status").parentElement).toHaveClass(
+      "animate-toast-in",
+      "motion-reduce:animate-none",
+    );
+  });
+
+  it("사라질 때 퇴장 애니메이션이 끝날 때까지 남아 있다가 지워진다", () => {
+    const { rerender } = render(<ToastLayer toast={toast} />);
+
+    rerender(<ToastLayer toast={null} />);
+    expect(screen.getByRole("status").parentElement).toHaveClass(
+      "animate-toast-out",
+    );
+
+    act(() => vi.advanceTimersByTime(TOAST_EXIT_MS));
+    expect(screen.queryByText("저장했습니다.")).not.toBeInTheDocument();
   });
 });
 

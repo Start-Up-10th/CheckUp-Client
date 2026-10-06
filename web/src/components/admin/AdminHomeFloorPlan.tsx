@@ -22,11 +22,6 @@ const DEFAULT_FLOOR: Floor = 4;
 const LOAD_FAILED_MESSAGE = "전개도를 불러오지 못했습니다.";
 const SAVE_FAILED_MESSAGE = "전개도 변경에 실패했습니다. 다시 시도해 주세요.";
 
-/**
- * 토스트의 패드·컴퓨터 세로 위치. 패드는 층 탭 아래 8px(83px), 컴퓨터는 층 탭 아래 16px(99px)이다. 핸드폰은 하단 탭바 위(공통).
- */
-const TOAST_TOP = "md:top-[83px] xl:top-[99px]";
-
 /** 호실 카드를 누르면 상세(읽기 전용) -> 수정(토글 편집) 2단계로 연다. */
 type DialogStage = "view" | "edit";
 
@@ -106,7 +101,7 @@ export function AdminHomeFloorPlan({
 
   return (
     <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} topClassName={TOAST_TOP} />
+      <ToastLayer toast={toast} />
 
       {/* 헤더: 제목 좌측 + 층 탭 우측 */}
       <div className="flex w-full items-center justify-between md:h-[57px] xl:h-auto xl:items-end">
