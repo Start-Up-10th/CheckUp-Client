@@ -93,7 +93,7 @@ export function AdminVolunteerRoster() {
             봉사자 명단 편집
           </h1>
         </div>
-        <FloorTabs selected={floor} onSelect={setFloor} desktopTrack />
+        <FloorTabs selected={floor} onSelect={setFloor} />
       </div>
 
       <div className="w-full xl:flex xl:h-[49px] xl:items-center">
