@@ -41,10 +41,8 @@ export function AdminFaceRecognition() {
         </div>
       </div>
 
-      {/* 다른 화면의 토스트와 같은 위치·크기(패드 이상 오른쪽 상단)로 보인다. QR 안내가 먼저이고 인식 실패는 그 뒤에 보인다. */}
+      {/* 다른 화면의 토스트와 같은 위치·크기(위쪽 가운데)로 보인다. QR 안내가 먼저이고 인식 실패는 그 뒤에 보인다. */}
       <ToastLayer
-        topClassName="md:top-6 xl:top-7"
-        phoneTopRight
         toast={
           recognition.qrNotice
             ? { variant: "error", message: QR_NOTICE_MESSAGE }

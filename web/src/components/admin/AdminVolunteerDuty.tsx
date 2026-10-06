@@ -26,12 +26,6 @@ const LIST_FAILURE_MESSAGE =
   "당일 봉사자 목록을 불러오지 못했습니다. 다시 시도해 주세요.";
 
 /**
- * 토스트의 패드·컴퓨터 세로 위치. 패드는 헤더의 `+ 명단에서 지정` 버튼 아래 8px(89px), 컴퓨터는 버튼이 아래 줄(103px)에 있어
- * 그 위 28px이다. 핸드폰은 하단 탭바 위(공통).
- */
-const TOAST_TOP = "md:top-[89px] xl:top-7";
-
-/**
  * REQ-COM-006: 봉사자 관리(Figma 06). 오늘 운영일의 당일 봉사자 목록이다. `완료`는 봉사를 마친 것으로
  * 처리하고 횟수를 1 줄이며(목록에서 빠진다), `봉사 제외`는 지정을 취소한다. 지정은 `+ 명단에서 지정`으로
  * 이동하는 봉사자 명단 편집(07)에서 한다.
@@ -91,7 +85,7 @@ export function AdminVolunteerDuty({
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} topClassName={TOAST_TOP} />
+      <ToastLayer toast={toast} />
 
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 md:min-h-[57px] xl:min-h-0 xl:gap-y-5">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
