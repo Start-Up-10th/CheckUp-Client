@@ -156,3 +156,18 @@ describe("AdminQrGeneration 갱신 실패·만료", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("AdminQrGeneration 용도", () => {
+  it("용도 탭 없이 기숙사 용도로 QR을 발급한다", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(json(201, SESSION));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AdminQrGeneration />);
+    await screen.findByText("남은 유효 시간");
+
+    expect(screen.queryByRole("button", { name: "자습실" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "기숙사" })).toBeNull();
+    const [, init] = fetchMock.mock.calls[0];
+    expect(JSON.parse(init.body as string)).toEqual({ purpose: "DORMITORY" });
+  });
+});
