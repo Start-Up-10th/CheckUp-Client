@@ -1,0 +1,26 @@
+name: checkup-web
+
+services:
+  web:
+    build:
+      context: .
+      args:
+        API_PROXY_TARGET: ${API_PROXY_TARGET:-http://host.docker.internal:8080}
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      API_PROXY_TARGET: ${API_PROXY_TARGET:-http://host.docker.internal:8080}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+networks:
+  default:
+    driver_opts:
+      com.docker.network.driver.mtu: "1400"
