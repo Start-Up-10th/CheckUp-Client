@@ -25,9 +25,6 @@ const COUNT_SUCCESS_MESSAGE = "봉사 횟수를 변경했습니다.";
 const COUNT_FAILURE_MESSAGE =
   "봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.";
 
-/** 토스트의 패드·컴퓨터 세로 위치. 봉사자 명단 편집(07)과 같다: 패드는 검색창 아래, 컴퓨터는 층 탭 아래 16px. */
-const TOAST_TOP = "md:top-[88px] xl:top-[99px]";
-
 /**
  * 학생 관리(Figma 08). 전체 학생을 층 탭·검색으로 거르고 호실별로 보여 준다. 학생을 누르면 상세 다이얼로그에서
  * 봉사 횟수와 사유를 정해 저장한다. 저장은 서버에 사유·일괄 변경 API가 없어 개발용 대역
@@ -76,7 +73,7 @@ export function AdminStudentManagement() {
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} topClassName={TOAST_TOP} />
+      <ToastLayer toast={toast} />
 
       <div className="flex w-full items-end justify-between">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">

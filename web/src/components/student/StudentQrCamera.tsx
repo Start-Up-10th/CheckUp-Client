@@ -11,6 +11,8 @@ import { parseQrToken } from "@/lib/student/parse-qr-token";
 import type { QrAttendanceResult } from "@/lib/student/qr-attendance-result";
 import { saveQrReturnUrl } from "@/lib/student/qr-return-url";
 import { useQrScanner } from "@/lib/student/use-qr-scanner";
+import { TOAST_EXIT_MS, ToastFrame } from "@/components/admin/Toast";
+import { usePresence } from "@/hooks/use-presence";
 import { QrCameraHeader } from "./QrCameraHeader";
 import { QrResultToast, type QrResultVariant } from "./QrResultToast";
 import { QrScanFrame } from "./QrScanFrame";
@@ -130,6 +132,9 @@ export function StudentQrCamera() {
     enabled: entry === "camera",
   });
 
+  // 결과가 사라져도 퇴장 애니메이션 동안 마지막 결과를 보인다. 위쪽 가운데에 뜬다(관리자 토스트와 같은 위치).
+  const { current: shown, closing } = usePresence(result, TOAST_EXIT_MS);
+
   useEffect(() => {
     if (!result) return;
     const timer =
@@ -172,12 +177,14 @@ export function StudentQrCamera() {
           </p>
         </div>
       </main>
-      {result && (
-        <div className="pointer-events-none fixed inset-x-[18px] bottom-10 z-50 flex justify-center md:left-60">
-          <div className="w-full max-w-[354px]">
-            <QrResultToast {...RESULT_MESSAGES[result]} />
-          </div>
-        </div>
+      {shown && (
+        <ToastFrame
+          closing={closing}
+          contentKey={shown}
+          widthClassName="w-full max-w-[354px]"
+        >
+          <QrResultToast {...RESULT_MESSAGES[shown]} />
+        </ToastFrame>
       )}
     </StudentShell>
   );
