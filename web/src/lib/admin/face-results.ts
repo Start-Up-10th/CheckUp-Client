@@ -19,6 +19,8 @@ export function successMessage(entry: RecognitionEntry): string {
 export const SUCCESS_DEDUPE_MS = 10_000;
 /** 화면에서 사라진 얼굴 트랙의 시도 횟수를 기억하는 시간. 잠깐 놓쳤다 돌아와도 실패를 다시 세지 않는다. */
 export const TRACK_MEMORY_MS = 30_000;
+/** 한 얼굴이 이만큼 실패하면 QR 출석 안내를 보인다. */
+export const QR_NOTICE_ATTEMPTS = 3;
 /** 최근 인식 목록에 남기는 최대 개수(당일 임시 기록, REQ-FACE-007). */
 export const MAX_ENTRIES = 30;
 
@@ -93,7 +95,13 @@ export function applyFrame(
       attempts: Math.max(seenAttempts, face.attempts),
       seenAt: nowMs,
     };
-    if (face.qrRecommended && face.status === "UNKNOWN") qrRecommended = true;
+    // 서버 권고가 없어도 같은 얼굴이 3회 실패하면 QR 안내를 보인다(사용자 결정 2026-10-06, DEC-004 수정).
+    if (
+      face.status === "UNKNOWN" &&
+      (face.qrRecommended || face.attempts >= QR_NOTICE_ATTEMPTS)
+    ) {
+      qrRecommended = true;
+    }
 
     if (
       face.status === "KNOWN" &&

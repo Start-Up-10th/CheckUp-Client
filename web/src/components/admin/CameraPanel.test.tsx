@@ -3,7 +3,6 @@ import { CameraPanel } from "./CameraPanel";
 
 function renderPanel(props: {
   successMessage?: string | null;
-  failureMessage?: string | null;
   status?: "requesting" | "granted" | "error";
   recognitionFailed?: boolean;
   onRetry?: () => void;
@@ -35,21 +34,15 @@ describe("CameraPanel", () => {
   });
 });
 
-describe("CameraPanel 하단 성공·실패 배너", () => {
+describe("CameraPanel 하단 성공 배너", () => {
   it("성공 문구를 성공 배너로 보인다", () => {
     renderPanel({ successMessage: "성공 · 2405 김도현" });
 
     expect(screen.getByRole("status")).toHaveTextContent("성공 · 2405 김도현");
   });
 
-  it("실패 문구를 실패 배너로 보인다", () => {
-    renderPanel({ failureMessage: "인식 실패" });
-
-    expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
-  });
-
   it("카메라를 실행하지 못했으면 배너를 보이지 않고 실행 실패 문구를 보인다", () => {
-    renderPanel({ status: "error", failureMessage: "인식 실패" });
+    renderPanel({ status: "error", successMessage: "성공 · 2405 김도현" });
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(
