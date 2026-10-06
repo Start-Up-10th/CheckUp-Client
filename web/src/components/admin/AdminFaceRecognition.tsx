@@ -1,6 +1,6 @@
 "use client";
 
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer } from "@/components/admin/Toast";
 import { CameraPanel } from "@/components/admin/CameraPanel";
 import { successMessage } from "@/lib/admin/face-results";
 import { useFaceRecognition } from "@/lib/admin/use-face-recognition";
@@ -10,7 +10,7 @@ import type { Purpose } from "@/lib/admin/purpose";
 /** 용도 탭이 없어서(Figma 2026-10-06, DEC-036) 얼굴 인식은 기숙사 용도로 고정한다. */
 const PURPOSE: Purpose = "dorm";
 
-/** 인식에 실패한 순간 카메라 하단에 잠깐 보이는 문구. 신원을 붙이지 않는다(REQ-FACE-005). */
+/** 인식에 실패한 순간 오른쪽 상단에 잠깐 보이는 문구. 신원을 붙이지 않는다(REQ-FACE-005). */
 const FAILURE_MESSAGE = "인식 실패";
 
 /** REQ-FACE-006 문구. 서버가 한 얼굴의 인식을 반복해 놓쳤다고(qrRecommended) 알릴 때 보인다. */
@@ -41,20 +41,23 @@ export function AdminFaceRecognition() {
         </div>
       </div>
 
-      {recognition.qrNotice && (
-        <StatusBanner
-          variant="error"
-          message={QR_NOTICE_MESSAGE}
-          compactOnPhone
-          className="w-fit"
-        />
-      )}
+      {/* 다른 화면의 토스트와 같은 위치·크기(패드 이상 오른쪽 상단)로 보인다. QR 안내가 먼저이고 인식 실패는 그 뒤에 보인다. */}
+      <ToastLayer
+        topClassName="md:top-6 xl:top-7"
+        phoneTopRight
+        toast={
+          recognition.qrNotice
+            ? { variant: "error", message: QR_NOTICE_MESSAGE }
+            : recognition.failure
+              ? { variant: "error", message: FAILURE_MESSAGE }
+              : null
+        }
+      />
 
       <div className="flex min-h-[240px] w-full flex-1 md:min-h-0">
         <CameraPanel
           videoRef={videoRef}
           status={status}
-          failureMessage={recognition.failure ? FAILURE_MESSAGE : null}
           successMessage={
             recognition.success ? successMessage(recognition.success) : null
           }
