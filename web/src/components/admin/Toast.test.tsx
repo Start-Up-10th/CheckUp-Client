@@ -1,5 +1,5 @@
 import { act, render, screen } from "@testing-library/react";
-import { ToastLayer, useToast } from "./Toast";
+import { TOAST_EXIT_MS, ToastLayer, useToast } from "./Toast";
 
 const toast = { variant: "success", message: "저장했습니다." } as const;
 
@@ -73,6 +73,32 @@ describe("ToastLayer 위치", () => {
     const { container } = render(<ToastLayer toast={null} />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+});
+
+describe("ToastLayer 애니메이션", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("나타날 때 위에서 내려오는 애니메이션을 쓰고 동작 줄이기에서는 끈다", () => {
+    render(<ToastLayer toast={toast} />);
+
+    expect(screen.getByRole("status").parentElement).toHaveClass(
+      "animate-toast-in",
+      "motion-reduce:animate-none",
+    );
+  });
+
+  it("사라질 때 퇴장 애니메이션이 끝날 때까지 남아 있다가 지워진다", () => {
+    const { rerender } = render(<ToastLayer toast={toast} />);
+
+    rerender(<ToastLayer toast={null} />);
+    expect(screen.getByRole("status").parentElement).toHaveClass(
+      "animate-toast-out",
+    );
+
+    act(() => vi.advanceTimersByTime(TOAST_EXIT_MS));
+    expect(screen.queryByText("저장했습니다.")).not.toBeInTheDocument();
   });
 });
 
