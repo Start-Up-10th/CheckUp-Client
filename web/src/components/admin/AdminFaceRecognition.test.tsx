@@ -72,20 +72,31 @@ afterEach(() => {
 });
 
 describe("AdminFaceRecognition", () => {
-  it("인식 결과가 없으면 최근 인식은 빈 상태다", async () => {
+  it("인식 결과가 없으면 성공·실패 표시를 하지 않는다", async () => {
     renderWith(createMockFaceGateway([[]]));
     await tick();
 
     expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
   });
 
-  it("성공은 `학번 이름`으로, 실패는 신원 없는 인식 실패로 최근 인식에 쌓는다", async () => {
+  it("성공은 `학번 이름`으로, 실패는 신원 없는 인식 실패로 카메라 하단에 보인다", async () => {
     renderWith(createMockFaceGateway([[known(), unknown(1)]]));
     await tick();
 
-    expect(screen.getByText("2405 김도현")).toBeInTheDocument();
-    // 최근 인식 행과 카메라 하단의 실패 배너, 두 곳에 보인다.
-    expect(screen.getAllByText("인식 실패")).toHaveLength(2);
+    expect(screen.getByRole("status")).toHaveTextContent("성공 · 2405 김도현");
+    expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
+  });
+
+  it("용도 탭·전체화면 버튼·최근 인식 목록은 없다", async () => {
+    renderWith(createMockFaceGateway([[known()]]));
+    await tick();
+
+    expect(screen.queryByRole("button", { name: "자습실" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "기숙사" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "전체화면으로 보기" }),
+    ).toBeNull();
+    expect(screen.queryByText("최근 인식")).toBeNull();
   });
 
   it("서버가 QR을 권하면 안내 문구를 보여 주고 시간이 지나면 사라진다", async () => {
@@ -123,10 +134,10 @@ describe("AdminFaceRecognition", () => {
     renderWith(gateway);
     await tick();
 
-    expect(screen.getAllByText("인식 실패")).toHaveLength(2);
+    expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
 
     await tick(5_000);
-    expect(screen.getAllByText("인식 실패")).toHaveLength(1);
+    expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
   });
 
   it("성공하면 카메라 하단에 `성공 · 학번 이름` 배너를 잠깐 보인다", async () => {
@@ -155,23 +166,17 @@ describe("AdminFaceRecognition", () => {
     expect(createSession).not.toHaveBeenCalled();
   });
 
-  it("용도 탭을 바꾸면 새 용도로 새 세션을 만들고 이전 기록은 비운다", async () => {
-    const gateway = createMockFaceGateway([[known()]]);
+  it("기숙사 용도로 세션을 만든다", async () => {
+    const gateway = createMockFaceGateway([[]]);
     const createSession = vi.spyOn(gateway, "createSession");
-    const closeSession = vi.spyOn(gateway, "closeSession");
     renderWith(gateway);
     await tick();
+
+    expect(createSession).toHaveBeenCalledTimes(1);
     expect(createSession).toHaveBeenLastCalledWith("dorm");
-
-    fireEvent.click(screen.getByRole("button", { name: "자습실" }));
-    await tick();
-
-    expect(closeSession).toHaveBeenCalledTimes(1);
-    expect(createSession).toHaveBeenLastCalledWith("study");
-    expect(screen.getAllByText("2405 김도현")).toHaveLength(1);
   });
 
-  it("세션을 만들지 못하면 최근 인식에 오류와 다시 시도를 보여 준다", async () => {
+  it("세션을 만들지 못하면 오류와 다시 시도를 카메라 영역에 보여 준다", async () => {
     const gateway = createMockFaceGateway([[]]);
     vi.spyOn(gateway, "createSession")
       .mockRejectedValueOnce(new Error("server"))
