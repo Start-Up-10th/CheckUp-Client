@@ -7,6 +7,8 @@ type StatusBannerProps = {
    * 켠다(기본 꺼짐). 패드 이상은 같은 크기다.
    */
   compactOnPhone?: boolean;
+  /** 메시지 오른쪽의 글자 버튼(예: 다시 시도). 줄 높이가 같아 배너 높이(42px)는 그대로다. */
+  action?: { label: string; onClick: () => void };
 };
 
 const VARIANT_STYLES = {
@@ -36,6 +38,7 @@ export function StatusBanner({
   message,
   className,
   compactOnPhone = false,
+  action,
 }: StatusBannerProps) {
   const style = VARIANT_STYLES[variant];
   return (
@@ -55,6 +58,15 @@ export function StatusBanner({
       >
         {message}
       </p>
+      {action && (
+        <button
+          type="button"
+          onClick={action.onClick}
+          className={`ml-1 underline underline-offset-2 ${compactOnPhone ? "text-xs leading-4 md:text-[13px] md:leading-4" : "text-[13px] leading-4"} font-bold ${style.text}`}
+        >
+          {action.label}
+        </button>
+      )}
     </div>
   );
 }

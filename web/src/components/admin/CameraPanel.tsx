@@ -9,7 +9,7 @@ type CameraPanelProps = {
   successMessage?: string | null;
   /** 방금 인식에 실패했을 때의 문구. 있으면 카메라 하단에 실패 배너로 잠깐 보인다(REQ-FACE-006). */
   failureMessage?: string | null;
-  /** 인식 서버 연결 실패. 카메라 하단에 오류 배너와 다시 시도를 보인다. */
+  /** 인식 서버 연결 실패. 카메라 하단에 Figma 상태 메시지 크기의 오류 배너와 다시 시도를 보인다. */
   recognitionFailed?: boolean;
   onRetry?: () => void;
 };
@@ -96,25 +96,16 @@ export function CameraPanel({
           </div>
         )}
 
-        {/* 인식 서버 연결 실패: Figma에 없는 상태라 다른 성공·실패 표시처럼 카메라 하단의 작은 배너로 보인다. */}
+        {/* 인식 서버 연결 실패: Figma에 없는 상태라 다른 성공·실패 표시처럼 카메라 하단에 Figma 상태 메시지(StatusBanner)와 같은 크기로 보인다. */}
         {recognitionFailed && status !== "error" && onRetry && (
-          <div className="absolute inset-x-3 bottom-3 flex justify-center md:bottom-4 xl:bottom-6">
-            <div
-              role="alert"
-              className="flex w-full items-center gap-2 rounded-[10px] border border-admin-danger-border bg-admin-danger-bg px-3 py-2.5 md:w-auto md:gap-2.5 md:rounded-xl md:px-4 md:py-3 xl:gap-3 xl:rounded-2xl xl:px-5 xl:py-3.5"
-            >
-              <span className="size-1.5 shrink-0 rounded-full bg-admin-danger-text md:size-2 xl:size-[9px]" />
-              <p className="min-w-0 flex-1 break-keep text-xs font-bold leading-4 text-admin-danger-text md:flex-none md:text-sm md:leading-[17px] xl:text-base xl:leading-5">
-                불러오지 못했어요
-              </p>
-              <button
-                type="button"
-                onClick={onRetry}
-                className="shrink-0 rounded-lg bg-admin-text px-2.5 py-1.5 text-[11px] leading-4 text-white md:ml-2 md:px-3.5 md:py-2 md:text-[13px] xl:ml-3 xl:rounded-xl xl:px-5 xl:py-2.5 xl:text-sm xl:leading-[17px]"
-              >
-                다시 시도
-              </button>
-            </div>
+          <div className="absolute inset-x-3 bottom-3 flex justify-center md:bottom-4">
+            <StatusBanner
+              variant="error"
+              message="불러오지 못했어요"
+              compactOnPhone
+              action={{ label: "다시 시도", onClick: onRetry }}
+              className="w-fit"
+            />
           </div>
         )}
       </div>
