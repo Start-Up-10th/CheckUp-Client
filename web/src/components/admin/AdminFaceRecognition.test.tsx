@@ -79,7 +79,7 @@ describe("AdminFaceRecognition", () => {
     expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
   });
 
-  it("성공은 `학번 이름`으로, 실패는 신원 없는 인식 실패로 카메라 하단에 보인다", async () => {
+  it("성공은 `학번 이름`으로, 성공은 카메라 하단에, 실패는 신원 없는 인식 실패로 오른쪽 상단에 보인다", async () => {
     renderWith(createMockFaceGateway([[known(), unknown(1)]]));
     await tick();
 
@@ -117,8 +117,8 @@ describe("AdminFaceRecognition", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("실패가 3회 이하이면 QR 안내를 하지 않는다", async () => {
-    renderWith(createMockFaceGateway([[unknown(3)]]));
+  it("실패가 3회 미만이면 QR 안내를 하지 않는다", async () => {
+    renderWith(createMockFaceGateway([[unknown(2)]]));
     await tick();
 
     expect(
@@ -126,7 +126,27 @@ describe("AdminFaceRecognition", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("실패하면 카메라 하단에 인식 실패 배너를 잠깐 보이고 사라진다", async () => {
+  it("3회 실패하면 QR 안내를 먼저 보이고 인식 실패는 안내가 끝난 뒤에 보인다", async () => {
+    const gateway = createMockFaceGateway([[]]);
+    vi.spyOn(gateway, "sendFrame")
+      .mockResolvedValueOnce({ frameId: "f", faces: [unknown(3)] })
+      .mockResolvedValue({ frameId: "f", faces: [] });
+    renderWith(gateway);
+    await tick();
+
+    expect(
+      screen.getByText("인식 실패 · 3회 초과 시 QR로 출석"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
+
+    await tick(8_000);
+    expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
+    expect(
+      screen.queryByText("인식 실패 · 3회 초과 시 QR로 출석"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("실패하면 오른쪽 상단에 인식 실패 토스트를 잠깐 보이고 사라진다", async () => {
     const gateway = createMockFaceGateway([[]]);
     vi.spyOn(gateway, "sendFrame")
       .mockResolvedValueOnce({ frameId: "f", faces: [unknown(1)] })

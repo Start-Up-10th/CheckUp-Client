@@ -7,8 +7,6 @@ type CameraPanelProps = {
   status: CameraStatus;
   /** 방금 인식에 성공했을 때의 문구(`성공 · 학번 이름`). */
   successMessage?: string | null;
-  /** 방금 인식에 실패했을 때의 문구. 있으면 카메라 하단에 실패 배너로 잠깐 보인다(REQ-FACE-006). */
-  failureMessage?: string | null;
   /** 인식 서버 연결 실패. 카메라 하단에 Figma 상태 메시지 크기의 오류 배너와 다시 시도를 보인다. */
   recognitionFailed?: boolean;
   onRetry?: () => void;
@@ -22,7 +20,6 @@ export function CameraPanel({
   videoRef,
   status,
   successMessage = null,
-  failureMessage = null,
   recognitionFailed = false,
   onRetry,
 }: CameraPanelProps) {
@@ -53,8 +50,8 @@ export function CameraPanel({
           className="size-full object-cover"
         />
 
-        {/* REQ-FACE-006: 카메라 하단에 성공·실패를 잠시 보인다. */}
-        {status !== "error" && (failureMessage || successMessage) && (
+        {/* REQ-FACE-006: 카메라 하단에 성공을 잠시 보인다. 인식 실패는 오른쪽 상단 토스트로 보인다. */}
+        {status !== "error" && successMessage && (
           <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-col items-center gap-2 md:bottom-4">
             {successMessage && (
               <>
@@ -77,13 +74,6 @@ export function CameraPanel({
                   </span>
                 </div>
               </>
-            )}
-            {failureMessage && (
-              <StatusBanner
-                variant="error"
-                message={failureMessage}
-                compactOnPhone
-              />
             )}
           </div>
         )}
