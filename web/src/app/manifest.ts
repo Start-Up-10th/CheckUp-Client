@@ -9,8 +9,8 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "기숙사 출석 관리",
-    short_name: "기숙사 출석",
+    name: "CheckUp",
+    short_name: "CheckUp",
     description: "광주소프트웨어마이스터고 기숙사 입소·자습실 출석 관리 시스템",
     start_url: "/",
     scope: "/",

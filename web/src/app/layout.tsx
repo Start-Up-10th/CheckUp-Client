@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "기숙사 출석",
+    title: "CheckUp",
   },
   icons: {
     apple: "/icons/apple-touch-icon.png",
