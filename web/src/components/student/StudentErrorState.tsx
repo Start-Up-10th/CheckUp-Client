@@ -47,7 +47,7 @@ export function StudentErrorState({
       <button
         type="button"
         onClick={onRetry}
-        className="rounded-control bg-admin-text px-6 py-[13px] text-[15px] text-white"
+        className="rounded-control bg-admin-text px-6 py-[13px] text-[15px] text-white transition-colors hover:bg-admin-ghost-text"
       >
         다시 시도
       </button>

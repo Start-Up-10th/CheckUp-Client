@@ -90,7 +90,7 @@ export function AdminMenuSheet({
               className={`flex items-center gap-3.5 rounded-xl px-3.5 py-[13px] text-[15px] leading-[18px] ${
                 active
                   ? "bg-admin-attendance-bg font-bold text-admin-attendance-text"
-                  : "font-medium text-admin-ghost-text"
+                  : "font-medium text-admin-ghost-text hover:bg-admin-bg"
               }`}
             >
               <span
@@ -113,7 +113,7 @@ export function AdminMenuSheet({
             onClose();
             onLogout();
           }}
-          className="flex items-center gap-3.5 rounded-xl px-3.5 py-[13px] text-left text-[15px] font-medium leading-[18px] text-admin-danger-text"
+          className="flex items-center gap-3.5 rounded-xl px-3.5 py-[13px] text-left text-[15px] font-medium leading-[18px] text-admin-danger-text transition-colors hover:bg-admin-danger-bg"
         >
           <MenuIcon src="/icons/menu/logout.svg" size={18} alignStart />
           로그아웃

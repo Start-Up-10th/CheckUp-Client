@@ -12,7 +12,7 @@ export function QrCameraHeader() {
       <Link
         href="/main"
         aria-label="뒤로 가기"
-        className="-m-2 p-2 text-2xl leading-none text-white/70"
+        className="-m-2 p-2 text-2xl leading-none text-white/70 transition-colors hover:text-white"
       >
         ‹
       </Link>

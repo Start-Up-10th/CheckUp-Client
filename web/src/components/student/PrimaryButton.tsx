@@ -22,7 +22,7 @@ export function PrimaryButton({
       className={`flex h-[54px] w-full shrink-0 items-center justify-center rounded-[15px] text-[15px] font-bold leading-normal md:h-14 md:text-base ${
         disabled
           ? "bg-admin-divider text-[#d5d5d8]"
-          : "bg-admin-accent-bg text-admin-accent-text"
+          : "bg-admin-accent-bg text-admin-accent-text transition hover:brightness-95"
       }`}
     >
       {children}

@@ -17,7 +17,7 @@ export function StudentRow({ student, onSelect }: StudentRowProps) {
       type="button"
       aria-label={`${student.name} 학생 상세`}
       onClick={() => onSelect(student.studentId)}
-      className="flex w-full flex-col gap-2.5 rounded-xl bg-admin-rowSurface py-[11px] pl-3.5 pr-3 text-left md:flex-row md:items-center md:justify-between md:gap-0 md:pl-4 xl:rounded-card xl:py-3 xl:pl-5 xl:pr-4"
+      className="flex w-full flex-col gap-2.5 rounded-xl bg-admin-rowSurface transition-colors hover:bg-admin-divider py-[11px] pl-3.5 pr-3 text-left md:flex-row md:items-center md:justify-between md:gap-0 md:pl-4 xl:rounded-card xl:py-3 xl:pl-5 xl:pr-4"
     >
       <span className="flex w-full items-center justify-between whitespace-nowrap md:w-auto md:flex-col md:items-start md:justify-start md:gap-[3px] xl:flex-row xl:items-center xl:gap-3.5">
         <span className="flex items-center gap-2 xl:contents">
