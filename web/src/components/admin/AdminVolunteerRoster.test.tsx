@@ -291,6 +291,8 @@ describe("AdminVolunteerRoster", () => {
 
       expect(dialog).toHaveClass("max-h-[calc(100dvh-32px)]");
       expect(list).toHaveClass("overflow-y-auto", "min-h-0");
+      // 이력은 5줄 높이까지만 보인다(줄 36px·간격 6px, 컴퓨터는 줄 39px).
+      expect(list).toHaveClass("max-h-[204px]", "xl:max-h-[219px]");
       expect(list?.children).toHaveLength(40);
       // 제목·남은 횟수·닫기 버튼은 스크롤 목록 밖에 있다.
       expect(list).not.toContainElement(
