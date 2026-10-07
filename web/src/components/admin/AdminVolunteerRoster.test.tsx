@@ -291,6 +291,8 @@ describe("AdminVolunteerRoster", () => {
 
       expect(dialog).toHaveClass("max-h-[calc(100dvh-32px)]");
       expect(list).toHaveClass("overflow-y-auto", "min-h-0");
+      // 이력은 5줄 높이까지만 보인다(줄 36px·간격 6px, 컴퓨터는 줄 39px).
+      expect(list).toHaveClass("max-h-[204px]", "xl:max-h-[219px]");
       expect(list?.children).toHaveLength(40);
       // 제목·남은 횟수·닫기 버튼은 스크롤 목록 밖에 있다.
       expect(list).not.toContainElement(
@@ -339,6 +341,12 @@ describe("AdminVolunteerRoster", () => {
       const link = barLink()!;
       expect(link).toHaveAttribute("href", "/admin/volunteers");
       expect(link.parentElement).toHaveTextContent("당일 지정 3명");
+      // Figma 위치(패널 아래에서 40px 위)와 나타나는 애니메이션(동작 줄이기에서는 끔).
+      expect(link.parentElement).toHaveClass(
+        "xl:bottom-[68px]",
+        "animate-bar-rise",
+        "motion-reduce:animate-none",
+      );
 
       fireEvent.click(screen.getByRole("button", { name: "3층" }));
       fireEvent.click(

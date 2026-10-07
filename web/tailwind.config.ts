@@ -1,6 +1,8 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  // 터치 화면에서는 hover가 눌린 뒤에도 남아 보여서, 마우스가 있는 기기에서만 hover를 적용한다.
+  future: { hoverOnlyWhenSupported: true },
   content: [
     "./src/app/**/*.{ts,tsx}",
     "./src/components/**/*.{ts,tsx}",
@@ -8,6 +10,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      keyframes: {
+        "bar-rise": {
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "bar-rise": "bar-rise 240ms cubic-bezier(0.16, 1, 0.3, 1)",
+      },
       fontFamily: {
         sans: [
           "Pretendard",

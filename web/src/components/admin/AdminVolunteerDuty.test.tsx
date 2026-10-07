@@ -65,22 +65,24 @@ describe("AdminVolunteerDuty", () => {
     expect(screen.getByText("10/01 당일 봉사자 · 2명")).toBeInTheDocument();
   });
 
-  it("명단에서 지정 링크는 봉사자 명단 편집으로 간다", () => {
+  it("명단 수정 링크는 봉사자 명단 편집으로 간다", () => {
     render(<AdminVolunteerDuty />);
 
-    expect(
-      screen.getByRole("link", { name: "+ 명단에서 지정" }),
-    ).toHaveAttribute("href", "/admin/volunteers/add");
+    expect(screen.getByRole("link", { name: "+ 명단 수정" })).toHaveAttribute(
+      "href",
+      "/admin/volunteers/add",
+    );
   });
 
-  it("명단에서 지정 링크 주소를 바꿀 수 있다", () => {
+  it("명단 수정 링크 주소를 바꿀 수 있다", () => {
     render(
       <AdminVolunteerDuty rosterHref="/admin/state-demo/volunteer-roster" />,
     );
 
-    expect(
-      screen.getByRole("link", { name: "+ 명단에서 지정" }),
-    ).toHaveAttribute("href", "/admin/state-demo/volunteer-roster");
+    expect(screen.getByRole("link", { name: "+ 명단 수정" })).toHaveAttribute(
+      "href",
+      "/admin/state-demo/volunteer-roster",
+    );
   });
 
   it("완료하면 목록에서 빠지고 횟수를 1 줄이며 완료 문구를 보여 준다", async () => {

@@ -25,7 +25,7 @@ export function ConsentItem({
       role="checkbox"
       aria-checked={checked}
       onClick={onToggle}
-      className="flex w-full items-start gap-3 rounded-control bg-admin-rowSurface px-3.5 py-[13px] text-left"
+      className="flex w-full items-start gap-3 rounded-control bg-admin-rowSurface px-3.5 py-[13px] text-left transition-colors hover:bg-admin-divider"
     >
       <ConsentCheckbox checked={checked} />
       <span className="flex min-w-0 flex-1 flex-col gap-[3px]">

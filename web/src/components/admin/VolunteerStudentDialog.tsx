@@ -107,10 +107,10 @@ export function VolunteerStudentDialog({
           ) : history.status === "ready" && history.items.length === 0 ? (
             <StatusBanner variant="neutral" message={HISTORY_EMPTY_MESSAGE} />
           ) : history.status === "ready" ? (
-            // 이력이 많으면 다이얼로그가 화면보다 길어지지 않게 이 목록만 스크롤한다.
+            // 이력은 5줄 높이(204px, 컴퓨터 219px)까지만 보이고 넘으면 이 목록만 스크롤한다. 화면이 낮으면 더 줄어든다.
             <div
               data-history-list
-              className="flex min-h-0 flex-col gap-1.5 overflow-y-auto"
+              className="flex max-h-[204px] min-h-0 flex-col gap-1.5 overflow-y-auto xl:max-h-[219px]"
             >
               {history.items.map((item) => (
                 <div
@@ -143,7 +143,7 @@ export function VolunteerStudentDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[13px] bg-admin-ghost-bg px-5 py-3 text-[13px] font-bold leading-4 text-admin-ghost-text xl:px-[22px] xl:py-[13px] xl:text-sm xl:leading-[17px]"
+            className="rounded-[13px] bg-admin-ghost-bg transition-colors hover:bg-admin-border px-5 py-3 text-[13px] font-bold leading-4 text-admin-ghost-text xl:px-[22px] xl:py-[13px] xl:text-sm xl:leading-[17px]"
           >
             닫기
           </button>

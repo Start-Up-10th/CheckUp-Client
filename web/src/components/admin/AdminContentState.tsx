@@ -76,7 +76,7 @@ export function AdminContentState(props: AdminContentStateProps) {
         <button
           type="button"
           onClick={props.onRetry}
-          className="rounded-control bg-admin-text px-6 py-[13px] text-[15px] font-medium text-white"
+          className="rounded-control bg-admin-text px-6 py-[13px] text-[15px] font-medium text-white transition-colors hover:bg-admin-ghost-text"
         >
           다시 시도
         </button>
@@ -85,7 +85,7 @@ export function AdminContentState(props: AdminContentStateProps) {
       {variant === "auth" && (
         <Link
           href={props.loginHref ?? "/admin/login"}
-          className="rounded-control bg-admin-accent-bg px-6 py-[13px] text-[15px] font-medium text-admin-accent-text"
+          className="rounded-control bg-admin-accent-bg transition hover:brightness-95 px-6 py-[13px] text-[15px] font-medium text-admin-accent-text"
         >
           로그인하기
         </Link>

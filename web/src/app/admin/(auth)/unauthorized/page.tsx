@@ -10,7 +10,7 @@ export default function AdminUnauthorizedPage() {
   return (
     <div className="absolute left-1/2 top-1/2 w-[300px] -translate-x-1/2 -translate-y-1/2 text-center">
       <Image
-        src="/icons/admin-login/checkup-logo.png"
+        src="/icons/login/checkup-logo.png"
         alt="CHECKUP"
         width={201}
         height={53}
@@ -26,7 +26,7 @@ export default function AdminUnauthorizedPage() {
       <button
         type="button"
         onClick={logout}
-        className="w-full rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc] py-3 text-[14px] font-medium text-[#0f172a]"
+        className="w-full rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc] transition-colors hover:bg-[#f1f5f9] py-3 text-[14px] font-medium text-[#0f172a]"
       >
         로그인 페이지로 돌아가기
       </button>

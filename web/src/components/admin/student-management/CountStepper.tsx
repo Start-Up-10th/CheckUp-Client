@@ -5,7 +5,7 @@ type CountStepperProps = {
 };
 
 const STEP_BUTTON =
-  "flex size-[30px] items-center justify-center rounded-[11px] border border-admin-border bg-admin-surface text-base font-bold leading-[19px] text-admin-ghost-text md:size-8 md:text-[17px] md:leading-5 xl:size-[34px] xl:text-lg xl:leading-[22px]";
+  "flex size-[30px] items-center justify-center rounded-[11px] border border-admin-border bg-admin-surface transition-colors enabled:hover:bg-admin-bg text-base font-bold leading-[19px] text-admin-ghost-text md:size-8 md:text-[17px] md:leading-5 xl:size-[34px] xl:text-lg xl:leading-[22px]";
 
 /**
  * Figma 08 학생 상세의 봉사 횟수 스테퍼 `− 3회 +`. 버튼은 핸드폰 30·패드 32·컴퓨터 34 정사각이고 횟수는 19/20/22
