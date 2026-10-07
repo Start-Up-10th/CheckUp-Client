@@ -1,4 +1,4 @@
-import type { Room } from "@/lib/admin/mock-floor-data";
+import type { Room } from "@/lib/admin/floor-types";
 import {
   roomCardCountLabel,
   roomCardStatus,
