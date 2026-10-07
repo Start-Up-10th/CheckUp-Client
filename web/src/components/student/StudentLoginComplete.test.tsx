@@ -1,6 +1,23 @@
 import { render, waitFor } from "@testing-library/react";
+import { rememberLoginApp, takeLoginApp } from "@/lib/auth/login-app";
 import { QR_RETURN_URL_KEY } from "@/lib/student/qr-return-url";
 import { StudentLoginComplete } from "./StudentLoginComplete";
+
+/** 기숙사 자치위원처럼 학생 정보가 있는 관리자. */
+const COMMITTEE = {
+  name: "자치위원",
+  role: "ADMIN",
+  consented: true,
+  student: {
+    studentId: 17,
+    grade: 2,
+    classNumber: 4,
+    number: 5,
+    studentNumber: 2405,
+    dormitoryRoom: 412,
+    dormitoryFloor: 4,
+  },
+};
 
 const QR_URL = `/qr#t=${"a".repeat(43)}`;
 const originalLocation = window.location;
@@ -32,6 +49,7 @@ afterEach(() => {
     value: originalLocation,
   });
   window.sessionStorage.clear();
+  window.localStorage.clear();
   vi.unstubAllGlobals();
 });
 
@@ -52,6 +70,34 @@ describe("StudentLoginComplete", () => {
     mockMe(200, { name: "사감", role: "ADMIN" });
     render(<StudentLoginComplete />);
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin"));
+  });
+
+  it("사용자 앱으로 로그인한 기숙사 자치위원(학생 정보가 있는 관리자)은 학생 홈으로", async () => {
+    rememberLoginApp("user");
+    mockMe(200, COMMITTEE);
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/main"));
+  });
+
+  it("시작한 앱을 적지 않았어도(기본) 기숙사 자치위원은 학생 홈으로", async () => {
+    mockMe(200, COMMITTEE);
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/main"));
+  });
+
+  it("관리자 앱으로 로그인한 기숙사 자치위원은 관리자 홈으로", async () => {
+    rememberLoginApp("admin");
+    mockMe(200, COMMITTEE);
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin"));
+  });
+
+  it("시작한 앱 기록은 한 번 읽고 지운다", async () => {
+    rememberLoginApp("admin");
+    mockMe(200, COMMITTEE);
+    render(<StudentLoginComplete />);
+    await waitFor(() => expect(replace).toHaveBeenCalled());
+    expect(takeLoginApp()).toBe("user");
   });
 
   it("QR 링크로 왔던 학생은 저장한 QR 주소로 돌아가고 값은 지운다", async () => {
