@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
 import { AdminFloorPlanSkeleton } from "@/components/admin/AdminFloorPlanSkeleton";
 import { FloorTabs } from "@/components/admin/FloorTabs";
@@ -9,92 +9,180 @@ import { RoomGrid } from "@/components/admin/RoomGrid";
 import { RoomDetailDialog } from "@/components/admin/RoomDetailDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { RoomAttendanceEditDialog } from "@/components/admin/RoomAttendanceEditDialog";
+import { redirectToAdminLogin } from "@/lib/admin/admin-session";
 import {
-  MOCK_FLOOR_ROOMS,
   summarizeAttendance,
   type Floor,
   type Room,
+  type RoomDetail,
   type Student,
-} from "@/lib/admin/mock-floor-data";
+} from "@/lib/admin/floor-types";
+import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
+import { RoomApiError } from "@/lib/admin/room-api";
+import { useRoomGateway } from "@/lib/admin/room-gateway";
 
 const DEFAULT_FLOOR: Floor = 4;
 
 const LOAD_FAILED_MESSAGE = "전개도를 불러오지 못했습니다.";
+const ROOM_LOAD_FAILED_MESSAGE = "호실 명단을 불러오지 못했습니다.";
 const SAVE_FAILED_MESSAGE = "전개도 변경에 실패했습니다. 다시 시도해 주세요.";
 
 /** 호실 카드를 누르면 상세(읽기 전용) -> 수정(토글 편집) 2단계로 연다. */
 type DialogStage = "view" | "edit";
 
-export function AdminHomeFloorPlan({
-  isLoading = false,
-  loadFailed = false,
-  saveRoom,
-}: {
-  /** 전개도 데이터 로딩 중. 실제 조회 연결 전까지 기본은 false다. */
-  isLoading?: boolean;
-  /** 전개도 조회 실패. 실제 조회 연결 전까지 기본은 false다. */
-  loadFailed?: boolean;
-  /** 호실 출석 저장. 실패(reject)하면 다이얼로그를 유지하고 실패 안내를 띄운다. 서버 연결 전까지 기본은 항상 성공이다. */
-  saveRoom?: (roomNumber: string, students: Student[]) => Promise<void>;
-}) {
+/** 어떤 층·요청 차례(`attempt`)의 결과인지 함께 두어, 층을 바꾸거나 다시 시도했을 때 이전 결과를 쓰지 않는다. */
+type FloorResult = { floor: Floor; attempt: number };
+
+/**
+ * REQ-UI-001·002: 관리자 홈(전개도). 층 현황과 호실 명단은 서버(`RoomGateway`)에서 받는다. 호실 카드를 누르면 그 호실
+ * 명단을 받아 상세 다이얼로그를 연다.
+ */
+export function AdminHomeFloorPlan() {
+  const gateway = useRoomGateway();
   const [selectedFloor, setSelectedFloor] = useState<Floor>(DEFAULT_FLOOR);
-  const [roomsByFloor, setRoomsByFloor] = useState(MOCK_FLOOR_ROOMS);
-  const [dialogRoomNumber, setDialogRoomNumber] = useState<string | null>(null);
+  // 서버에서 받은 층 현황과 다시 시도 차례. 호실 저장 결과는 받아 둔 현황에 바로 반영한다.
+  const [attempt, setAttempt] = useState(0);
+  const [loaded, setLoaded] = useState<
+    (FloorResult & { rooms: Room[] }) | null
+  >(null);
+  const [failed, setFailed] = useState<FloorResult | null>(null);
+  const [dialogRoom, setDialogRoom] = useState<RoomDetail | null>(null);
   const [dialogStage, setDialogStage] = useState<DialogStage>("view");
+  // 호실 명단 요청이 겹칠 때 가장 최근 요청만 받아들이기 위한 번호.
+  const roomRequest = useRef(0);
+  // 저장 요청이 끝나기 전의 중복 저장을 막는다.
+  const saving = useRef(false);
   const { toast, showToast } = useToast();
 
-  const rooms = roomsByFloor[selectedFloor];
+  useEffect(() => {
+    let cancelled = false;
+    gateway
+      .floor(selectedFloor)
+      .then((rooms) => {
+        if (!cancelled) {
+          setLoaded({ floor: selectedFloor, attempt, rooms });
+        }
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        if (error instanceof AdminUnauthorizedError) {
+          redirectToAdminLogin();
+          return;
+        }
+        setFailed({ floor: selectedFloor, attempt });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [gateway, selectedFloor, attempt]);
+
+  const loadedNow =
+    loaded?.floor === selectedFloor && loaded.attempt === attempt
+      ? loaded
+      : null;
+  const loadFailed =
+    failed?.floor === selectedFloor && failed.attempt === attempt;
+  const isLoading = !loadedNow && !loadFailed;
+  const rooms = useMemo(() => loadedNow?.rooms ?? [], [loadedNow]);
   const { present, absent } = useMemo(
     () => summarizeAttendance(rooms),
     [rooms],
   );
 
   useEffect(() => {
-    if (loadFailed)
+    if (loadFailed) {
       showToast({ variant: "error", message: LOAD_FAILED_MESSAGE });
+    }
   }, [loadFailed, showToast]);
 
   if (isLoading) return <AdminFloorPlanSkeleton />;
-  const dialogRoom =
-    rooms.find((room) => room.number === dialogRoomNumber) ?? null;
 
   function handleSelectFloor(floor: Floor) {
     setSelectedFloor(floor);
     closeDialog();
   }
 
-  function openRoomDetail(room: Room) {
-    setDialogRoomNumber(room.number);
-    setDialogStage("view");
+  function retryLoad() {
+    setFailed(null);
+    setAttempt((count) => count + 1);
+  }
+
+  async function openRoomDetail(room: Room) {
+    const request = (roomRequest.current += 1);
+    try {
+      const students = await gateway.students(room.number);
+      if (request !== roomRequest.current) return;
+      setDialogRoom({ number: room.number, students });
+      setDialogStage("view");
+    } catch (error) {
+      if (request !== roomRequest.current) return;
+      if (error instanceof AdminUnauthorizedError) {
+        redirectToAdminLogin();
+        return;
+      }
+      showToast({ variant: "error", message: ROOM_LOAD_FAILED_MESSAGE });
+    }
   }
 
   function closeDialog() {
-    setDialogRoomNumber(null);
+    roomRequest.current += 1;
+    setDialogRoom(null);
     setDialogStage("view");
   }
 
   async function handleSaveRoom(roomNumber: string, students: Student[]) {
-    const current = rooms.find((room) => room.number === roomNumber);
-    const unchanged = current?.students.every(
-      (student, index) => student.present === students[index]?.present,
-    );
-    if (unchanged) {
+    if (!dialogRoom || saving.current) return;
+    // 서버에는 출석 상태가 바뀐 학생만 보낸다.
+    const changes = students
+      .filter((student) => {
+        const before = dialogRoom.students.find(
+          (item) => item.studentId === student.studentId,
+        );
+        return before !== undefined && before.present !== student.present;
+      })
+      .map((student) => ({
+        studentId: student.studentId,
+        present: student.present,
+      }));
+    if (changes.length === 0) {
       closeDialog();
       showToast({ variant: "neutral", message: "변경된 내용이 없습니다." });
       return;
     }
+    saving.current = true;
     try {
-      await saveRoom?.(roomNumber, students);
-    } catch {
+      await gateway.save(roomNumber, changes);
+    } catch (error) {
+      if (error instanceof AdminUnauthorizedError) {
+        redirectToAdminLogin();
+        return;
+      }
       showToast({ variant: "error", message: SAVE_FAILED_MESSAGE });
+      // 서버의 호실 명단과 어긋났으면(호실 학생이 아님) 이 다이얼로그의 명단은 낡았으므로 닫고 현황을 다시 받는다.
+      if (
+        error instanceof RoomApiError &&
+        error.code === "STUDENT_NOT_IN_ROOM"
+      ) {
+        closeDialog();
+        retryLoad();
+      }
       return;
+    } finally {
+      saving.current = false;
     }
-    setRoomsByFloor((prev) => ({
-      ...prev,
-      [selectedFloor]: prev[selectedFloor].map((room): Room =>
-        room.number === roomNumber ? { ...room, students } : room,
-      ),
-    }));
+    const presentCount = students.filter((student) => student.present).length;
+    setLoaded((prev) =>
+      prev
+        ? {
+            ...prev,
+            rooms: prev.rooms.map((room) =>
+              room.number === roomNumber
+                ? { ...room, present: presentCount }
+                : room,
+            ),
+          }
+        : prev,
+    );
     closeDialog();
     showToast({ variant: "success", message: "출석 상태를 저장했습니다." });
   }
@@ -121,7 +209,7 @@ export function AdminHomeFloorPlan({
 
       {loadFailed ? (
         <div className="flex w-full flex-1 items-center justify-center rounded-[16px] bg-admin-surface px-3.5 py-4 md:rounded-[18px] md:p-[20px] xl:rounded-panel">
-          <AdminContentState variant="error" onRetry={() => {}} />
+          <AdminContentState variant="error" onRetry={retryLoad} />
         </div>
       ) : (
         <RoomGrid rooms={rooms} onRoomClick={openRoomDetail} />
