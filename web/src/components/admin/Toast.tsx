@@ -19,7 +19,7 @@ export type ToastMessage = {
   message: string;
 };
 
-/** 화면 하단에 잠깐 떴다 사라지는 상태 메시지(REQ-UI-006). 같은 문구를 다시 띄워도 타이머가 새로 시작된다. */
+/** 화면 위쪽 가운데에 잠깐 떴다 사라지는 상태 메시지(REQ-UI-006). 같은 문구를 다시 띄워도 타이머가 새로 시작된다. */
 export function useToast() {
   const [toast, setToast] = useState<({ id: number } & ToastMessage) | null>(
     null,
