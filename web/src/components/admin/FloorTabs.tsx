@@ -1,4 +1,4 @@
-import type { Floor } from "@/lib/admin/mock-floor-data";
+import type { Floor } from "@/lib/admin/floor-types";
 
 const FLOORS: Floor[] = [3, 4, 5];
 

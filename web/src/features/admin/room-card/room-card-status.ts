@@ -1,4 +1,4 @@
-import { roomAttendance, type Room } from "@/lib/admin/mock-floor-data";
+import { roomAttendance, type Room } from "@/lib/admin/floor-types";
 
 /** REQ-UI-001: 공실은 없다는 전제라 전원 출석 / 일부 미출석 두 상태만 둔다. */
 export type RoomCardStatus = "present" | "absent";

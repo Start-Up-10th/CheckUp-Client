@@ -8,7 +8,7 @@ import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerDesignatedBar } from "@/components/admin/VolunteerDesignatedBar";
 import { VolunteerRosterRow } from "@/components/admin/VolunteerRosterRow";
 import { VolunteerStudentDialog } from "@/components/admin/VolunteerStudentDialog";
-import type { Floor } from "@/lib/admin/mock-floor-data";
+import type { Floor } from "@/lib/admin/floor-types";
 import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
 import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
 import { groupByRoom } from "@/lib/admin/volunteer-roster";
