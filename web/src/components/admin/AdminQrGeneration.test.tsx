@@ -6,6 +6,9 @@ vi.mock("@/lib/admin/admin-session", () => ({
   redirectToAdminLogin: () => redirectToAdminLogin(),
 }));
 
+// 화면의 heartbeat 주기(`HEARTBEAT_INTERVAL_MS`)보다 약간 긴 시간. 한 주기를 지나가게 한다.
+const HEARTBEAT_FIRST_TICK_MS = 20_000;
+
 const SESSION = {
   sessionId: "session-1",
   purpose: "DORMITORY",
@@ -101,6 +104,63 @@ describe("AdminQrGeneration 갱신 실패·만료", () => {
     expect(screen.getByText("남은 유효 시간")).toBeInTheDocument();
     expect(screen.queryByText(/QR 갱신에 실패/)).not.toBeInTheDocument();
     expect(redirectToAdminLogin).not.toHaveBeenCalled();
+  });
+
+  it("QR 발급이 429면 잠시 후 다시 시도 안내를 보이고 Retry-After 뒤에 다시 발급한다", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(null, { status: 429, headers: { "Retry-After": "2" } }),
+      )
+      .mockResolvedValue(json(201, SESSION));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AdminQrGeneration />);
+
+    expect(
+      await screen.findByText("잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/QR 자동 생성에 실패/)).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2_000);
+    });
+
+    expect(await screen.findByText("남은 유효 시간")).toBeInTheDocument();
+    expect(
+      screen.queryByText("잠시 후 다시 시도해 주세요."),
+    ).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("heartbeat가 429면 기존 QR을 유지하고 안내를 보이며 성공하면 안내가 사라진다", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(json(201, SESSION))
+      .mockResolvedValueOnce(new Response(null, { status: 429 }))
+      .mockResolvedValue(
+        json(200, { ...SESSION, qrUrl: SESSION.qrUrl.replace("a", "b") }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AdminQrGeneration />);
+    await screen.findByText("남은 유효 시간");
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_FIRST_TICK_MS);
+    });
+    expect(screen.getByText("잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
+    expect(screen.getByText("남은 유효 시간")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_FIRST_TICK_MS);
+    });
+    expect(
+      screen.queryByText("잠시 후 다시 시도해 주세요."),
+    ).not.toBeInTheDocument();
   });
 
   it("카운트다운이 0이 되면 만료 안내를 보이고 만료된 QR은 내린다", async () => {
