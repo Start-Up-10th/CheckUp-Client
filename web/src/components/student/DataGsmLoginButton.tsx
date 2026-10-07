@@ -9,7 +9,7 @@ export function DataGsmLoginButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex h-12 w-[300px] max-w-full items-center rounded-md border border-[#e2e8f0] bg-[#f8fafc] pl-5 text-sm font-medium leading-normal text-[#0f172a]"
+      className="flex h-12 w-[300px] max-w-full items-center rounded-md border border-[#e2e8f0] bg-[#f8fafc] pl-5 text-sm font-medium leading-normal text-[#0f172a] transition-colors hover:bg-[#f1f5f9]"
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- 14px 장식 아이콘이라 next/image 최적화가 필요 없다 */}
       <img

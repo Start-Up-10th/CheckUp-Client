@@ -13,7 +13,7 @@ export function AdminLoginButton() {
     <a
       href={LOGIN_START_PATH}
       onClick={() => rememberLoginApp("admin")}
-      className="relative flex h-12 w-[300px] items-center rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc]"
+      className="relative flex h-12 w-[300px] items-center rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc] transition-colors hover:bg-[#f1f5f9]"
     >
       <Image
         src="/icons/admin-login/datagsm-icon.svg"
