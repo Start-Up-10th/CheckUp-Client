@@ -39,7 +39,7 @@ export function AdminVolunteerDuty({
   const { roster, status, updateStudent, reload } = useVolunteerRoster();
   const gateway = useVolunteerGateway();
   const singleFlight = useSingleFlight();
-  const { toast, showToast } = useToast();
+  const { toasts, showToast } = useToast();
   const today = designatedToday(roster);
   const dayLabel = operatingDayLabel(new Date());
 
@@ -85,7 +85,7 @@ export function AdminVolunteerDuty({
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} />
+      <ToastLayer toasts={toasts} />
 
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 md:min-h-[57px] xl:min-h-0 xl:gap-y-5">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
