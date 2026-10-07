@@ -3,7 +3,6 @@
 import { ListRowsSkeleton } from "@/components/admin/ListRowsSkeleton";
 import { useEffect, useMemo, useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
-import { StatusBanner } from "@/components/admin/StatusBanner";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { StudentDetailDialog } from "@/components/admin/student-management/StudentDetailDialog";
 import { StudentFloorTabs } from "@/components/admin/student-management/StudentFloorTabs";
@@ -104,7 +103,7 @@ export function AdminStudentManagement() {
         ) : status !== "ready" ? (
           <ListRowsSkeleton />
         ) : groups.length === 0 ? (
-          <StatusBanner variant="neutral" message={NO_RESULT_MESSAGE} />
+          <AdminContentState variant="empty" description={NO_RESULT_MESSAGE} />
         ) : (
           <div className="flex flex-col gap-4 md:gap-[18px] xl:gap-[22px]">
             {groups.map((group) => (

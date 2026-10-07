@@ -49,7 +49,7 @@ export function RoomAttendanceEditDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={`room-edit-dialog-title-${room.number}`}
-        className="z-50 flex w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-[16px] bg-admin-surface p-4 md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px]"
+        className="z-50 flex max-h-[calc(100dvh-32px)] w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-[16px] bg-admin-surface p-4 md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px]"
         onClick={(event) => event.stopPropagation()}
       >
         <h2
@@ -62,7 +62,7 @@ export function RoomAttendanceEditDialog({
           배정 {assigned}명 · 출석 {present}명
         </p>
 
-        <div className="flex w-full flex-col gap-1.5 pt-3">
+        <div className="flex min-h-0 w-full flex-col gap-1.5 overflow-y-auto pt-3">
           {sortedRoomStudents(pendingStudents).map((student, index) => (
             <div
               key={student.studentId}

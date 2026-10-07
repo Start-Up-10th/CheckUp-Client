@@ -4,7 +4,6 @@ import { ListRowsSkeleton } from "@/components/admin/ListRowsSkeleton";
 import Link from "next/link";
 import { useEffect } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
-import { StatusBanner } from "@/components/admin/StatusBanner";
 import {
   ToastLayer,
   useToast,
@@ -131,10 +130,9 @@ export function AdminVolunteerDuty({
           ) : status !== "ready" ? (
             <ListRowsSkeleton />
           ) : today.length === 0 ? (
-            <StatusBanner
-              variant="neutral"
-              compactOnPhone
-              message="오늘 지정된 봉사자가 없습니다. 봉사자 명단에서 지정해 주세요."
+            <AdminContentState
+              variant="empty"
+              description="오늘 지정된 봉사자가 없습니다. 봉사자 명단에서 지정해 주세요."
             />
           ) : (
             today.map((student) => (
