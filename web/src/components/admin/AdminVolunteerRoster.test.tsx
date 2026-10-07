@@ -341,6 +341,12 @@ describe("AdminVolunteerRoster", () => {
       const link = barLink()!;
       expect(link).toHaveAttribute("href", "/admin/volunteers");
       expect(link.parentElement).toHaveTextContent("당일 지정 3명");
+      // Figma 위치(패널 아래에서 40px 위)와 나타나는 애니메이션(동작 줄이기에서는 끔).
+      expect(link.parentElement).toHaveClass(
+        "xl:bottom-[68px]",
+        "animate-bar-rise",
+        "motion-reduce:animate-none",
+      );
 
       fireEvent.click(screen.getByRole("button", { name: "3층" }));
       fireEvent.click(
