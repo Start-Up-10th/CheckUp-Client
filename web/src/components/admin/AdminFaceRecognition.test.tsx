@@ -162,6 +162,8 @@ describe("AdminFaceRecognition", () => {
     expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
 
     await tick(8_000);
+    // 토스트 갱신은 라이브러리 안에서 한 박자 뒤에 반영된다.
+    await tick(100);
     expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
     expect(
       screen.queryByText("인식 실패 · 3회 초과 시 QR로 출석"),

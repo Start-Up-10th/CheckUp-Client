@@ -55,7 +55,7 @@ export function AdminHomeFloorPlan() {
   const roomRequest = useRef(0);
   // 저장 요청이 끝나기 전의 중복 저장을 막는다.
   const saving = useRef(false);
-  const { toasts, showToast } = useToast();
+  const { showToast } = useToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -201,7 +201,7 @@ export function AdminHomeFloorPlan() {
 
   return (
     <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toasts={toasts} />
+      <ToastLayer />
 
       {/* 헤더: 제목 좌측 + 층 탭 우측 */}
       <div className="flex w-full items-center justify-between md:h-[57px] xl:h-auto xl:items-end">

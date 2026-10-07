@@ -12,10 +12,8 @@ import type { QrAttendanceResult } from "@/lib/student/qr-attendance-result";
 import { RateLimitedError } from "@/lib/rate-limit";
 import { saveQrReturnUrl } from "@/lib/student/qr-return-url";
 import { useQrScanner } from "@/lib/student/use-qr-scanner";
-import { TOAST_EXIT_MS, ToastFrame } from "@/components/admin/Toast";
-import { usePresence } from "@/hooks/use-presence";
+import { ToastLayer, type ToastMessage } from "@/components/admin/Toast";
 import { QrCameraHeader } from "./QrCameraHeader";
-import { QrResultToast, type QrResultVariant } from "./QrResultToast";
 import { QrScanFrame } from "./QrScanFrame";
 import { StudentErrorState } from "./StudentErrorState";
 import { StudentShell } from "./StudentShell";
@@ -28,10 +26,7 @@ import { StudentShell } from "./StudentShell";
 type QrOutcome = QrAttendanceResult | "notStudent" | "retry";
 
 /** 결과별 문구·색. 문구는 REQ-ATT-004/005와 Figma state messages(4:71, 345:43)를 따른다. */
-const RESULT_MESSAGES: Record<
-  QrOutcome,
-  { variant: QrResultVariant; message: string }
-> = {
+const RESULT_MESSAGES: Record<QrOutcome, ToastMessage> = {
   approved: { variant: "success", message: "승인되었습니다" },
   expired: {
     variant: "error",
@@ -140,9 +135,6 @@ export function StudentQrCamera() {
     enabled: entry === "camera",
   });
 
-  // 결과가 사라져도 퇴장 애니메이션 동안 마지막 결과를 보인다. 위쪽 가운데에 뜬다(관리자 토스트와 같은 위치).
-  const { current: shown, closing } = usePresence(result, TOAST_EXIT_MS);
-
   useEffect(() => {
     if (!result) return;
     const timer =
@@ -185,15 +177,8 @@ export function StudentQrCamera() {
           </p>
         </div>
       </main>
-      {shown && (
-        <ToastFrame
-          closing={closing}
-          contentKey={shown}
-          widthClassName="w-full max-w-[354px]"
-        >
-          <QrResultToast {...RESULT_MESSAGES[shown]} />
-        </ToastFrame>
-      )}
+      {/* 결과는 다른 화면의 상태 메시지와 같은 토스트(위쪽 가운데)로 보이고 결과가 사라지면 닫힌다. */}
+      <ToastLayer toast={result ? RESULT_MESSAGES[result] : null} />
     </StudentShell>
   );
 }
