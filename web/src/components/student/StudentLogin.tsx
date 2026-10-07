@@ -2,7 +2,6 @@
 
 import { ToastLayer } from "@/components/admin/Toast";
 import { LOGIN_START_PATH } from "@/lib/auth/auth-api";
-import { rememberLoginApp } from "@/lib/auth/login-app";
 import { LoginCard } from "@/components/LoginCard";
 import { DataGsmLoginButton } from "./DataGsmLoginButton";
 
@@ -26,8 +25,6 @@ export function StudentLogin({
   // 웹은 DataGSM 주소·클라이언트 ID를 직접 만들지 않는다. 앱 안 이동(router)이 아니라 서버 302를
   // 따라가야 하므로 location을 바꾼다.
   const login = () => {
-    // 어느 앱에서 시작했는지 적어 둔다. 콜백 뒤 기숙사 자치위원(관리자이면서 학생)을 사용자 앱으로 보내는 데 쓴다(DEC-047).
-    rememberLoginApp("user");
     window.location.assign(LOGIN_START_PATH);
   };
 

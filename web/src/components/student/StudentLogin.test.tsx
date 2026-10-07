@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { takeLoginApp } from "@/lib/auth/login-app";
 import { StudentLogin } from "./StudentLogin";
 
 describe("StudentLogin", () => {
@@ -27,17 +26,13 @@ describe("StudentLogin", () => {
     );
   });
 
-  it("로그인을 시작하기 직전에 사용자 앱에서 시작했다고 적는다", () => {
+  it("누르면 서버 로그인 시작 주소로 이동한다", () => {
     const originalLocation = window.location;
     const assign = vi.fn();
     Object.defineProperty(window, "location", {
       configurable: true,
       value: { assign, href: "http://localhost/" },
     });
-    window.localStorage.setItem(
-      "checkup:login-app",
-      JSON.stringify({ app: "admin", at: Date.now() }),
-    );
     try {
       render(<StudentLogin />);
 
@@ -46,8 +41,6 @@ describe("StudentLogin", () => {
       );
 
       expect(assign).toHaveBeenCalledWith("/api/v1/auth/login");
-      // 이전에 남은 관리자 기록을 사용자 앱 기록으로 덮어쓴다.
-      expect(takeLoginApp()).toBe("user");
     } finally {
       Object.defineProperty(window, "location", {
         configurable: true,

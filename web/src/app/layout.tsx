@@ -10,12 +10,12 @@ const robotoMono = Roboto_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "기숙사 출석 관리",
+  title: "CheckUp",
   description: "광주소프트웨어마이스터고 기숙사 입소·자습실 출석 관리 시스템",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "기숙사 출석",
+    title: "CheckUp",
   },
   icons: {
     apple: "/icons/apple-touch-icon.png",
