@@ -2,9 +2,11 @@ import { AdminUnauthorizedError } from "./qr-api";
 import {
   VolunteerApiError,
   adjustVolunteerCount,
+  adjustVolunteerCountBy,
   cancelVolunteerDuty,
   completeVolunteerDuty,
   designateVolunteer,
+  fetchVolunteerAdjustments,
   fetchVolunteers,
   toRosterStudent,
 } from "./volunteer-api";
@@ -161,5 +163,108 @@ describe("봉사 변경 요청", () => {
 
     expect(student.duty).toBe("completed");
     expect(student.count).toBe(2);
+  });
+});
+
+describe("adjustVolunteerCountBy", () => {
+  it("횟수 변화와 사유를 PATCH count로 한 번에 보낸다", async () => {
+    const fetchMock = mockFetch(200, BODY);
+
+    await adjustVolunteerCountBy(17, 3, "  청소 당번 대체  ", "key-3");
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/v1/volunteer/17/count");
+    expect(init.method).toBe("PATCH");
+    expect(init.headers).toEqual({
+      "Content-Type": "application/json",
+      "Idempotency-Key": "key-3",
+    });
+    expect(JSON.parse(init.body)).toEqual({
+      delta: 3,
+      reason: "청소 당번 대체",
+    });
+  });
+
+  it("사유가 비어 있으면 reason을 보내지 않고 100자를 넘으면 자른다", async () => {
+    const fetchMock = mockFetch(200, BODY);
+
+    await adjustVolunteerCountBy(17, -2, "   ", "key-4");
+    await adjustVolunteerCountBy(17, 1, "가".repeat(120), "key-5");
+
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ delta: -2 });
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body).reason).toHaveLength(
+      100,
+    );
+  });
+
+  it("바뀐 학생 상태를 돌려주고 0일 때 차감은 서버 코드로 던진다", async () => {
+    mockFetch(200, { ...BODY, volunteerCount: 6 });
+    await expect(adjustVolunteerCountBy(17, 3, "")).resolves.toMatchObject({
+      count: 6,
+    });
+
+    mockFetch(409, { code: "VOLUNTEER_COUNT_ZERO" });
+    await expect(adjustVolunteerCountBy(17, -1, "")).rejects.toMatchObject({
+      status: 409,
+      code: "VOLUNTEER_COUNT_ZERO",
+    });
+  });
+});
+
+describe("fetchVolunteerAdjustments", () => {
+  it("조정 이력을 날짜·활동명·실제 바뀐 횟수로 바꾼다", async () => {
+    const fetchMock = mockFetch(200, [
+      {
+        createdAt: "2026-10-01T15:30:00Z",
+        delta: -2,
+        requestedDelta: -5,
+        reason: "청소 당번 대체",
+        kind: "ADMIN",
+      },
+      {
+        createdAt: "2026-09-24T01:00:00Z",
+        delta: -1,
+        reason: null,
+        kind: "DUTY_COMPLETION",
+      },
+      {
+        createdAt: "2026-09-17T01:00:00Z",
+        delta: 3,
+        reason: null,
+        kind: "ADMIN",
+      },
+      { createdAt: "2026-09-03T01:00:00Z", delta: -1, kind: "ADMIN" },
+    ]);
+
+    const items = await fetchVolunteerAdjustments(17);
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/v1/volunteer/17/adjustments", {
+      credentials: "include",
+    });
+    expect(items.map(({ date, title, delta }) => [date, title, delta])).toEqual(
+      [
+        ["10/02", "청소 당번 대체", -2],
+        ["09/24", "당일 봉사 완료", -1],
+        ["09/17", "봉사 횟수 추가", 3],
+        ["09/03", "봉사 횟수 감면", -1],
+      ],
+    );
+    expect(new Set(items.map((item) => item.id)).size).toBe(4);
+  });
+
+  it("이력이 없으면 빈 목록이고 401은 로그인 필요 오류다", async () => {
+    mockFetch(200, []);
+    await expect(fetchVolunteerAdjustments(17)).resolves.toEqual([]);
+
+    mockFetch(401);
+    await expect(fetchVolunteerAdjustments(17)).rejects.toBeInstanceOf(
+      AdminUnauthorizedError,
+    );
+  });
+
+  it("횟수가 정수가 아니면 오류를 던진다", async () => {
+    mockFetch(200, [{ createdAt: "2026-10-01T00:00:00Z", delta: "x" }]);
+
+    await expect(fetchVolunteerAdjustments(17)).rejects.toThrow("unexpected");
   });
 });
