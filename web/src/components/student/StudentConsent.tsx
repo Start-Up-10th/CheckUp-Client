@@ -11,6 +11,7 @@ import {
 import { ConsentAllRow } from "./ConsentAllRow";
 import { ConsentItem } from "./ConsentItem";
 import { PrimaryButton } from "./PrimaryButton";
+import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 
 type ConsentKey = "privacy" | "face" | "notice";
 
@@ -44,11 +45,12 @@ const CONSENT_ITEMS: {
 ];
 
 /** 저장 실패 종류. server는 다시 시도할 수 있고, notStudent(403)는 다시 시도해도 같다. */
-type ConsentError = "server" | "notStudent";
+type ConsentError = "server" | "notStudent" | "rateLimited";
 
 const ERROR_MESSAGES: Record<ConsentError, string> = {
   server: "서버와 연결이 원활하지 않습니다.",
   notStudent: "학생 계정만 이용할 수 있어요.",
+  rateLimited: RATE_LIMIT_MESSAGE,
 };
 
 /**
@@ -105,7 +107,7 @@ export function StudentConsent() {
           return;
         }
         setSaving(false);
-        setError("server");
+        setError(reason instanceof RateLimitedError ? "rateLimited" : "server");
       });
   };
 

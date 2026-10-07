@@ -1,3 +1,4 @@
+import { throwIfRateLimited } from "@/lib/rate-limit";
 export type FaceStatus = {
   /** 필수 동의(개인정보·얼굴 정보 처리)를 했는지 */
   consented: boolean;
@@ -66,6 +67,7 @@ export async function fetchFaceStatus(): Promise<FaceStatus> {
   const res = await fetch("/api/v1/face/me", { credentials: "include" });
   if (res.status === 401) throw new FaceLoginRequiredError();
   if (res.status === 403) throw new FaceNotStudentError();
+  throwIfRateLimited(res);
   if (!res.ok) throw new Error(`faceStatus: ${res.status}`);
   const body = (await res.json()) as {
     consented?: unknown;
@@ -108,5 +110,6 @@ export async function enrollFace(video: Blob): Promise<FaceEnrollResult> {
     if (code === "FACE_ENROLLMENT_NOT_ELIGIBLE") return "notEligible";
     throw new FaceNotStudentError();
   }
+  throwIfRateLimited(res);
   throw new Error(`faceEnroll: ${res.status}`);
 }

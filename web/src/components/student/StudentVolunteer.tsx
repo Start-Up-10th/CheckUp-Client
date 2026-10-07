@@ -11,18 +11,19 @@ import {
   type VolunteerRecord,
 } from "@/lib/student/volunteer-api";
 import { StudentEmptyState } from "./StudentEmptyState";
-import { StudentErrorState } from "./StudentErrorState";
+import { RATE_LIMITED_COPY, StudentErrorState } from "./StudentErrorState";
 import { StudentPageHeader } from "./StudentPageHeader";
 import { StudentShell } from "./StudentShell";
 import { VolunteerCountCard } from "./VolunteerCountCard";
 import { VolunteerHistoryItem } from "./VolunteerHistoryItem";
 import { VolunteerHistorySkeleton } from "./VolunteerHistorySkeleton";
+import { RateLimitedError } from "@/lib/rate-limit";
 
 const LOAD_FAILED_MESSAGE = "봉사 활동 내역을 불러오지 못했습니다.";
 
 type LoadState =
   | { status: "loading" }
-  | { status: "error" }
+  | { status: "error"; rateLimited?: boolean }
   | { status: "ready"; remaining: number; history: VolunteerRecord[] };
 
 /**
@@ -73,7 +74,10 @@ function StudentVolunteerContent() {
         if (reason instanceof VolunteerLoginRequiredError) {
           router.replace("/login");
         } else {
-          setState({ status: "error" });
+          setState({
+            status: "error",
+            rateLimited: reason instanceof RateLimitedError,
+          });
         }
       });
     return () => {
@@ -101,7 +105,12 @@ function StudentVolunteerContent() {
         <StudentPageHeader title="봉사 활동" backHref="/my" />
         <div className="px-[18px] md:px-0">
           {failed ? (
-            <StudentErrorState onRetry={retry} />
+            <StudentErrorState
+              onRetry={retry}
+              {...(state.status === "error" && state.rateLimited
+                ? RATE_LIMITED_COPY
+                : {})}
+            />
           ) : state.status !== "ready" ? (
             <VolunteerHistorySkeleton />
           ) : (

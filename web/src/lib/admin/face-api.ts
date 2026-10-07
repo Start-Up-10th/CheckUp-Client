@@ -1,4 +1,5 @@
 import type { Purpose } from "@/lib/admin/purpose";
+import { throwIfRateLimited } from "@/lib/rate-limit";
 import { AdminUnauthorizedError, PURPOSE_TO_API } from "@/lib/admin/qr-api";
 
 /** 서버 `Recognition.status`. KNOWN은 서버가 후보 학생과 확인한 경우, UNKNOWN은 못 찾은 경우다. */
@@ -95,6 +96,7 @@ function toFaceResult(face: FaceApiBody["faces"][number]): FaceResult {
 
 async function failFrom(res: Response): Promise<never> {
   if (res.status === 401) throw new AdminUnauthorizedError();
+  throwIfRateLimited(res);
   const body = (await res.json().catch(() => null)) as {
     code?: unknown;
   } | null;
