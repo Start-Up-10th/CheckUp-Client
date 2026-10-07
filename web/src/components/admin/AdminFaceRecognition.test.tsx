@@ -132,6 +132,8 @@ describe("AdminFaceRecognition", () => {
     ).toBeInTheDocument();
 
     await tick(10_000);
+    // 사라지는 애니메이션(200ms) 동안은 마지막 토스트를 그린다.
+    await tick(300);
     expect(
       screen.queryByText("인식 실패 · 3회 초과 시 QR로 출석"),
     ).not.toBeInTheDocument();

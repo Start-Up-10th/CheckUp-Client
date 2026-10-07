@@ -44,7 +44,7 @@ export function AdminVolunteerRoster() {
   const [designatedHere, setDesignatedHere] = useState(false);
   const gateway = useVolunteerGateway();
   const singleFlight = useSingleFlight();
-  const { toast, showToast } = useToast();
+  const { toasts, showToast } = useToast();
   const selected =
     roster.find((student) => student.studentId === selectedId) ?? null;
   // 봉사자 관리(06)가 보여 주는 사람과 같게, 완료한 학생은 빼고 아직 완료하지 않은 지정만 센다.
@@ -86,7 +86,7 @@ export function AdminVolunteerRoster() {
 
   return (
     <div className="relative flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} />
+      <ToastLayer toasts={toasts} />
 
       <div className="flex w-full items-end justify-between">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
