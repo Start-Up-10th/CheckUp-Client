@@ -14,11 +14,10 @@ import { useFaceGateway } from "@/lib/admin/face-gateway";
 import { applyFrame, INITIAL_RECOGNITION } from "@/lib/admin/face-results";
 import type { Purpose } from "@/lib/admin/purpose";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
+import { RateLimitedError } from "@/lib/rate-limit";
 
 /** 응답이 온 뒤 다음 프레임을 보내기까지의 간격. 서버 최소 간격(200ms)보다 넉넉히 둔다. */
 export const FRAME_INTERVAL_MS = 500;
-/** 서버가 요청이 너무 빠르다고(429) 했을 때 기다리는 시간. */
-export const RATE_LIMIT_BACKOFF_MS = 1000;
 /** 그 밖의 실패 뒤 다시 보내기까지 기다리는 시간. */
 export const ERROR_BACKOFF_MS = 2000;
 /** 연속 실패가 이만큼 쌓이면 오류 상태로 알린다. */
@@ -61,6 +60,8 @@ export function useFaceRecognition({
   const [qrNotice, setQrNotice] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [failure, setFailure] = useState(false);
+  // 서버가 요청이 너무 많다고(429) 한 동안 true다. 다음 프레임 응답이 오면 false로 돌아온다.
+  const [rateLimited, setRateLimited] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
 
@@ -152,6 +153,7 @@ export function useFaceRecognition({
             );
             if (cancelled) break;
             failures = 0;
+            setRateLimited(false);
             const outcome = applyFrame(state, result.faces, new Date());
             state = outcome.state;
             const found = outcome.success;
@@ -216,15 +218,18 @@ export function useFaceRecognition({
               await sleep(intervalMs);
               continue;
             }
-            failures += 1;
-            if (failures >= MAX_CONSECUTIVE_FAILURES) {
-              fail(error);
-              return;
+            if (error instanceof RateLimitedError) {
+              // 요청이 너무 많다는 안내(429)는 실패로 세지 않고 서버가 알려 준 시간(Retry-After, 없으면 1초)만큼 기다린다.
+              setRateLimited(true);
+              delay = error.retryAfterMs;
+            } else {
+              failures += 1;
+              if (failures >= MAX_CONSECUTIVE_FAILURES) {
+                fail(error);
+                return;
+              }
+              delay = ERROR_BACKOFF_MS;
             }
-            delay =
-              error instanceof FaceApiError && error.status === 429
-                ? RATE_LIMIT_BACKOFF_MS
-                : ERROR_BACKOFF_MS;
           }
         }
         await sleep(delay);
@@ -237,6 +242,7 @@ export function useFaceRecognition({
     setQrNotice(false);
     setSuccess(null);
     setFailure(false);
+    setRateLimited(false);
     /* eslint-enable react-hooks/set-state-in-effect */
     void run();
 
@@ -261,5 +267,5 @@ export function useFaceRecognition({
     };
   }, [cameraReady, purpose, gateway, attempt, capture, intervalMs, videoRef]);
 
-  return { status, qrNotice, success, failure, retry };
+  return { status, qrNotice, success, failure, rateLimited, retry };
 }

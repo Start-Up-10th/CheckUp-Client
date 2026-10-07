@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel";
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer } from "@/components/admin/Toast";
 import { formatCountdown } from "@/lib/admin/qr-countdown";
+import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 import type { Purpose } from "@/lib/admin/purpose";
 import { redirectToAdminLogin } from "@/lib/admin/admin-session";
 import {
@@ -38,11 +39,14 @@ export function AdminQrGeneration() {
   const [session, setSession] = useState<ActiveSession | null>(null);
   const [now, setNow] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // 서버가 요청이 너무 많다고(429) 한 동안 보이는 `잠시 후 다시 시도` 안내.
+  const [rateLimited, setRateLimited] = useState(false);
   // sessionKey를 올려 heartbeat 404 시 세션 재생성을 트리거한다.
   const [sessionKey, setSessionKey] = useState(0);
 
   const sessionIdRef = useRef<string | null>(null);
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // ref로 즉시 취소: 언마운트 정리에서 React 스케줄러 전에 동기적으로 세트한다.
   const cancelRef = useRef(false);
 
@@ -80,6 +84,7 @@ export function AdminQrGeneration() {
           try {
             const hb = await heartbeatQrSession(id);
             if (cancelRef.current) return;
+            setRateLimited(false);
             setSession((prev) =>
               prev
                 ? {
@@ -98,6 +103,9 @@ export function AdminQrGeneration() {
               sessionIdRef.current = null;
               setSession(null);
               redirectToAdminLogin();
+            } else if (err instanceof RateLimitedError) {
+              // 요청이 너무 많다는 안내: 기존 QR을 유지하고 안내만 보인 뒤 다음 주기에 다시 갱신한다.
+              setRateLimited(true);
             } else if (err instanceof QrSessionNotFoundError) {
               // 서버 세션이 사라진 경우 새 세션을 생성한다.
               sessionIdRef.current = null;
@@ -112,6 +120,13 @@ export function AdminQrGeneration() {
         if (cancelRef.current) return;
         if (err instanceof AdminUnauthorizedError) {
           redirectToAdminLogin();
+        } else if (err instanceof RateLimitedError) {
+          // 요청이 너무 많다는 안내: Retry-After(없으면 1초) 뒤에 같은 세션 발급을 다시 시도한다.
+          setRateLimited(true);
+          retryRef.current = setTimeout(() => {
+            setRateLimited(false);
+            setSessionKey((k) => k + 1);
+          }, err.retryAfterMs);
         } else {
           setError("QR 자동 생성에 실패했습니다. 새로고침해 주세요.");
         }
@@ -128,6 +143,10 @@ export function AdminQrGeneration() {
       cancelRef.current = true;
       clearInterval(tickTimer);
       clearHeartbeat();
+      if (retryRef.current) {
+        clearTimeout(retryRef.current);
+        retryRef.current = null;
+      }
       if (sessionIdRef.current) {
         closeQrSession(sessionIdRef.current);
         sessionIdRef.current = null;
@@ -145,7 +164,11 @@ export function AdminQrGeneration() {
     !error && remaining !== null && remaining > 0
       ? formatCountdown(remaining)
       : undefined;
-  const bannerMessage = error ?? (expired ? EXPIRED_MESSAGE : null);
+  // 오류·만료는 오류 배너, 429 안내만 있을 때는 안내(neutral) 배너다.
+  const bannerMessage =
+    error ??
+    (expired ? EXPIRED_MESSAGE : rateLimited ? RATE_LIMIT_MESSAGE : null);
+  const bannerVariant = !error && !expired && rateLimited ? "neutral" : "error";
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 pb-[7px] pt-3.5 md:gap-[22px] md:px-[22px] md:pb-[22px] md:pt-6 xl:gap-5 xl:px-8 xl:pb-7 xl:pt-7">
@@ -160,9 +183,14 @@ export function AdminQrGeneration() {
         </div>
       </div>
 
-      {bannerMessage && (
-        <StatusBanner variant="error" message={bannerMessage} compactOnPhone />
-      )}
+      {/* 오류·만료·429 안내는 다른 화면의 상태 메시지와 같은 위쪽 가운데 토스트로 보인다. 상태가 풀릴 때까지 유지된다. */}
+      <ToastLayer
+        toast={
+          bannerMessage
+            ? { variant: bannerVariant, message: bannerMessage }
+            : null
+        }
+      />
 
       {session && countdownLabel ? (
         <QrCodeGenerationPanel

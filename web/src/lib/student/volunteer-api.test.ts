@@ -1,3 +1,4 @@
+import { RateLimitedError } from "@/lib/rate-limit";
 import {
   VolunteerLoginRequiredError,
   fetchRemainingVolunteerCount,
@@ -111,5 +112,29 @@ describe("fetchVolunteerHistory", () => {
     await expect(fetchVolunteerHistory(1234)).rejects.toThrow(
       "unexpected response",
     );
+  });
+});
+
+describe("429 응답", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("429면 Retry-After를 담은 RateLimitedError다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(
+        async () =>
+          new Response(null, {
+            status: 429,
+            headers: { "Retry-After": "3" },
+          }),
+      ),
+    );
+
+    const error = await fetchRemainingVolunteerCount(7).catch(
+      (e: unknown) => e,
+    );
+
+    expect(error).toBeInstanceOf(RateLimitedError);
+    expect((error as RateLimitedError).retryAfterMs).toBe(3000);
   });
 });
