@@ -6,12 +6,12 @@ const TONE_STYLES: Record<SidebarTone, { on: string; off: string }> = {
   // 흰 사이드바(Figma 227:16)
   light: {
     on: "bg-admin-attendance-bg font-bold text-admin-attendance-text",
-    off: "text-admin-ghost-text",
+    off: "text-admin-ghost-text hover:bg-admin-bg",
   },
   // QR 카메라 화면의 어두운 사이드바(Figma 228:21)
   dark: {
     on: "bg-white/10 font-bold text-admin-accent-bg",
-    off: "text-white/55",
+    off: "text-white/55 hover:bg-white/5 hover:text-white/80",
   },
 };
 
@@ -44,7 +44,7 @@ export function StudentSidebarLink({
     <Link
       href={href}
       aria-current={current ? "page" : undefined}
-      className={`flex items-center gap-2.5 rounded-control px-3 py-[11px] text-sm leading-normal ${
+      className={`flex items-center gap-2.5 rounded-control px-3 py-[11px] text-sm leading-normal transition-colors ${
         highlighted ? TONE_STYLES[tone].on : TONE_STYLES[tone].off
       }`}
     >
