@@ -27,8 +27,8 @@ const COUNT_FAILURE_MESSAGE =
 
 /**
  * 학생 관리(Figma 08). 전체 학생을 층 탭·검색으로 거르고 호실별로 보여 준다. 학생을 누르면 상세 다이얼로그에서
- * 봉사 횟수와 사유를 정해 저장한다. 저장은 서버에 사유·일괄 변경 API가 없어 개발용 대역
- * (`devStudentManagementGateway`)으로 동작한다.
+ * 봉사 횟수와 사유를 정해 저장한다. 저장은 서버 `PATCH /api/v1/volunteer/{id}/count`로 횟수 변화와 사유를 한 번에 보낸다
+ * (`apiStudentManagementGateway`).
  */
 export function AdminStudentManagement() {
   const { roster, status, updateStudent, reload } = useVolunteerRoster();
