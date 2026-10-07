@@ -1,6 +1,6 @@
 "use client";
 
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer } from "@/components/admin/Toast";
 import { LOGIN_START_PATH } from "@/lib/auth/auth-api";
 import { rememberLoginApp } from "@/lib/auth/login-app";
 import { DataGsmLoginButton } from "./DataGsmLoginButton";
@@ -46,11 +46,13 @@ export function StudentLogin({
         />
       </h1>
       <DataGsmLoginButton onClick={login} />
-      {failureMessage !== null && (
-        <div className="fixed inset-x-[18px] bottom-8 z-40 md:inset-x-auto md:bottom-auto md:right-8 md:top-8 md:w-[380px]">
-          <StatusBanner variant="error" message={failureMessage} />
-        </div>
-      )}
+      <ToastLayer
+        toast={
+          failureMessage !== null
+            ? { variant: "error", message: failureMessage }
+            : null
+        }
+      />
     </main>
   );
 }

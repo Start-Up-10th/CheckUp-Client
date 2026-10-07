@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer } from "@/components/admin/Toast";
 import { useCurrentStudent } from "@/lib/student/current-student";
 import { fetchFaceStatus } from "@/lib/student/face-enroll-api";
 import {
@@ -137,18 +137,18 @@ function StudentMainContent({
         </div>
       </main>
       <QrFab />
-      {showError && (
-        <div className="pointer-events-none fixed inset-x-[18px] bottom-[176px] z-40 md:inset-x-auto md:bottom-auto md:right-8 md:top-8 md:w-[380px]">
-          {roster.status === "error" && roster.rateLimited ? (
-            <StatusBanner variant="neutral" message={RATE_LIMIT_MESSAGE} />
-          ) : (
-            <StatusBanner
-              variant="error"
-              message="서버와 연결이 원활하지 않습니다."
-            />
-          )}
-        </div>
-      )}
+      <ToastLayer
+        toast={
+          !showError
+            ? null
+            : roster.status === "error" && roster.rateLimited
+              ? { variant: "neutral", message: RATE_LIMIT_MESSAGE }
+              : {
+                  variant: "error",
+                  message: "서버와 연결이 원활하지 않습니다.",
+                }
+        }
+      />
     </>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer } from "@/components/admin/Toast";
 import {
   ConsentLoginRequiredError,
   ConsentNotStudentError,
@@ -140,11 +140,16 @@ export function StudentConsent() {
           동의하고 계속하기
         </PrimaryButton>
       </div>
-      {error && (
-        <div className="pointer-events-none fixed inset-x-[18px] bottom-[104px] z-40 md:inset-x-auto md:bottom-auto md:right-8 md:top-8 md:w-[380px]">
-          <StatusBanner variant="error" message={ERROR_MESSAGES[error]} />
-        </div>
-      )}
+      <ToastLayer
+        toast={
+          error
+            ? {
+                variant: error === "rateLimited" ? "neutral" : "error",
+                message: ERROR_MESSAGES[error],
+              }
+            : null
+        }
+      />
     </main>
   );
 }

@@ -57,21 +57,6 @@ const config: Config = {
           },
         },
       },
-      // 토스트 등장·퇴장: 위에서 살짝 내려오며 나타나고, 사라질 때는 위로 올라가며 흐려진다.
-      keyframes: {
-        "toast-in": {
-          from: { opacity: "0", transform: "translateY(-12px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
-        },
-        "toast-out": {
-          from: { opacity: "1", transform: "translateY(0)" },
-          to: { opacity: "0", transform: "translateY(-12px)" },
-        },
-      },
-      animation: {
-        "toast-in": "toast-in 200ms ease-out both",
-        "toast-out": "toast-out 200ms ease-in both",
-      },
       borderRadius: {
         card: "14px",
         panel: "20px",

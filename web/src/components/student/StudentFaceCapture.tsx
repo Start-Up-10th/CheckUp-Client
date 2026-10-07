@@ -3,7 +3,7 @@
 import { Roboto_Mono } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer } from "@/components/admin/Toast";
 import {
   FaceLoginRequiredError,
   FaceNotStudentError,
@@ -217,6 +217,18 @@ export function StudentFaceCapture() {
         <FaceLaptopNotice />
       </div>
 
+      {/* 등록 실패는 다른 화면의 상태 메시지와 같은 토스트로 보이고 다시 찍으면 닫힌다. */}
+      <ToastLayer
+        toast={
+          failure
+            ? {
+                variant: failure === "rateLimited" ? "neutral" : "error",
+                message: FAILURE_MESSAGES[failure],
+              }
+            : null
+        }
+      />
+
       <div className="flex flex-1 flex-col pt-14 md:hidden">
         <h1 className="sr-only">얼굴 등록</h1>
         {entry === "notStudent" ? (
@@ -269,14 +281,6 @@ export function StudentFaceCapture() {
                 >
                   {count}
                 </span>
-              )}
-              {failure && (
-                <div className="absolute inset-x-[18px] top-4">
-                  <StatusBanner
-                    variant="error"
-                    message={FAILURE_MESSAGES[failure]}
-                  />
-                </div>
               )}
               <div
                 className={`absolute inset-x-0 flex justify-center ${

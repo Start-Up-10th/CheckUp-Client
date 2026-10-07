@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer } from "@/components/admin/Toast";
 import { useCurrentStudent } from "@/lib/student/current-student";
 import { LogoutButton } from "./LogoutButton";
 import { MenuRow } from "./MenuRow";
@@ -50,11 +50,13 @@ function StudentMyPageContent() {
           </div>
         </div>
       </main>
-      {current.status === "error" && (
-        <div className="pointer-events-none fixed inset-x-[18px] bottom-[176px] z-40 md:inset-x-auto md:bottom-auto md:right-8 md:top-8 md:w-[380px]">
-          <StatusBanner variant="error" message="정보를 불러오지 못했습니다." />
-        </div>
-      )}
+      <ToastLayer
+        toast={
+          current.status === "error"
+            ? { variant: "error", message: "정보를 불러오지 못했습니다." }
+            : null
+        }
+      />
     </>
   );
 }
