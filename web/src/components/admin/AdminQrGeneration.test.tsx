@@ -55,8 +55,8 @@ describe("AdminQrGeneration 세션 만료", () => {
 
     const message = await screen.findByText(/QR 자동 생성에 실패/);
     expect(message).toBeInTheDocument();
-    // 다른 화면의 상태 메시지와 같은 위쪽 가운데 토스트(화면에 고정)로 보인다.
-    expect(message.closest(".fixed")).not.toBeNull();
+    // 다른 화면의 상태 메시지와 같은 토스트(react-toastify)로 보인다.
+    expect(message.closest(".Toastify__toast")).not.toBeNull();
     expect(redirectToAdminLogin).not.toHaveBeenCalled();
   });
 

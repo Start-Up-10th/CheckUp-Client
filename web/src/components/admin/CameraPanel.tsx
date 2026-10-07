@@ -1,28 +1,17 @@
 import type { RefObject } from "react";
-import { StatusBanner } from "@/components/admin/StatusBanner";
 import type { CameraStatus } from "@/lib/admin/use-camera-stream";
 
 type CameraPanelProps = {
   videoRef: RefObject<HTMLVideoElement | null>;
   status: CameraStatus;
-  /** 방금 인식에 성공했을 때의 문구(`성공 · 학번 이름`). */
-  successMessage?: string | null;
-  /** 인식 서버 연결 실패. 카메라 하단에 Figma 상태 메시지 크기의 오류 배너와 다시 시도를 보인다. */
-  recognitionFailed?: boolean;
-  onRetry?: () => void;
 };
 
 /**
  * REQ-FACE-004/007: 카메라는 자동 실행되고 시작 버튼은 없다. LIVE는 허용된 뒤에만 표시한다.
+ * 인식 성공·실패·서버 오류 메시지는 이 패널이 아니라 토스트로 보인다(DEC-048).
  * 전체화면 모드·전체화면 버튼은 없다(Figma 2026-10-06 사용자 수정, DEC-036).
  */
-export function CameraPanel({
-  videoRef,
-  status,
-  successMessage = null,
-  recognitionFailed = false,
-  onRetry,
-}: CameraPanelProps) {
+export function CameraPanel({ videoRef, status }: CameraPanelProps) {
   const live = status === "granted";
 
   return (
@@ -50,52 +39,11 @@ export function CameraPanel({
           className="size-full object-cover"
         />
 
-        {/* REQ-FACE-006: 카메라 하단에 성공을 잠시 보인다. 인식 실패는 위쪽 가운데 토스트로 보인다. */}
-        {status !== "error" && successMessage && (
-          <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-col items-center gap-2 md:bottom-4">
-            {successMessage && (
-              <>
-                <StatusBanner
-                  variant="success"
-                  message={successMessage}
-                  compactOnPhone
-                  className="xl:hidden"
-                />
-                {/* 컴퓨터(Figma 16:26 `성공 칩`): 흰 칩 + 초록 체크 원 + 굵은 초록 글자. 같은 문구라 화면 읽기에는 배너만 쓴다. */}
-                <div
-                  aria-hidden="true"
-                  className="hidden items-center gap-[9px] rounded-xl border border-admin-border bg-admin-surface px-[13px] py-[11px] xl:flex"
-                >
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-admin-attendance-text text-[11px] font-bold leading-none text-white">
-                    ✓
-                  </span>
-                  <span className="text-[13px] font-bold leading-4 text-admin-attendance-text">
-                    {successMessage}
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
         {status === "error" && (
           <div className="pointer-events-none absolute inset-x-0 bottom-[10%] flex flex-col items-center gap-2 text-center text-white">
             <p className="text-sm font-medium">
               카메라를 자동으로 실행하지 못했습니다.
             </p>
-          </div>
-        )}
-
-        {/* 인식 서버 연결 실패: Figma에 없는 상태라 다른 성공·실패 표시처럼 카메라 하단에 Figma 상태 메시지(StatusBanner)와 같은 크기로 보인다. */}
-        {recognitionFailed && status !== "error" && onRetry && (
-          <div className="absolute inset-x-3 bottom-3 flex justify-center md:bottom-4">
-            <StatusBanner
-              variant="error"
-              message="불러오지 못했어요"
-              compactOnPhone
-              action={{ label: "다시 시도", onClick: onRetry }}
-              className="w-fit"
-            />
           </div>
         )}
       </div>

@@ -162,6 +162,8 @@ describe("AdminFaceRecognition", () => {
     expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
 
     await tick(8_000);
+    // 토스트 갱신은 라이브러리 안에서 한 박자 뒤에 반영된다.
+    await tick(100);
     expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
     expect(
       screen.queryByText("인식 실패 · 3회 초과 시 QR로 출석"),
@@ -184,7 +186,7 @@ describe("AdminFaceRecognition", () => {
     expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
   });
 
-  it("성공하면 카메라 하단에 `성공 · 학번 이름` 배너를 잠깐 보인다", async () => {
+  it("성공하면 `성공 · 학번 이름` 성공 토스트를 잠깐(2초) 보인다", async () => {
     const gateway = createMockFaceGateway([[]]);
     vi.spyOn(gateway, "sendFrame")
       .mockResolvedValueOnce({ frameId: "f", faces: [known()] })
@@ -192,11 +194,12 @@ describe("AdminFaceRecognition", () => {
     renderWith(gateway);
     await tick();
 
-    // 배너(화면 읽기용)와 컴퓨터용 칩이 같은 문구를 그린다.
     expect(screen.getByRole("status")).toHaveTextContent("성공 · 2405 김도현");
-
-    await tick(5_000);
-    expect(screen.queryByText("성공 · 2405 김도현")).not.toBeInTheDocument();
+    expect(document.querySelector(".Toastify__toast--success")).not.toBeNull();
+    // 닫히는 시간은 라이브러리가 진행 막대로 센다(성공 2초).
+    expect(screen.getByRole("progressbar").style.animationDuration).toBe(
+      "2000ms",
+    );
   });
 
   it("카메라 허용 전에는 서버에 세션을 만들지 않는다", async () => {
@@ -220,7 +223,7 @@ describe("AdminFaceRecognition", () => {
     expect(createSession).toHaveBeenLastCalledWith("dorm");
   });
 
-  it("세션을 만들지 못하면 오류와 다시 시도를 카메라 영역에 보여 준다", async () => {
+  it("세션을 만들지 못하면 오류 토스트와 다시 시도를 보여 준다", async () => {
     const gateway = createMockFaceGateway([[]]);
     vi.spyOn(gateway, "createSession")
       .mockRejectedValueOnce(new Error("server"))

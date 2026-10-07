@@ -1,6 +1,7 @@
 "use client";
 
-import { ToastLayer } from "@/components/admin/Toast";
+import { useEffect } from "react";
+import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { CameraPanel } from "@/components/admin/CameraPanel";
 import { successMessage } from "@/lib/admin/face-results";
 import { useFaceRecognition } from "@/lib/admin/use-face-recognition";
@@ -13,6 +14,9 @@ const PURPOSE: Purpose = "dorm";
 
 /** 인식에 실패한 순간 위쪽 가운데 토스트로 잠깐 보이는 문구. 신원을 붙이지 않는다(REQ-FACE-005). */
 const FAILURE_MESSAGE = "인식 실패";
+
+/** 인식 서버에 연결하지 못했을 때(다시 시도 버튼과 함께 보인다). */
+const SERVER_FAILED_MESSAGE = "불러오지 못했어요";
 
 /** REQ-FACE-006 문구. 서버가 한 얼굴의 인식을 반복해 놓쳤다고(qrRecommended) 알릴 때 보인다. */
 const QR_NOTICE_MESSAGE = "인식 실패 · 3회 초과 시 QR로 출석";
@@ -29,6 +33,16 @@ export function AdminFaceRecognition() {
     purpose: PURPOSE,
   });
 
+  // 성공(`성공 · 학번 이름`)은 토스트로 잠깐 보인다(REQ-FACE-006·007). 카메라가 안 켜졌으면 서버 오류 토스트는 숨긴다.
+  const { showToast } = useToast();
+  const success = recognition.success;
+  useEffect(() => {
+    if (success) {
+      showToast({ variant: "success", message: successMessage(success) });
+    }
+  }, [success, showToast]);
+  const serverFailed = recognition.status === "error" && status !== "error";
+
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
       <div className="flex w-full items-center justify-between md:items-end">
@@ -42,29 +56,30 @@ export function AdminFaceRecognition() {
         </div>
       </div>
 
-      {/* 다른 화면의 토스트와 같은 위치·크기(위쪽 가운데)로 보인다. QR 안내가 먼저이고 인식 실패는 그 뒤에 보이며, 429(요청이 너무 많음)일 때는 `잠시 후 다시 시도` 안내를 보인다. */}
+      {/*
+        모든 상태 메시지는 토스트(위쪽 가운데)로 보인다. 상태가 풀릴 때까지 유지하는 한 자리(`toast`)는 인식 서버 연결 실패
+        (다시 시도 버튼) > QR 안내 > 인식 실패 > 429 `잠시 후 다시 시도` 순서로 하나만 보이고, 성공은 따로 잠깐 떴다 사라진다.
+      */}
       <ToastLayer
         toast={
-          recognition.qrNotice
-            ? { variant: "error", message: QR_NOTICE_MESSAGE }
-            : recognition.failure
-              ? { variant: "error", message: FAILURE_MESSAGE }
-              : recognition.rateLimited
-                ? { variant: "neutral", message: RATE_LIMIT_MESSAGE }
-                : null
+          serverFailed
+            ? {
+                variant: "error",
+                message: SERVER_FAILED_MESSAGE,
+                action: { label: "다시 시도", onClick: recognition.retry },
+              }
+            : recognition.qrNotice
+              ? { variant: "error", message: QR_NOTICE_MESSAGE }
+              : recognition.failure
+                ? { variant: "error", message: FAILURE_MESSAGE }
+                : recognition.rateLimited
+                  ? { variant: "neutral", message: RATE_LIMIT_MESSAGE }
+                  : null
         }
       />
 
       <div className="flex min-h-[240px] w-full flex-1 md:min-h-0">
-        <CameraPanel
-          videoRef={videoRef}
-          status={status}
-          successMessage={
-            recognition.success ? successMessage(recognition.success) : null
-          }
-          recognitionFailed={recognition.status === "error"}
-          onRetry={recognition.retry}
-        />
+        <CameraPanel videoRef={videoRef} status={status} />
       </div>
     </div>
   );
