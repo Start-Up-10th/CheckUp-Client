@@ -7,18 +7,24 @@ import {
   useVolunteerGateway,
   type VolunteerGateway,
 } from "@/lib/admin/volunteer-gateway";
+import { RateLimitedError } from "@/lib/admin/rate-limit";
 import { replaceStudent } from "@/lib/admin/volunteer-roster";
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 export type RosterStatus = "idle" | "loading" | "ready" | "error";
 
-type RosterState = { roster: RosterStudent[]; status: RosterStatus };
+/** `rateLimited`는 마지막 불러오기가 429(요청이 너무 많음)로 막혀 `error`가 됐는지다. */
+type RosterState = {
+  roster: RosterStudent[];
+  status: RosterStatus;
+  rateLimited: boolean;
+};
 
 /**
  * 봉사 명단(07)과 당일 봉사자(06)가 같은 명단을 보도록 화면 밖에 둔 저장소다. 화면마다 상태를 따로 두면
  * 07에서 지정한 학생이 06으로 이동하면서 사라진다. 명단은 서버에서 한 번 받아 두 화면이 나눠 쓴다.
  */
-const INITIAL: RosterState = { roster: [], status: "idle" };
+const INITIAL: RosterState = { roster: [], status: "idle", rateLimited: false };
 let state: RosterState = INITIAL;
 let requestId = 0;
 /** 진행 중인 새로고침마다, 그동안 성공한 동작이 돌려준 학생 상태. 응답이 오면 그 위에 덮어쓴다. */
@@ -37,7 +43,7 @@ export function getRoster(): RosterStudent[] {
 /** 명단을 직접 바꾼다. 불러오기를 마친 상태(`ready`)가 된다. */
 export function setRoster(next: RosterStudent[]): void {
   requestId += 1;
-  emit({ roster: next, status: "ready" });
+  emit({ roster: next, status: "ready", rateLimited: false });
 }
 
 /**
@@ -46,7 +52,11 @@ export function setRoster(next: RosterStudent[]): void {
  */
 export function updateStudent(updated: RosterStudent): void {
   activeOverlays.forEach((overlay) => overlay.set(updated.id, updated));
-  emit({ roster: replaceStudent(state.roster, updated), status: state.status });
+  emit({
+    roster: replaceStudent(state.roster, updated),
+    status: state.status,
+    rateLimited: state.rateLimited,
+  });
 }
 
 /** 처음 상태(명단 없음, 아직 불러오지 않음)로 되돌린다. */
@@ -65,7 +75,11 @@ export async function loadRoster(gateway: VolunteerGateway): Promise<void> {
   const silent = state.status === "ready";
   const overlay = new Map<number, RosterStudent>();
   activeOverlays.add(overlay);
-  emit({ roster: state.roster, status: silent ? "ready" : "loading" });
+  emit({
+    roster: state.roster,
+    status: silent ? "ready" : "loading",
+    rateLimited: false,
+  });
   try {
     const students = await gateway.list();
     if (id === requestId) {
@@ -74,7 +88,7 @@ export async function loadRoster(gateway: VolunteerGateway): Promise<void> {
         overlay.size === 0
           ? students
           : students.map((student) => overlay.get(student.id) ?? student);
-      emit({ roster: merged, status: "ready" });
+      emit({ roster: merged, status: "ready", rateLimited: false });
     }
   } catch (error) {
     if (id !== requestId) return;
@@ -82,7 +96,11 @@ export async function loadRoster(gateway: VolunteerGateway): Promise<void> {
       redirectToAdminLogin();
       return;
     }
-    emit({ roster: state.roster, status: silent ? "ready" : "error" });
+    emit({
+      roster: state.roster,
+      status: silent ? "ready" : "error",
+      rateLimited: error instanceof RateLimitedError,
+    });
   } finally {
     activeOverlays.delete(overlay);
   }
@@ -105,11 +123,13 @@ function getServerSnapshot(): RosterState {
 export function useVolunteerRoster(): {
   roster: RosterStudent[];
   status: RosterStatus;
+  /** 불러오기 실패가 429(요청이 너무 많음) 때문인지. 화면이 `잠시 후 다시 시도` 안내를 고른다. */
+  rateLimited: boolean;
   updateStudent: (updated: RosterStudent) => void;
   reload: () => void;
 } {
   const gateway = useVolunteerGateway();
-  const { roster, status } = useSyncExternalStore(
+  const { roster, status, rateLimited } = useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot,
@@ -120,5 +140,5 @@ export function useVolunteerRoster(): {
     if (status === "idle") reload();
   }, [status, reload]);
 
-  return { roster, status, updateStudent, reload };
+  return { roster, status, rateLimited, updateStudent, reload };
 }

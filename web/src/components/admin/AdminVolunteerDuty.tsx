@@ -12,7 +12,11 @@ import {
 } from "@/components/admin/Toast";
 import { VolunteerDutyRow } from "@/components/admin/VolunteerDutyRow";
 import { operatingDayLabel } from "@/lib/admin/operating-day";
-import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
+import {
+  failureToast,
+  listFailureToast,
+  useSingleFlight,
+} from "@/lib/admin/volunteer-action";
 import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
 import { designatedToday } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
@@ -36,7 +40,8 @@ export function AdminVolunteerDuty({
   /** `+ 명단에서 지정`이 가는 봉사자 명단 편집 주소. 로그인 없이 보는 확인용 페이지에서만 바꾼다. */
   rosterHref?: string;
 }) {
-  const { roster, status, updateStudent, reload } = useVolunteerRoster();
+  const { roster, status, rateLimited, updateStudent, reload } =
+    useVolunteerRoster();
   const gateway = useVolunteerGateway();
   const singleFlight = useSingleFlight();
   const { toast, showToast } = useToast();
@@ -45,9 +50,9 @@ export function AdminVolunteerDuty({
 
   useEffect(() => {
     if (status === "error") {
-      showToast({ variant: "error", message: LIST_FAILURE_MESSAGE });
+      showToast(listFailureToast(rateLimited, LIST_FAILURE_MESSAGE));
     }
-  }, [status, showToast]);
+  }, [status, rateLimited, showToast]);
 
   /** 서버에 요청하고, 서버가 돌려준 학생 상태를 명단에 넣는다. 실패는 상태 메시지로 알린다. */
   function runDutyAction(
