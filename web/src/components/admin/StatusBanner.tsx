@@ -72,7 +72,7 @@ export function StatusBanner({
         <button
           type="button"
           onClick={action.onClick}
-          className={`ml-1 shrink-0 rounded-lg bg-admin-text py-1 text-white ${compactOnPhone ? "px-2.5 text-[11px] leading-4 md:px-3 md:text-xs" : "px-3 text-xs leading-4"}`}
+          className={`ml-1 shrink-0 rounded-lg bg-admin-text py-1 text-white transition-colors hover:bg-admin-ghost-text ${compactOnPhone ? "px-2.5 text-[11px] leading-4 md:px-3 md:text-xs" : "px-3 text-xs leading-4"}`}
         >
           {action.label}
         </button>

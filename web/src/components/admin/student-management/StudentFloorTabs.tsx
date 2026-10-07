@@ -33,7 +33,7 @@ export function StudentFloorTabs({
             className={`rounded-lg px-3 py-[7px] text-xs leading-[14px] md:rounded-[10px] md:border md:border-transparent md:px-[15px] md:py-2 md:text-sm md:font-medium md:leading-[17px] xl:rounded-xl xl:border-0 xl:px-[22px] xl:py-2.5 ${
               active
                 ? "bg-admin-attendance-bg font-bold text-admin-attendance-text md:border-admin-attendance-border xl:font-bold"
-                : "bg-admin-surface font-normal text-admin-ghost-text xl:font-normal"
+                : "bg-admin-surface font-normal text-admin-ghost-text transition hover:brightness-95 xl:font-normal"
             }`}
           >
             {floor}층

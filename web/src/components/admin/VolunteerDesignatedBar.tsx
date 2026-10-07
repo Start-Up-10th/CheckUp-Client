@@ -24,7 +24,7 @@ export function VolunteerDesignatedBar({ count }: VolunteerDesignatedBarProps) {
       </p>
       <Link
         href="/admin/volunteers"
-        className="rounded-[10px] bg-admin-accent-bg px-3.5 py-2.5 text-[13px] font-bold leading-4 text-admin-accent-text md:rounded-xl md:px-4 md:py-[11px] xl:px-5 xl:py-3 xl:text-sm xl:leading-[17px]"
+        className="rounded-[10px] bg-admin-accent-bg transition hover:brightness-95 px-3.5 py-2.5 text-[13px] font-bold leading-4 text-admin-accent-text md:rounded-xl md:px-4 md:py-[11px] xl:px-5 xl:py-3 xl:text-sm xl:leading-[17px]"
       >
         봉사자 관리 →
       </Link>

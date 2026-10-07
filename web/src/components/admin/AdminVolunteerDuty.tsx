@@ -105,7 +105,7 @@ export function AdminVolunteerDuty({
         <Link
           href={rosterHref}
           aria-label="+ 명단에서 지정"
-          className="col-start-2 row-start-1 rounded-[10px] bg-admin-accent-bg px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-accent-text md:text-[13px] md:leading-4 xl:row-start-2 xl:px-[18px] xl:py-[9px]"
+          className="col-start-2 row-start-1 rounded-[10px] bg-admin-accent-bg transition hover:brightness-95 px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-accent-text md:text-[13px] md:leading-4 xl:row-start-2 xl:px-[18px] xl:py-[9px]"
         >
           <span className="md:hidden">+ 지정</span>
           <span className="hidden md:inline">+ 명단에서 지정</span>
