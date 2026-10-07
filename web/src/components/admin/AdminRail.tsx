@@ -47,7 +47,7 @@ export function AdminRail({ activePath }: { activePath?: string }) {
           type="button"
           aria-label="로그아웃"
           onClick={logout}
-          className="flex w-full flex-col items-center gap-1.5 rounded-[14px] bg-admin-danger-bg py-3 text-admin-danger-text"
+          className="flex w-full flex-col items-center gap-1.5 rounded-[14px] bg-admin-danger-bg py-3 text-admin-danger-text transition-colors hover:bg-admin-danger-border"
         >
           <LogoutIcon className="size-[22px]" />
           <span className="text-[10px] font-medium leading-3">로그아웃</span>
