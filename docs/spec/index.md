@@ -7,7 +7,7 @@
 | --- | --- | --- |
 | 범위 | [scope.md](scope.md) | 목표·스택·제외 기능 |
 | 인증 | [identity.md](identity.md) | DataGSM·권한·동의·프로필 |
-| 얼굴 | [face.md](face.md) | 등록·벡터·다수 인식·화면·오프라인 |
+| 얼굴 | [face.md](face.md) | 등록·벡터·다수 인식·화면 |
 | 출석·QR | [attendance.md](attendance.md) | 세션·중복·갱신·수동 수정·08시 |
 | 화면 | [screens.md](screens.md) | 관리자 전개도·학생 홈·반응형·문구·설치(PWA) |
 | 봉사·알림 | [community.md](community.md) | 봉사 관리·알림 |
