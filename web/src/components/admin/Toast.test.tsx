@@ -183,4 +183,23 @@ describe("단일 토스트(toast 속성)", () => {
 
     expect(screen.queryByText("떠날 때")).not.toBeInTheDocument();
   });
+
+  it("글자 버튼을 붙이면 누를 때 그 동작을 부른다", async () => {
+    const onClick = vi.fn();
+    render(
+      <ToastLayer
+        toast={{
+          variant: "error",
+          message: "불러오지 못했어요",
+          action: { label: "다시 시도", onClick },
+        }}
+      />,
+    );
+
+    const button = await screen.findByRole("button", { name: "다시 시도" });
+    await act(async () => button.click());
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("불러오지 못했어요")).toBeInTheDocument();
+  });
 });

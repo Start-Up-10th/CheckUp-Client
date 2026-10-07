@@ -1,12 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { CameraPanel } from "./CameraPanel";
 
-function renderPanel(props: {
-  successMessage?: string | null;
-  status?: "requesting" | "granted" | "error";
-  recognitionFailed?: boolean;
-  onRetry?: () => void;
-}) {
+function renderPanel(props: { status?: "requesting" | "granted" | "error" }) {
   return render(
     <CameraPanel
       videoRef={{ current: null }}
@@ -32,32 +27,20 @@ describe("CameraPanel", () => {
 
     expect(screen.queryByText("LIVE")).not.toBeInTheDocument();
   });
-});
 
-describe("CameraPanel 하단 성공 배너", () => {
-  it("성공 문구를 성공 배너로 보인다", () => {
-    renderPanel({ successMessage: "성공 · 2405 김도현" });
+  it("카메라를 실행하지 못했으면 LIVE 없이 실행 실패 문구를 보인다", () => {
+    renderPanel({ status: "error" });
 
-    expect(screen.getByRole("status")).toHaveTextContent("성공 · 2405 김도현");
-  });
-
-  it("카메라를 실행하지 못했으면 배너를 보이지 않고 실행 실패 문구를 보인다", () => {
-    renderPanel({ status: "error", successMessage: "성공 · 2405 김도현" });
-
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByText("LIVE")).not.toBeInTheDocument();
     expect(
       screen.getByText("카메라를 자동으로 실행하지 못했습니다."),
     ).toBeInTheDocument();
   });
-});
 
-describe("CameraPanel 인식 서버 오류", () => {
-  it("인식 서버에 연결하지 못하면 오류 배너와 다시 시도를 보인다", () => {
-    const onRetry = vi.fn();
-    renderPanel({ recognitionFailed: true, onRetry });
+  it("인식 결과 메시지는 이 패널이 아니라 토스트로 보인다(패널에 배너가 없다)", () => {
+    renderPanel({});
 
-    expect(screen.getByText("불러오지 못했어요")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
-    expect(onRetry).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Bounce,
   ToastContainer,
@@ -24,6 +30,11 @@ const TOAST_DURATION_MS: Record<ToastMessage["variant"], number> = {
 export type ToastMessage = {
   variant: "success" | "error" | "neutral";
   message: string;
+};
+
+/** 상태가 풀릴 때까지 유지하는 토스트. 글자 버튼(예: 다시 시도)을 붙일 수 있다. */
+export type StickyToast = ToastMessage & {
+  action?: { label: string; onClick: () => void };
 };
 
 /** 우리 종류를 react-toastify 종류로 바꾼다(안내는 `info`). */
@@ -100,15 +111,35 @@ export function useToast() {
  * `toast`는 상태가 풀릴 때까지 유지하는 단일 토스트다(얼굴 인식·QR 생성·QR 스캔 결과): 문구가 바뀌면 그 자리에서
  * 바뀌고, null이 되면 닫힌다.
  */
-export function ToastLayer({ toast = null }: { toast?: ToastMessage | null }) {
+export function ToastLayer({ toast = null }: { toast?: StickyToast | null }) {
   const variant = toast?.variant;
   const message = toast?.message;
+  const actionLabel = toast?.action?.label;
+  // 버튼을 누르면 가장 최근에 받은 동작을 부른다(렌더마다 새 함수여도 토스트를 다시 그리지 않는다).
+  const actionRef = useRef(toast?.action?.onClick);
+  useEffect(() => {
+    actionRef.current = toast?.action?.onClick;
+  });
 
   useEffect(() => {
     if (!variant || message === undefined) {
       notify.dismiss(SINGLE_TOAST_ID);
       return;
     }
+    const content: ReactNode = actionLabel ? (
+      <span className="flex items-center justify-between gap-3">
+        <span>{message}</span>
+        <button
+          type="button"
+          onClick={() => actionRef.current?.()}
+          className="shrink-0 rounded-md bg-black/10 px-2.5 py-1 text-xs font-medium"
+        >
+          {actionLabel}
+        </button>
+      </span>
+    ) : (
+      message
+    );
     const options: ToastOptions = {
       toastId: SINGLE_TOAST_ID,
       type: TYPE[variant],
@@ -116,11 +147,11 @@ export function ToastLayer({ toast = null }: { toast?: ToastMessage | null }) {
       autoClose: false,
     };
     if (notify.isActive(SINGLE_TOAST_ID)) {
-      notify.update(SINGLE_TOAST_ID, { ...options, render: message });
+      notify.update(SINGLE_TOAST_ID, { ...options, render: content });
     } else {
-      notify(message, options);
+      notify(content, options);
     }
-  }, [variant, message]);
+  }, [variant, message, actionLabel]);
 
   // 화면을 떠나면 이 화면의 토스트를 모두 지운다.
   useEffect(() => () => notify.dismiss(), []);
