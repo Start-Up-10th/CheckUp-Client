@@ -5,7 +5,8 @@ type VolunteerDesignatedBarProps = { count: number };
 /**
  * Figma 07 하단 바 `당일 지정 N명 · 봉사자 관리 →`. 오늘 지정된 사람이 있을 때만 보이고, 없으면(0명) 핸드폰·패드는 자리만 비워 둔다.
  * 핸드폰·패드는 목록 패널 아래에 따로 놓여 패널이 그만큼 짧아진다(핸드폰 358×52: 패널과 12px, 하단 바 위 12px /
- * 패드 콘텐츠 폭 628×56: 패널과 16px, 아래 20px). 컴퓨터는 패널 위에 겹쳐 가운데 560×62(아래 28px)로 뜬다.
+ * 패드 콘텐츠 폭 628×56: 패널과 16px, 아래 20px). 컴퓨터는 패널 위에 겹쳐 가운데 560×62로 뜨고, 패널 아래 가장자리에서 40px 위(화면 아래 68px)에 있다.
+ * 나타날 때 아래에서 올라오며 서서히 보인다(동작 줄이기를 켜면 바로 나타난다).
  */
 export function VolunteerDesignatedBar({ count }: VolunteerDesignatedBarProps) {
   if (count === 0) {
@@ -18,7 +19,7 @@ export function VolunteerDesignatedBar({ count }: VolunteerDesignatedBarProps) {
     );
   }
   return (
-    <div className="relative z-10 -my-0.5 flex h-[52px] shrink-0 items-center justify-between rounded-[14px] border border-admin-border bg-admin-surface py-2 pl-4 pr-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] md:my-0 md:-mb-1 md:h-14 md:rounded-2xl md:py-2.5 md:pl-5 md:pr-3 xl:absolute xl:bottom-7 xl:left-1/2 xl:mb-0 xl:h-[62px] xl:w-[560px] xl:-translate-x-1/2">
+    <div className="relative z-10 -my-0.5 flex animate-bar-rise motion-reduce:animate-none h-[52px] shrink-0 items-center justify-between rounded-[14px] border border-admin-border bg-admin-surface py-2 pl-4 pr-2.5 shadow-[0_4px_16px_rgba(0,0,0,0.08)] md:my-0 md:-mb-1 md:h-14 md:rounded-2xl md:py-2.5 md:pl-5 md:pr-3 xl:absolute xl:inset-x-0 xl:bottom-[68px] xl:mx-auto xl:mb-0 xl:h-[62px] xl:w-[560px]">
       <p className="text-[13px] leading-4 text-admin-textSecondary xl:text-sm xl:leading-[17px]">
         당일 지정 <span className="font-bold text-admin-text">{count}명</span>
       </p>

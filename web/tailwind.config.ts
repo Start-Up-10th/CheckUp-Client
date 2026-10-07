@@ -10,6 +10,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      keyframes: {
+        "bar-rise": {
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "bar-rise": "bar-rise 240ms cubic-bezier(0.16, 1, 0.3, 1)",
+      },
       fontFamily: {
         sans: [
           "Pretendard",
