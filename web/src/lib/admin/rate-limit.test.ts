@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_RETRY_AFTER_MS,
   MAX_RETRY_AFTER_MS,
+  RATE_LIMIT_MESSAGE,
   RateLimitedError,
+  failureNotice,
   parseRetryAfter,
   throwIfRateLimited,
 } from "./rate-limit";
@@ -67,5 +69,25 @@ describe("throwIfRateLimited", () => {
     expect(() =>
       throwIfRateLimited(new Response(null, { status: 200 })),
     ).not.toThrow();
+  });
+});
+
+describe("failureNotice", () => {
+  it("429는 잠시 후 다시 시도 안내(neutral)다", () => {
+    expect(failureNotice(new RateLimitedError(), "실패")).toEqual({
+      variant: "neutral",
+      message: RATE_LIMIT_MESSAGE,
+    });
+  });
+
+  it("그 밖의 실패는 받은 오류 문구다", () => {
+    expect(failureNotice(new Error("x"), "실패")).toEqual({
+      variant: "error",
+      message: "실패",
+    });
+    expect(failureNotice(null, "실패")).toEqual({
+      variant: "error",
+      message: "실패",
+    });
   });
 });

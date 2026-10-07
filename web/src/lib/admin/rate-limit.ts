@@ -1,3 +1,5 @@
+import type { ToastMessage } from "@/components/admin/Toast";
+
 /** 429(요청이 너무 많음)일 때 화면이 보이는 안내. 학생 QR 화면의 `잠시 후 다시 시도해 주세요.`와 같다. */
 export const RATE_LIMIT_MESSAGE = "잠시 후 다시 시도해 주세요.";
 
@@ -46,4 +48,14 @@ export function throwIfRateLimited(res: Response): void {
       parseRetryAfter(res.headers?.get("Retry-After")),
     );
   }
+}
+
+/**
+ * 실패 안내를 정한다. 요청이 너무 많아서(429)면 `잠시 후 다시 시도해 주세요.`(안내), 그 밖에는 `message` 오류 문구다.
+ * 401·서버가 알려 준 이유 같은 화면별 분기는 호출한 쪽이 먼저 처리한다.
+ */
+export function failureNotice(error: unknown, message: string): ToastMessage {
+  return error instanceof RateLimitedError
+    ? { variant: "neutral", message: RATE_LIMIT_MESSAGE }
+    : { variant: "error", message };
 }
