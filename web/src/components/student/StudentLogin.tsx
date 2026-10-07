@@ -2,6 +2,7 @@
 
 import { StatusBanner } from "@/components/admin/StatusBanner";
 import { LOGIN_START_PATH } from "@/lib/auth/auth-api";
+import { rememberLoginApp } from "@/lib/auth/login-app";
 import { DataGsmLoginButton } from "./DataGsmLoginButton";
 
 /**
@@ -26,7 +27,11 @@ export function StudentLogin({
   // DataGSM 로그인으로 보내고, 콜백 검증·토큰 교환·세션 발급도 서버가 한다(REQ-AUTH-001).
   // 웹은 DataGSM 주소·클라이언트 ID를 직접 만들지 않는다. 앱 안 이동(router)이 아니라 서버 302를
   // 따라가야 하므로 location을 바꾼다.
-  const login = () => window.location.assign(LOGIN_START_PATH);
+  const login = () => {
+    // 어느 앱에서 시작했는지 적어 둔다. 콜백 뒤 기숙사 자치위원(관리자이면서 학생)을 사용자 앱으로 보내는 데 쓴다(DEC-047).
+    rememberLoginApp("user");
+    window.location.assign(LOGIN_START_PATH);
+  };
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-[106px] bg-[#f5f5f7] px-4 pt-[255px] md:gap-[162px] md:bg-admin-bg md:pt-[225px]">
