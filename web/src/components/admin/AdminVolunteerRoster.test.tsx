@@ -269,6 +269,35 @@ describe("AdminVolunteerRoster", () => {
       expect(screen.getByText("청소 당번 대체")).toBeInTheDocument();
     });
 
+    it("이력이 많아도 다이얼로그는 화면 높이 안에 있고 이력 목록만 스크롤한다", async () => {
+      const many = Array.from({ length: 40 }, (_, index) => ({
+        id: `h${index}`,
+        date: "10/04",
+        title: `봉사 횟수 추가 ${index}`,
+        delta: 1,
+      }));
+      renderPlain(
+        <VolunteerGatewayProvider value={mockGateway}>
+          <VolunteerHistoryGatewayProvider value={{ list: async () => many }}>
+            <AdminVolunteerRoster />
+          </VolunteerHistoryGatewayProvider>
+        </VolunteerGatewayProvider>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+
+      const dialog = screen.getByRole("dialog", { name: "김도현" });
+      await within(dialog).findByText("봉사 횟수 추가 0");
+      const list = dialog.querySelector("[data-history-list]");
+
+      expect(dialog).toHaveClass("max-h-[calc(100dvh-32px)]");
+      expect(list).toHaveClass("overflow-y-auto", "min-h-0");
+      expect(list?.children).toHaveLength(40);
+      // 제목·남은 횟수·닫기 버튼은 스크롤 목록 밖에 있다.
+      expect(list).not.toContainElement(
+        within(dialog).getByRole("button", { name: "닫기" }),
+      );
+    });
+
     it("이력을 받다가 로그인이 끊기면(401) 관리자 로그인으로 보낸다", async () => {
       renderPlain(
         <VolunteerGatewayProvider value={mockGateway}>
