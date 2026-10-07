@@ -118,6 +118,26 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
     expect(screen.getByText("402호")).toBeInTheDocument();
   });
 
+  it("상세·수정 다이얼로그는 N인실 대신 배정·출석 인원으로 표기한다", async () => {
+    const gateway = createMockRoomGateway();
+    gateway.students = vi.fn().mockResolvedValue([
+      { studentId: "1", name: "김도현", present: true },
+      { studentId: "2", name: "박서연", present: false },
+      { studentId: "3", name: "이지후", present: true },
+    ]);
+    renderWith(gateway);
+
+    fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
+
+    expect(await screen.findByText("배정 3명 · 출석 2명")).toBeInTheDocument();
+    expect(screen.queryByText(/인실/)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "수정" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "출석" })[1]);
+
+    expect(screen.getByText("배정 3명 · 출석 3명")).toBeInTheDocument();
+  });
+
   it("명단을 못 받으면 실패 문구를 보이고 상세는 열지 않는다", async () => {
     const gateway = createMockRoomGateway();
     gateway.students = vi.fn().mockRejectedValue(new Error("fail"));
