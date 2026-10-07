@@ -1,4 +1,5 @@
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
+import { throwIfRateLimited } from "@/lib/admin/rate-limit";
 import type { Floor, Room, Student } from "@/lib/admin/floor-types";
 
 /** 서버가 준 오류. `code`는 서버 ErrorCode 이름(예: `STUDENT_NOT_IN_ROOM`)이고 본문이 없으면 null이다. */
@@ -34,6 +35,7 @@ async function request(path: string, init?: RequestInit): Promise<Response> {
     credentials: "include",
   });
   if (res.status === 401) throw new AdminUnauthorizedError();
+  throwIfRateLimited(res);
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as {
       code?: unknown;

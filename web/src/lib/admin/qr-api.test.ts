@@ -1,3 +1,4 @@
+import { RateLimitedError } from "./rate-limit";
 import {
   AdminUnauthorizedError,
   QrSessionNotFoundError,
@@ -109,6 +110,36 @@ describe("heartbeatQrSession", () => {
 
     await expect(heartbeatQrSession("gone")).rejects.toBeInstanceOf(
       QrSessionNotFoundError,
+    );
+  });
+});
+
+describe("429 응답", () => {
+  function rateLimited() {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(null, { status: 429, headers: { "Retry-After": "5" } }),
+        ),
+    );
+  }
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("QR 발급이 429면 Retry-After를 담은 RateLimitedError다", async () => {
+    rateLimited();
+
+    await expect(createQrSession("dorm")).rejects.toMatchObject({
+      retryAfterMs: 5000,
+    });
+  });
+
+  it("heartbeat가 429면 RateLimitedError다", async () => {
+    rateLimited();
+
+    await expect(heartbeatQrSession("s-1")).rejects.toBeInstanceOf(
+      RateLimitedError,
     );
   });
 });

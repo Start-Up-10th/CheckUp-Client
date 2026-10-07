@@ -1,4 +1,5 @@
 import { AdminUnauthorizedError } from "./qr-api";
+import { RateLimitedError } from "./rate-limit";
 import {
   FaceApiError,
   closeFaceSession,
@@ -214,7 +215,6 @@ describe("sendFaceFrame", () => {
 
   it.each([
     [404, "FACE_SESSION_NOT_FOUND"],
-    [429, "FACE_FRAME_RATE_LIMITED"],
     [503, "FACE_AI_UNAVAILABLE"],
   ])("%s는 서버 code %s를 담은 FaceApiError다", async (status, code) => {
     mockFetch(status, { code });
@@ -225,6 +225,25 @@ describe("sendFaceFrame", () => {
 
     expect(error).toBeInstanceOf(FaceApiError);
     expect(error).toMatchObject({ status, code });
+  });
+
+  it("429는 Retry-After를 담은 RateLimitedError다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ code: "FACE_FRAME_RATE_LIMITED" }), {
+          status: 429,
+          headers: { "Retry-After": "2" },
+        }),
+      ),
+    );
+
+    const error = await sendFaceFrame("s-1", frame, "f-1").catch(
+      (e: unknown) => e,
+    );
+
+    expect(error).toBeInstanceOf(RateLimitedError);
+    expect((error as RateLimitedError).retryAfterMs).toBe(2000);
   });
 
   it("401은 AdminUnauthorizedError다", async () => {

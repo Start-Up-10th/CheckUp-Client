@@ -1,3 +1,4 @@
+import { RateLimitedError } from "./rate-limit";
 import { AdminUnauthorizedError } from "./qr-api";
 import {
   VolunteerApiError,
@@ -266,5 +267,23 @@ describe("fetchVolunteerAdjustments", () => {
     mockFetch(200, [{ createdAt: "2026-10-01T00:00:00Z", delta: "x" }]);
 
     await expect(fetchVolunteerAdjustments(17)).rejects.toThrow("unexpected");
+  });
+});
+
+describe("429 응답", () => {
+  it("봉사 API가 429면 Retry-After를 담은 RateLimitedError다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(null, { status: 429, headers: { "Retry-After": "7" } }),
+        ),
+    );
+
+    const error = await fetchVolunteers().catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(RateLimitedError);
+    expect((error as RateLimitedError).retryAfterMs).toBe(7000);
   });
 });

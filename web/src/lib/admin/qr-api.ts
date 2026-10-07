@@ -1,4 +1,5 @@
 import type { Purpose } from "@/lib/admin/purpose";
+import { throwIfRateLimited } from "@/lib/admin/rate-limit";
 
 export type ApiPurpose = "DORMITORY" | "STUDY_ROOM";
 
@@ -68,6 +69,7 @@ export async function createQrSession(
     body: JSON.stringify({ purpose: PURPOSE_TO_API[purpose] }),
   });
   if (res.status === 401) throw new AdminUnauthorizedError();
+  throwIfRateLimited(res);
   if (!res.ok) throw new Error(`createQrSession: ${res.status}`);
   return toQrSession((await res.json()) as QrSessionApiResponse);
 }
@@ -82,6 +84,7 @@ export async function heartbeatQrSession(
   );
   if (res.status === 401) throw new AdminUnauthorizedError();
   if (res.status === 404) throw new QrSessionNotFoundError();
+  throwIfRateLimited(res);
   if (!res.ok) throw new Error(`heartbeat: ${res.status}`);
   const { qrUrl, tokenExpiresAt, serverTime } = toQrSession(
     (await res.json()) as QrSessionApiResponse,
