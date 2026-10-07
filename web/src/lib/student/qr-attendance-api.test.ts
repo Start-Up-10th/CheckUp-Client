@@ -106,15 +106,13 @@ describe("429 응답", () => {
   it("429면 Retry-After를 담은 RateLimitedError다", async () => {
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockImplementation(
-          async () =>
-            new Response(null, {
-              status: 429,
-              headers: { "Retry-After": "3" },
-            }),
-        ),
+      vi.fn().mockImplementation(
+        async () =>
+          new Response(null, {
+            status: 429,
+            headers: { "Retry-After": "3" },
+          }),
+      ),
     );
 
     const error = await submitQrAttendance("token").catch((e: unknown) => e);
