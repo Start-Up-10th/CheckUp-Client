@@ -1,5 +1,5 @@
 const BUTTON_BASE =
-  "flex h-[52px] flex-1 items-center justify-center rounded-[15px] text-[15px] font-bold leading-normal disabled:opacity-40";
+  "flex h-[52px] flex-1 items-center justify-center rounded-[15px] text-[15px] font-bold leading-normal disabled:opacity-40 transition enabled:hover:brightness-95";
 
 /**
  * 얼굴 촬영 완료 단계의 버튼 두 개(Figma 692:44). 높이 52px·간격 10px·좌우 18px.

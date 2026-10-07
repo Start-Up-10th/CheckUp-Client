@@ -90,14 +90,14 @@ export function RoomAttendanceEditDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[13px] bg-admin-ghost-bg px-[18px] py-[11px] text-[13px] font-bold leading-4 text-admin-ghost-text md:px-5 md:py-3 xl:px-[22px] xl:py-[13px] xl:text-sm xl:leading-[17px]"
+            className="rounded-[13px] bg-admin-ghost-bg transition-colors hover:bg-admin-border px-[18px] py-[11px] text-[13px] font-bold leading-4 text-admin-ghost-text md:px-5 md:py-3 xl:px-[22px] xl:py-[13px] xl:text-sm xl:leading-[17px]"
           >
             닫기
           </button>
           <button
             type="button"
             onClick={() => onSave(room.number, pendingStudents)}
-            className="rounded-[13px] bg-admin-accent-bg px-[18px] py-[11px] text-[13px] font-bold leading-4 text-admin-accent-text md:px-5 md:py-3 xl:px-[22px] xl:py-[13px] xl:text-sm xl:leading-[17px]"
+            className="rounded-[13px] bg-admin-accent-bg transition hover:brightness-95 px-[18px] py-[11px] text-[13px] font-bold leading-4 text-admin-accent-text md:px-5 md:py-3 xl:px-[22px] xl:py-[13px] xl:text-sm xl:leading-[17px]"
           >
             저장
           </button>

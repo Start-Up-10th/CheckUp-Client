@@ -132,7 +132,7 @@ export function ToastLayer({ toast = null }: { toast?: StickyToast | null }) {
         <button
           type="button"
           onClick={() => actionRef.current?.()}
-          className="shrink-0 rounded-md bg-black/10 px-2.5 py-1 text-xs font-medium"
+          className="shrink-0 rounded-md bg-black/10 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-black/20"
         >
           {actionLabel}
         </button>

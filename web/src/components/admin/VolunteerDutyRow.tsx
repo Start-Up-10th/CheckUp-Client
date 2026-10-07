@@ -35,7 +35,7 @@ export function VolunteerDutyRow({
           type="button"
           aria-label={`${student.name} 봉사 완료`}
           onClick={() => onComplete(student.studentId)}
-          className="rounded-[10px] bg-admin-accent-bg px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-accent-text xl:px-[18px] xl:py-[9px] xl:text-[13px] xl:leading-4"
+          className="rounded-[10px] bg-admin-accent-bg transition hover:brightness-95 px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-accent-text xl:px-[18px] xl:py-[9px] xl:text-[13px] xl:leading-4"
         >
           완료
         </button>
@@ -43,7 +43,7 @@ export function VolunteerDutyRow({
           type="button"
           aria-label={`${student.name} 당일 봉사자에서 제외`}
           onClick={() => onCancel(student.studentId)}
-          className="rounded-[10px] bg-admin-danger-bg px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-danger-text xl:px-[18px] xl:py-[9px] xl:text-[13px] xl:leading-4"
+          className="rounded-[10px] bg-admin-danger-bg transition-colors hover:bg-admin-danger-border px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-danger-text xl:px-[18px] xl:py-[9px] xl:text-[13px] xl:leading-4"
         >
           <span className="md:hidden">제외</span>
           <span className="hidden md:inline">봉사 제외</span>

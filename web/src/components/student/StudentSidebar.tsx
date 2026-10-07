@@ -137,7 +137,7 @@ export function StudentSidebar({
       <button
         type="button"
         onClick={logout}
-        className="flex items-center gap-2.5 rounded-control bg-admin-danger-bg px-3 py-[11px] text-sm leading-normal text-admin-danger-text"
+        className="flex items-center gap-2.5 rounded-control bg-admin-danger-bg px-3 py-[11px] text-sm leading-normal text-admin-danger-text transition-colors hover:bg-admin-danger-border"
       >
         <MaskIcon src="/icons/student-nav/logout.svg" className="size-[18px]" />
         로그아웃

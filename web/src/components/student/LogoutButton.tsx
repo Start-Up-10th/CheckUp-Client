@@ -14,7 +14,7 @@ export function LogoutButton() {
     <button
       type="button"
       onClick={logout}
-      className="flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-admin-danger-border bg-admin-danger-bg px-[18px] text-[15px] font-medium leading-normal text-admin-danger-text md:hidden"
+      className="flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-admin-danger-border bg-admin-danger-bg px-[18px] text-[15px] font-medium leading-normal text-admin-danger-text transition-colors hover:bg-admin-danger-border md:hidden"
     >
       <MaskIcon src="/icons/student-nav/logout.svg" className="size-[18px]" />
       로그아웃

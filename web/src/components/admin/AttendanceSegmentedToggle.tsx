@@ -17,7 +17,7 @@ export function AttendanceSegmentedToggle({
         className={`flex h-[22px] w-12 items-center justify-center rounded-full text-[11px] md:h-6 md:w-[54px] md:text-xs xl:h-[26px] xl:w-[58px] ${
           present
             ? "bg-admin-accent-bg font-bold text-admin-accent-text"
-            : "font-normal text-admin-textFaint"
+            : "font-normal text-admin-textFaint transition-colors hover:text-admin-textSecondary"
         }`}
       >
         출석
@@ -29,7 +29,7 @@ export function AttendanceSegmentedToggle({
         className={`flex h-[22px] w-12 items-center justify-center rounded-full text-[11px] md:h-6 md:w-[54px] md:text-xs xl:h-[26px] xl:w-[58px] ${
           !present
             ? "bg-admin-surface font-bold text-admin-ghost-text"
-            : "font-normal text-admin-textFaint"
+            : "font-normal text-admin-textFaint transition-colors hover:text-admin-textSecondary"
         }`}
       >
         미출석

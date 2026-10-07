@@ -143,7 +143,7 @@ export function VolunteerStudentDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[13px] bg-admin-ghost-bg px-5 py-3 text-[13px] font-bold leading-4 text-admin-ghost-text xl:px-[22px] xl:py-[13px] xl:text-sm xl:leading-[17px]"
+            className="rounded-[13px] bg-admin-ghost-bg transition-colors hover:bg-admin-border px-5 py-3 text-[13px] font-bold leading-4 text-admin-ghost-text xl:px-[22px] xl:py-[13px] xl:text-sm xl:leading-[17px]"
           >
             닫기
           </button>
