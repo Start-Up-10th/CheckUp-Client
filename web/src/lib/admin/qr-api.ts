@@ -57,7 +57,7 @@ export class AdminUnauthorizedError extends Error {
   }
 }
 
-/** REQ-ATT-003: 페이지 진입·용도 탭 선택 시 새 QR 세션 발급. 401이면 AdminUnauthorizedError */
+/** REQ-ATT-003: 페이지 진입 시 새 QR 세션 발급. 401이면 AdminUnauthorizedError */
 export async function createQrSession(
   purpose: Purpose,
 ): Promise<QrCreateResponse> {
@@ -89,7 +89,7 @@ export async function heartbeatQrSession(
   return { qrUrl, tokenExpiresAt, serverTime };
 }
 
-/** REQ-ATT-003: 페이지 이탈·용도 탭 변경 시 해당 세션만 종료 (sendBeacon) */
+/** REQ-ATT-003: 페이지 이탈 시 해당 세션만 종료 (sendBeacon) */
 export function closeQrSession(sessionId: string): void {
   navigator.sendBeacon(`/api/v1/qr/${encodeURIComponent(sessionId)}/close`);
 }

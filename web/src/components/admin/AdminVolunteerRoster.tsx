@@ -8,7 +8,7 @@ import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerDesignatedBar } from "@/components/admin/VolunteerDesignatedBar";
 import { VolunteerRosterRow } from "@/components/admin/VolunteerRosterRow";
 import { VolunteerStudentDialog } from "@/components/admin/VolunteerStudentDialog";
-import type { Floor } from "@/lib/admin/mock-floor-data";
+import type { Floor } from "@/lib/admin/floor-types";
 import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
 import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
 import { groupByRoom } from "@/lib/admin/volunteer-roster";
@@ -23,12 +23,6 @@ const LIST_FAILURE_MESSAGE =
 /** 서버가 이유를 알려 주지 않은 지정 실패(Figma 07 state messages). */
 const DESIGNATE_FAILURE_MESSAGE =
   "당일 봉사자 지정에 실패했습니다. 다시 시도해 주세요.";
-
-/**
- * 토스트의 패드·컴퓨터 세로 위치. 패드는 검색창이 전체 폭이라 가리지 않게 검색창 아래 8px(139px), 컴퓨터는 층 탭 아래 16px(99px,
- * 검색창은 왼쪽 420px라 겹치지 않음)이다. 핸드폰은 하단 탭바 위(공통).
- */
-const TOAST_TOP = "md:top-[88px] xl:top-[99px]";
 
 /**
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.
@@ -87,7 +81,7 @@ export function AdminVolunteerRoster() {
 
   return (
     <div className="relative flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} topClassName={TOAST_TOP} />
+      <ToastLayer toast={toast} />
 
       <div className="flex w-full items-end justify-between">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
@@ -99,7 +93,7 @@ export function AdminVolunteerRoster() {
             봉사자 명단 편집
           </h1>
         </div>
-        <FloorTabs selected={floor} onSelect={setFloor} desktopTrack />
+        <FloorTabs selected={floor} onSelect={setFloor} />
       </div>
 
       <div className="w-full xl:flex xl:h-[49px] xl:items-center">

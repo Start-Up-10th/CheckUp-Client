@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { AttendanceSegmentedToggle } from "@/components/admin/AttendanceSegmentedToggle";
 import {
-  roomAttendance,
   sortedRoomStudents,
-  type Room,
+  studentsAttendance,
+  type RoomDetail,
   type Student,
-} from "@/lib/admin/mock-floor-data";
+} from "@/lib/admin/floor-types";
 
 type RoomAttendanceEditDialogProps = {
-  room: Room;
+  room: RoomDetail;
   onClose: () => void;
   onSave: (roomNumber: string, students: Student[]) => void;
 };
@@ -27,10 +27,7 @@ export function RoomAttendanceEditDialog({
   const [pendingStudents, setPendingStudents] = useState<Student[]>(
     room.students,
   );
-  const { assigned, present } = roomAttendance({
-    ...room,
-    students: pendingStudents,
-  });
+  const { assigned, present } = studentsAttendance(pendingStudents);
 
   function setStudentPresent(studentId: string, nextPresent: boolean) {
     setPendingStudents((students) =>
@@ -62,33 +59,31 @@ export function RoomAttendanceEditDialog({
           {room.number}호
         </h2>
         <p className="text-[13px] leading-4 text-admin-textMuted xl:text-sm xl:leading-[17px]">
-          {assigned}인실 · {present}명 출석
+          배정 {assigned}명 · 출석 {present}명
         </p>
 
         <div className="flex w-full flex-col gap-1.5 pt-3">
-          {sortedRoomStudents({ ...room, students: pendingStudents }).map(
-            (student, index) => (
-              <div
-                key={student.studentId}
-                className="flex w-full items-center justify-between rounded-xl bg-admin-rowSurface py-2.5 pl-3.5 pr-2.5"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[12px] text-admin-textFaint xl:text-[13px]">
-                    {index + 1}번
-                  </span>
-                  <span className="text-[13px] font-bold leading-4 text-admin-text xl:text-sm xl:leading-5">
-                    {student.name}
-                  </span>
-                </div>
-                <AttendanceSegmentedToggle
-                  present={student.present}
-                  onChange={(nextPresent) =>
-                    setStudentPresent(student.studentId, nextPresent)
-                  }
-                />
+          {sortedRoomStudents(pendingStudents).map((student, index) => (
+            <div
+              key={student.studentId}
+              className="flex w-full items-center justify-between rounded-xl bg-admin-rowSurface py-2.5 pl-3.5 pr-2.5"
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[12px] text-admin-textFaint xl:text-[13px]">
+                  {index + 1}번
+                </span>
+                <span className="text-[13px] font-bold leading-4 text-admin-text xl:text-sm xl:leading-5">
+                  {student.name}
+                </span>
               </div>
-            ),
-          )}
+              <AttendanceSegmentedToggle
+                present={student.present}
+                onChange={(nextPresent) =>
+                  setStudentPresent(student.studentId, nextPresent)
+                }
+              />
+            </div>
+          ))}
         </div>
 
         <div className="flex h-[100px] w-full items-start justify-end gap-2 pt-3.5">

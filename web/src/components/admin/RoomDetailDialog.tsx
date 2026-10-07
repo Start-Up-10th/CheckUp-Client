@@ -1,11 +1,11 @@
 import {
-  roomAttendance,
   sortedRoomStudents,
-  type Room,
-} from "@/lib/admin/mock-floor-data";
+  studentsAttendance,
+  type RoomDetail,
+} from "@/lib/admin/floor-types";
 
 type RoomDetailDialogProps = {
-  room: Room;
+  room: RoomDetail;
   onClose: () => void;
   onEdit: () => void;
 };
@@ -19,7 +19,7 @@ export function RoomDetailDialog({
   onClose,
   onEdit,
 }: RoomDetailDialogProps) {
-  const { assigned, present } = roomAttendance(room);
+  const { assigned, present } = studentsAttendance(room.students);
 
   return (
     <div
@@ -41,11 +41,11 @@ export function RoomDetailDialog({
           {room.number}호
         </h2>
         <p className="text-[13px] leading-4 text-admin-textMuted xl:text-sm xl:leading-[17px]">
-          {assigned}인실 · {present}명 출석
+          배정 {assigned}명 · 출석 {present}명
         </p>
 
         <div className="flex w-full flex-col gap-1.5 pt-3">
-          {sortedRoomStudents(room).map((student, index) => (
+          {sortedRoomStudents(room.students).map((student, index) => (
             <div
               key={student.studentId}
               className="flex w-full items-center justify-between rounded-xl bg-admin-rowSurface py-2.5 pl-3.5 pr-2.5"

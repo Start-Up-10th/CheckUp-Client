@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useAdminLogout } from "@/lib/admin/use-admin-logout";
 
-// REQ-AUTH-001: 관리자 권한 없는 계정 로그인 시 예외 화면.
+// REQ-AUTH-001·003: 관리자 권한 없는 계정 로그인 시 예외 화면. 문구는 명세(REQ-UI-006 표)와 같다.
 export default function AdminUnauthorizedPage() {
   const logout = useAdminLogout();
 
@@ -18,7 +18,7 @@ export default function AdminUnauthorizedPage() {
         priority
       />
       <p className="mb-1 text-[17px] font-bold text-[#1c1c1e]">
-        접근 권한이 없습니다
+        관리자 권한이 없는 계정입니다.
       </p>
       <p className="mb-8 text-[14px] text-[#8e8e93]">
         관리자 계정으로 다시 로그인해 주세요.

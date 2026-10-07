@@ -10,7 +10,7 @@ import type { Purpose } from "@/lib/admin/purpose";
 /** 용도 탭이 없어서(Figma 2026-10-06, DEC-036) 얼굴 인식은 기숙사 용도로 고정한다. */
 const PURPOSE: Purpose = "dorm";
 
-/** 인식에 실패한 순간 오른쪽 상단에 잠깐 보이는 문구. 신원을 붙이지 않는다(REQ-FACE-005). */
+/** 인식에 실패한 순간 위쪽 가운데 토스트로 잠깐 보이는 문구. 신원을 붙이지 않는다(REQ-FACE-005). */
 const FAILURE_MESSAGE = "인식 실패";
 
 /** REQ-FACE-006 문구. 서버가 한 얼굴의 인식을 반복해 놓쳤다고(qrRecommended) 알릴 때 보인다. */
@@ -41,10 +41,8 @@ export function AdminFaceRecognition() {
         </div>
       </div>
 
-      {/* 다른 화면의 토스트와 같은 위치·크기(패드 이상 오른쪽 상단)로 보인다. QR 안내가 먼저이고 인식 실패는 그 뒤에 보인다. */}
+      {/* 다른 화면의 토스트와 같은 위치·크기(위쪽 가운데)로 보인다. QR 안내가 먼저이고 인식 실패는 그 뒤에 보인다. */}
       <ToastLayer
-        topClassName="md:top-6 xl:top-7"
-        phoneTopRight
         toast={
           recognition.qrNotice
             ? { variant: "error", message: QR_NOTICE_MESSAGE }
