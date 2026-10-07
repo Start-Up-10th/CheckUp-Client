@@ -43,7 +43,7 @@ export function StudentDetailDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="flex w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-2xl bg-admin-surface p-[18px] md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px]"
+        className="flex max-h-[calc(100dvh-32px)] w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 overflow-y-auto rounded-2xl bg-admin-surface p-[18px] md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px]"
         onClick={(event) => event.stopPropagation()}
       >
         <h2

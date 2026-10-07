@@ -76,7 +76,7 @@ export function VolunteerStudentDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="flex w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-2xl bg-admin-surface p-[18px] md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px]"
+        className="flex max-h-[calc(100dvh-32px)] w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-2xl bg-admin-surface p-[18px] md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px]"
         onClick={(event) => event.stopPropagation()}
       >
         <h2
@@ -98,7 +98,7 @@ export function VolunteerStudentDialog({
           </p>
         </div>
 
-        <div className="flex w-full flex-col gap-1.5 pt-3.5 xl:pt-4">
+        <div className="flex min-h-0 w-full flex-col gap-1.5 pt-3.5 xl:pt-4">
           <p className="text-xs font-medium leading-[14px] text-admin-textMuted xl:text-[13px] xl:leading-4">
             봉사 이력
           </p>
@@ -107,29 +107,35 @@ export function VolunteerStudentDialog({
           ) : history.status === "ready" && history.items.length === 0 ? (
             <StatusBanner variant="neutral" message={HISTORY_EMPTY_MESSAGE} />
           ) : history.status === "ready" ? (
-            history.items.map((item) => (
-              <div
-                key={item.id}
-                className="flex w-full items-center gap-2.5 rounded-xl bg-admin-rowSurface px-3 py-2.5 xl:gap-3 xl:px-3.5 xl:py-[11px]"
-              >
-                <p className="shrink-0 text-xs leading-[14px] text-admin-textMuted xl:text-[13px] xl:leading-4">
-                  {item.date}
-                </p>
-                <p className="min-w-0 flex-1 text-[13px] leading-4 text-admin-text xl:text-sm xl:leading-[17px]">
-                  {item.title}
-                </p>
-                <p
-                  className={`shrink-0 text-[13px] font-bold leading-4 xl:text-sm xl:leading-[17px] ${
-                    item.delta > 0
-                      ? "text-admin-attendance-text"
-                      : "text-admin-danger-text"
-                  }`}
+            // 이력이 많으면 다이얼로그가 화면보다 길어지지 않게 이 목록만 스크롤한다.
+            <div
+              data-history-list
+              className="flex min-h-0 flex-col gap-1.5 overflow-y-auto"
+            >
+              {history.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex w-full items-center gap-2.5 rounded-xl bg-admin-rowSurface px-3 py-2.5 xl:gap-3 xl:px-3.5 xl:py-[11px]"
                 >
-                  {item.delta > 0 ? "+" : "−"}
-                  {Math.abs(item.delta)}회
-                </p>
-              </div>
-            ))
+                  <p className="shrink-0 text-xs leading-[14px] text-admin-textMuted xl:text-[13px] xl:leading-4">
+                    {item.date}
+                  </p>
+                  <p className="min-w-0 flex-1 text-[13px] leading-4 text-admin-text xl:text-sm xl:leading-[17px]">
+                    {item.title}
+                  </p>
+                  <p
+                    className={`shrink-0 text-[13px] font-bold leading-4 xl:text-sm xl:leading-[17px] ${
+                      item.delta > 0
+                        ? "text-admin-attendance-text"
+                        : "text-admin-danger-text"
+                    }`}
+                  >
+                    {item.delta > 0 ? "+" : "−"}
+                    {Math.abs(item.delta)}회
+                  </p>
+                </div>
+              ))}
+            </div>
           ) : null}
         </div>
 
