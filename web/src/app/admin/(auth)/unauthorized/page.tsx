@@ -10,7 +10,7 @@ export default function AdminUnauthorizedPage() {
   return (
     <div className="absolute left-1/2 top-1/2 w-[300px] -translate-x-1/2 -translate-y-1/2 text-center">
       <Image
-        src="/icons/admin-login/checkup-logo.png"
+        src="/icons/login/checkup-logo.png"
         alt="CHECKUP"
         width={201}
         height={53}
