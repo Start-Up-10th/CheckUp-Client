@@ -12,7 +12,6 @@ import { captureFrame } from "@/lib/admin/capture-frame";
 import { FaceApiError } from "@/lib/admin/face-api";
 import { useFaceGateway } from "@/lib/admin/face-gateway";
 import { applyFrame, INITIAL_RECOGNITION } from "@/lib/admin/face-results";
-import type { RecognitionEntry } from "@/lib/admin/face-results";
 import type { Purpose } from "@/lib/admin/purpose";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 
@@ -46,8 +45,8 @@ type Options = {
 
 /**
  * REQ-FACE-004·006·007: 관리자 카메라 얼굴 인식. 카메라가 준비되면 서버에 세션을 만들고, 응답이 올 때마다
- * 프레임을 한 장씩(겹치지 않게) 보낸 뒤 결과를 최근 인식 목록으로 만든다. 용도 탭을 바꾸거나 화면을 떠나면
- * 그 세션만 종료하고 카메라 자체는 건드리지 않는다. 프레임은 저장하지 않는다.
+ * 프레임을 한 장씩(겹치지 않게) 보낸 뒤 결과를 성공·실패·QR 안내로 알린다(최근 인식 목록은 없다, DEC-036). 화면을
+ * 떠나면 그 세션만 종료하고 카메라 자체는 건드리지 않는다. 프레임은 저장하지 않는다.
  */
 export function useFaceRecognition({
   videoRef,
@@ -58,10 +57,9 @@ export function useFaceRecognition({
 }: Options) {
   const gateway = useFaceGateway();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [entries, setEntries] = useState<RecognitionEntry[]>([]);
   const [status, setStatus] = useState<FaceSessionStatus>("starting");
   const [qrNotice, setQrNotice] = useState(false);
-  const [success, setSuccess] = useState<RecognitionEntry | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [failure, setFailure] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
@@ -156,7 +154,6 @@ export function useFaceRecognition({
             failures = 0;
             const outcome = applyFrame(state, result.faces, new Date());
             state = outcome.state;
-            setEntries(state.entries);
             const found = outcome.success;
             if (found) {
               successTimer = hold(
@@ -234,9 +231,8 @@ export function useFaceRecognition({
       }
     }
 
-    // 용도 탭 변경·재시도마다 새 세션이므로 이전 세션의 기록과 상태를 비운다.
+    // 재시도마다 새 세션이므로 이전 세션의 상태를 비운다.
     /* eslint-disable react-hooks/set-state-in-effect */
-    setEntries([]);
     setStatus("starting");
     setQrNotice(false);
     setSuccess(null);
@@ -265,5 +261,5 @@ export function useFaceRecognition({
     };
   }, [cameraReady, purpose, gateway, attempt, capture, intervalMs, videoRef]);
 
-  return { entries, status, qrNotice, success, failure, retry };
+  return { status, qrNotice, success, failure, retry };
 }
