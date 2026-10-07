@@ -30,13 +30,13 @@ const LIST_FAILURE_MESSAGE =
 
 /**
  * REQ-COM-006: 봉사자 관리(Figma 06). 오늘 운영일의 당일 봉사자 목록이다. `완료`는 봉사를 마친 것으로
- * 처리하고 횟수를 1 줄이며(목록에서 빠진다), `봉사 제외`는 지정을 취소한다. 지정은 `+ 명단에서 지정`으로
+ * 처리하고 횟수를 1 줄이며(목록에서 빠진다), `봉사 제외`는 지정을 취소한다. 지정은 `+ 명단 수정`으로
  * 이동하는 봉사자 명단 편집(07)에서 한다.
  */
 export function AdminVolunteerDuty({
   rosterHref = "/admin/volunteers/add",
 }: {
-  /** `+ 명단에서 지정`이 가는 봉사자 명단 편집 주소. 로그인 없이 보는 확인용 페이지에서만 바꾼다. */
+  /** `+ 명단 수정`이 가는 봉사자 명단 편집 주소. 로그인 없이 보는 확인용 페이지에서만 바꾼다. */
   rosterHref?: string;
 }) {
   const { roster, status, rateLimited, updateStudent, reload } =
@@ -104,11 +104,11 @@ export function AdminVolunteerDuty({
         {/* 폰·패드는 제목 옆, 컴퓨터는 아래 줄 오른쪽(Figma 06). 링크 하나를 격자 위치만 바꿔 쓴다. */}
         <Link
           href={rosterHref}
-          aria-label="+ 명단에서 지정"
+          aria-label="+ 명단 수정"
           className="col-start-2 row-start-1 rounded-[10px] bg-admin-accent-bg transition hover:brightness-95 px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-accent-text md:text-[13px] md:leading-4 xl:row-start-2 xl:px-[18px] xl:py-[9px]"
         >
-          <span className="md:hidden">+ 지정</span>
-          <span className="hidden md:inline">+ 명단에서 지정</span>
+          <span className="md:hidden">+ 수정</span>
+          <span className="hidden md:inline">+ 명단 수정</span>
         </Link>
         <div className="hidden items-center gap-2 xl:col-start-1 xl:row-start-2 xl:flex">
           <h2 className="text-[15px] font-bold leading-[18px] text-admin-text">
