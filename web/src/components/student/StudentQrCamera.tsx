@@ -9,6 +9,7 @@ import {
 } from "@/lib/student/qr-attendance-api";
 import { parseQrToken } from "@/lib/student/parse-qr-token";
 import type { QrAttendanceResult } from "@/lib/student/qr-attendance-result";
+import { RateLimitedError } from "@/lib/rate-limit";
 import { saveQrReturnUrl } from "@/lib/student/qr-return-url";
 import { useQrScanner } from "@/lib/student/use-qr-scanner";
 import { TOAST_EXIT_MS, ToastFrame } from "@/components/admin/Toast";
@@ -75,6 +76,8 @@ export function StudentQrCamera() {
   const [entry, setEntry] = useState<QrEntry>("checking");
   // React 개발 모드(Strict Mode)에서 effect가 두 번 돌아도 진입 처리는 한 번만 한다.
   const entryHandled = useRef(false);
+  // 결과 메시지를 보여 준 뒤 다시 스캔하기까지의 시간. 서버가 429로 Retry-After를 알려 주면 그만큼 기다린다.
+  const holdMsRef = useRef(RESULT_TOAST_MS);
 
   // 토큰을 제출한다. 우리 QR 형식이 아니어서 토큰이 없으면(null) 서버를 부르지 않고 바로
   // "유효하지 않은 QR"로 보여 준다(하네스 DEC-018). 토큰은 로그에 남기지 않는다.
@@ -82,6 +85,7 @@ export function StudentQrCamera() {
   const submitToken = useCallback(
     (token: string | null) => {
       setProcessing(true);
+      holdMsRef.current = RESULT_TOAST_MS;
       if (!token) {
         setResult("invalid");
         return;
@@ -93,6 +97,10 @@ export function StudentQrCamera() {
             saveQrReturnUrl(token);
             router.push("/login");
             return;
+          }
+          if (error instanceof RateLimitedError) {
+            // 요청이 너무 많다는 안내(429): `잠시 후 다시 시도해 주세요.`를 보이고 Retry-After 뒤에 다시 스캔한다.
+            holdMsRef.current = Math.max(RESULT_TOAST_MS, error.retryAfterMs);
           }
           setResult(
             error instanceof QrNotStudentError ? "notStudent" : "retry",
@@ -146,7 +154,7 @@ export function StudentQrCamera() {
             // 링크로 들어와 승인되지 않았으면(만료·중복·종료·형식 오류) 카메라를 켜 다시 찍게 한다
             // (Figma·계약에 없어 정한 흐름). 이미 카메라로 들어왔으면 그대로다.
             setEntry("camera");
-          }, RESULT_TOAST_MS);
+          }, holdMsRef.current);
     return () => clearTimeout(timer);
   }, [result, router]);
 

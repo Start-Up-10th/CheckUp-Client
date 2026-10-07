@@ -52,6 +52,24 @@ describe("StudentConsent", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/login"));
   });
 
+  it("저장이 429로 막히면 잠시 후 다시 시도 안내를 보여 주고 다시 누를 수 있다", async () => {
+    mockFetch(429);
+    render(<StudentConsent />);
+
+    agreeAll();
+
+    expect(
+      await screen.findByText("잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("서버와 연결이 원활하지 않습니다."),
+    ).not.toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("button", { name: "동의하고 계속하기" }),
+    ).toBeEnabled();
+  });
+
   it("저장에 실패하면 오류 문구를 보여 주고 다시 누를 수 있다", async () => {
     mockFetch(500);
     render(<StudentConsent />);

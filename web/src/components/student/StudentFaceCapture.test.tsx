@@ -353,6 +353,19 @@ describe("StudentFaceCapture 완료", () => {
     expect(screen.getByText("얼굴 등록 대상이 아니에요")).toBeInTheDocument();
   });
 
+  it("등록 요청이 429로 막히면 잠시 후 다시 시도 안내를 보인다", async () => {
+    mockApi(READY, [{ status: 429 }]);
+    await renderUntilDone();
+
+    fireEvent.click(completeButton());
+    await advance();
+
+    expect(screen.getByText("잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
+    expect(
+      screen.queryByText("얼굴 등록에 실패했습니다. 다시 시도해 주세요."),
+    ).not.toBeInTheDocument();
+  });
+
   it("실패 뒤 다시 찍으면 문구가 사라지고 새 영상으로 등록할 수 있다", async () => {
     const fetchMock = mockApi(READY, [
       { status: 503, body: { code: "FACE_AI_UNAVAILABLE" } },
