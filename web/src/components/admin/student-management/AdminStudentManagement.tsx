@@ -9,7 +9,7 @@ import { StudentDetailDialog } from "@/components/admin/student-management/Stude
 import { StudentFloorTabs } from "@/components/admin/student-management/StudentFloorTabs";
 import { StudentRoomGroup } from "@/components/admin/student-management/StudentRoomGroup";
 import { StudentSearchField } from "@/components/admin/student-management/StudentSearchField";
-import type { Floor } from "@/lib/admin/mock-floor-data";
+import type { Floor } from "@/lib/admin/floor-types";
 import { useStudentManagementGateway } from "@/lib/admin/student-management-gateway";
 import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
 import { groupByRoom } from "@/lib/admin/volunteer-roster";
