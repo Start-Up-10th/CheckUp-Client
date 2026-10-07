@@ -175,20 +175,20 @@ describe("useFaceRecognition 세션", () => {
     expect(gateway.sendFrame).not.toHaveBeenCalled();
   });
 
-  it("용도 탭을 바꾸면 이전 세션만 종료하고 새 용도로 새 세션을 만들며 기록을 비운다", async () => {
+  it("용도를 바꾸면 이전 세션만 종료하고 새 용도로 새 세션을 만든다", async () => {
     const gateway = makeGateway({
       sendFrame: vi.fn(async () => frameOf([known()])),
     });
     const { result, rerender } = setup(gateway);
     await tick();
-    expect(result.current.entries).toHaveLength(1);
+    expect(result.current.success).toBe("2405 김도현");
 
     rerender({ cameraReady: true, purpose: "study" });
     await tick();
 
     expect(gateway.closeSession).toHaveBeenCalledWith("session-1");
     expect(gateway.createSession).toHaveBeenLastCalledWith("study");
-    expect(result.current.entries).toHaveLength(1);
+    expect(result.current.success).toBe("2405 김도현");
     expect(gateway.sendFrame).toHaveBeenLastCalledWith(
       "session-2",
       FRAME,
@@ -335,24 +335,35 @@ describe("useFaceRecognition 프레임 전송", () => {
     expect(result.current.status).toBe("error");
   });
 
-  it("세션을 새로 만들면 이전 세션의 트랙 시도 기록을 버려 실패 행이 가려지지 않는다", async () => {
+  it("세션을 새로 만들면 이전 세션의 트랙 시도 기록을 버려 새 실패가 가려지지 않는다", async () => {
     const failFrame = (attempts: number) =>
       frameOf([
         { trackId: "a", status: "UNKNOWN", attempts, qrRecommended: false },
       ]);
+    // 새 세션의 첫 프레임 응답을 첫 실패 표시가 사라진 뒤에 돌려줘서 두 번째 실패가 새로 세어지는지 본다.
+    let release: () => void = () => {};
+    const delayed = new Promise<FaceFrameResult>((resolve) => {
+      release = () => resolve(failFrame(1));
+    });
     const gateway = makeGateway({
       sendFrame: vi
         .fn()
-        .mockResolvedValueOnce(failFrame(3))
+        .mockResolvedValueOnce(failFrame(2))
         .mockRejectedValueOnce(new FaceApiError(404, "FACE_SESSION_NOT_FOUND"))
-        .mockResolvedValue(failFrame(1)),
+        .mockReturnValueOnce(delayed)
+        .mockResolvedValue(frameOf([])),
     });
     const { result } = setup(gateway);
 
     await tick(FRAME_INTERVAL_MS * 3);
+    expect(result.current.failure).toBe(true);
+    await tick(FAILURE_HOLD_MS);
+    expect(result.current.failure).toBe(false);
 
     // 새 세션의 같은 트랙 id가 attempts 1로 시작해도 새 시도로 센다.
-    expect(result.current.entries).toHaveLength(2);
+    await act(async () => release());
+    await tick();
+    expect(result.current.failure).toBe(true);
   });
 
   it("연속 실패가 쌓이면 error가 되고 성공하면 횟수를 다시 센다", async () => {
@@ -398,7 +409,7 @@ describe("useFaceRecognition 프레임 전송", () => {
 });
 
 describe("useFaceRecognition 결과", () => {
-  it("성공은 이름을 붙인 행과 잠깐 보이는 성공 표시를 만든다", async () => {
+  it("성공은 `학번 이름`을 붙인 성공 표시를 잠깐 만든다", async () => {
     const gateway = makeGateway({
       sendFrame: vi
         .fn<FaceGateway["sendFrame"]>()
@@ -408,17 +419,13 @@ describe("useFaceRecognition 결과", () => {
     const { result } = setup(gateway);
     await tick();
 
-    expect(result.current.entries[0]).toMatchObject({
-      label: "2405 김도현",
-      outcome: "success",
-    });
-    expect(result.current.success?.label).toBe("2405 김도현");
+    expect(result.current.success).toBe("2405 김도현");
 
     await tick(SUCCESS_HOLD_MS);
     expect(result.current.success).toBeNull();
   });
 
-  it("같은 학생이 계속 비치는 동안에는 목록에 한 번만 올리고 성공 표시는 유지한다", async () => {
+  it("같은 학생이 계속 비치는 동안 성공 표시는 유지한다", async () => {
     const gateway = makeGateway({
       sendFrame: vi.fn(async () => frameOf([known()])),
     });
@@ -426,8 +433,7 @@ describe("useFaceRecognition 결과", () => {
     await tick();
     await tick(SUCCESS_HOLD_MS);
 
-    expect(result.current.entries).toHaveLength(1);
-    expect(result.current.success?.label).toBe("2405 김도현");
+    expect(result.current.success).toBe("2405 김도현");
   });
 
   it("실패하면 잠깐 failure를 켜고 지난 뒤 끈다", async () => {

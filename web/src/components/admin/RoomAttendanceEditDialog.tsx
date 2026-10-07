@@ -59,7 +59,7 @@ export function RoomAttendanceEditDialog({
           {room.number}호
         </h2>
         <p className="text-[13px] leading-4 text-admin-textMuted xl:text-sm xl:leading-[17px]">
-          {assigned}인실 · {present}명 출석
+          배정 {assigned}명 · 출석 {present}명
         </p>
 
         <div className="flex w-full flex-col gap-1.5 pt-3">

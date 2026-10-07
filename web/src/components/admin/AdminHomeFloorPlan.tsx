@@ -207,9 +207,14 @@ export function AdminHomeFloorPlan() {
 
       <AttendanceStatCards present={present} absent={absent} />
 
-      {loadFailed ? (
+      {loadFailed || rooms.length === 0 ? (
+        // 조회 실패는 다시 시도, 배정된 호실이 하나도 없는 층은 빈 상태(REQ-UI-006)를 본문 자리에 보인다.
         <div className="flex w-full flex-1 items-center justify-center rounded-[16px] bg-admin-surface px-3.5 py-4 md:rounded-[18px] md:p-[20px] xl:rounded-panel">
-          <AdminContentState variant="error" onRetry={retryLoad} />
+          {loadFailed ? (
+            <AdminContentState variant="error" onRetry={retryLoad} />
+          ) : (
+            <AdminContentState variant="empty" />
+          )}
         </div>
       ) : (
         <RoomGrid rooms={rooms} onRoomClick={openRoomDetail} />
