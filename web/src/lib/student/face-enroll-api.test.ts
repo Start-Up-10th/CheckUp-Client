@@ -1,3 +1,4 @@
+import { RateLimitedError } from "@/lib/rate-limit";
 import {
   FaceLoginRequiredError,
   FaceNotStudentError,
@@ -150,12 +151,32 @@ describe("enrollFace", () => {
     );
   });
 
-  it.each([400, 413, 429, 500, 502, 503, 504])(
-    "%i는 일반 오류",
-    async (status) => {
-      mockFetch(status);
+  it.each([400, 413, 500, 502, 503, 504])("%i는 일반 오류", async (status) => {
+    mockFetch(status);
 
-      await expect(enrollFace(VIDEO)).rejects.toThrow(`faceEnroll: ${status}`);
-    },
-  );
+    await expect(enrollFace(VIDEO)).rejects.toThrow(`faceEnroll: ${status}`);
+  });
+});
+describe("429 응답", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("429면 Retry-After를 담은 RateLimitedError다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(
+          async () =>
+            new Response(null, {
+              status: 429,
+              headers: { "Retry-After": "3" },
+            }),
+        ),
+    );
+
+    const error = await enrollFace(VIDEO).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(RateLimitedError);
+    expect((error as RateLimitedError).retryAfterMs).toBe(3000);
+  });
 });

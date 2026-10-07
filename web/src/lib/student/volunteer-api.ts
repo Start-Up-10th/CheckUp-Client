@@ -1,3 +1,4 @@
+import { throwIfRateLimited } from "@/lib/rate-limit";
 /** 로그인이 필요하다(401). */
 export class VolunteerLoginRequiredError extends Error {
   constructor() {
@@ -31,6 +32,7 @@ export function toVolunteerDateLabel(operatingDay: string): string {
 async function getJson(url: string, name: string): Promise<unknown> {
   const res = await fetch(url, { credentials: "include" });
   if (res.status === 401) throw new VolunteerLoginRequiredError();
+  throwIfRateLimited(res);
   if (!res.ok) throw new Error(`${name}: ${res.status}`);
   return res.json();
 }

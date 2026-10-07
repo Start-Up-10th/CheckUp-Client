@@ -1,3 +1,4 @@
+import { RateLimitedError } from "@/lib/rate-limit";
 import {
   NotificationLoginRequiredError,
   NotificationNotStudentError,
@@ -181,5 +182,29 @@ describe("markNotificationsRead", () => {
     await expect(markNotificationsRead()).rejects.toThrow(
       "notificationsRead: 500",
     );
+  });
+});
+
+describe("429 응답", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("429면 Retry-After를 담은 RateLimitedError다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockImplementation(
+          async () =>
+            new Response(null, {
+              status: 429,
+              headers: { "Retry-After": "3" },
+            }),
+        ),
+    );
+
+    const error = await fetchNotifications().catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(RateLimitedError);
+    expect((error as RateLimitedError).retryAfterMs).toBe(3000);
   });
 });

@@ -1,3 +1,4 @@
+import { throwIfRateLimited } from "@/lib/rate-limit";
 import {
   toQrAttendanceResult,
   type QrAttendanceResult,
@@ -36,6 +37,7 @@ export async function submitQrAttendance(
   if (res.status === 401) throw new QrLoginRequiredError();
   if (res.status === 403) throw new QrNotStudentError();
   if (res.status === 400) return "invalid";
+  throwIfRateLimited(res);
   if (!res.ok) throw new Error(`qrAttendance: ${res.status}`);
   const body = (await res.json()) as { result?: unknown };
   return toQrAttendanceResult(
