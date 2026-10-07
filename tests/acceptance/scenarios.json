@@ -203,9 +203,17 @@
         "다른 기기의 세션은 유지한다",
         "미허용인데 LIVE나 성공을 표시하지 않는다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/lib/admin/use-camera-stream.ts",
+        "web/src/lib/admin/use-face-recognition.ts",
+        "web/src/components/admin/AdminFaceRecognition.tsx"
+      ],
+      "evidence": [
+        "web/src/lib/admin/use-camera-stream.test.tsx",
+        "web/src/lib/admin/use-face-recognition.test.tsx",
+        "web/src/components/admin/AdminFaceRecognition.test.tsx"
+      ]
     },
     {
       "id": "ACC-FACE-005",
@@ -220,9 +228,15 @@
         "성공 기록·알림이 중복되지 않는다",
         "실패가 기존 출석을 지우지 않는다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/lib/admin/face-results.ts",
+        "web/src/lib/admin/face-api.ts"
+      ],
+      "evidence": [
+        "web/src/lib/admin/face-results.test.ts",
+        "web/src/lib/admin/face-api.test.ts"
+      ]
     },
     {
       "id": "ACC-FACE-006",
@@ -231,15 +245,24 @@
       ],
       "title": "실패 안내 경계",
       "given": "같은 트랙의 연속 시도와 다른 얼굴 트랙",
-      "when": "실패 1·2·3·4회와 성공 후 재시도를 한다",
+      "when": "실패 1·2·3회와 성공 후 재시도를 한다",
       "then": [
-        "4번째 연속 실패부터 지정 QR 안내가 뜬다",
+        "같은 트랙이 3회 실패하면 QR 안내가 먼저 뜨고 인식 실패 토스트는 안내가 끝난 뒤에 뜬다",
         "영상 프레임을 각각 실패로 세지 않는다",
         "트랙 간 횟수가 섞이지 않고 성공/이탈 때 정리된다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/lib/admin/face-results.ts",
+        "web/src/lib/admin/use-face-recognition.ts",
+        "web/src/components/admin/AdminFaceRecognition.tsx",
+        "web/src/components/admin/Toast.tsx"
+      ],
+      "evidence": [
+        "web/src/lib/admin/face-results.test.ts",
+        "web/src/lib/admin/use-face-recognition.test.tsx",
+        "web/src/components/admin/AdminFaceRecognition.test.tsx"
+      ]
     },
     {
       "id": "ACC-FACE-007",
@@ -254,9 +277,15 @@
         "전체화면 버튼·최근 인식 목록·용도 탭은 없다",
         "미식별 실패는 이름 없이 인식 실패로 보인다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/admin/CameraPanel.tsx",
+        "web/src/components/admin/AdminFaceRecognition.tsx"
+      ],
+      "evidence": [
+        "web/src/components/admin/CameraPanel.test.tsx",
+        "web/src/components/admin/AdminFaceRecognition.test.tsx"
+      ]
     },
     {
       "id": "ACC-FACE-008",
@@ -408,9 +437,22 @@
         "인원 분모는 DataGSM 배정 수이며 4로 고정하지 않는다",
         "공실 메뉴/범례가 없고 전원/일부 출석 색상이 구별된다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/admin/AdminHomeFloorPlan.tsx",
+        "web/src/components/admin/RoomGrid.tsx",
+        "web/src/components/admin/RoomCard.tsx",
+        "web/src/components/admin/FloorTabs.tsx",
+        "web/src/components/admin/AttendanceStatCards.tsx",
+        "web/src/lib/admin/room-api.ts",
+        "web/src/lib/admin/room-gateway.tsx"
+      ],
+      "evidence": [
+        "web/src/components/admin/AdminHomeFloorPlan.test.tsx",
+        "web/src/components/admin/FloorTabs.test.tsx",
+        "web/src/lib/admin/room-api.test.ts",
+        "web/src/lib/admin/room-mock-gateway.test.ts"
+      ]
     },
     {
       "id": "ACC-UI-002",
@@ -425,9 +467,15 @@
         "관리자만 출석/미출석 선택 후 저장한다",
         "학생에게는 읽기 전용이다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/admin/RoomDetailDialog.tsx",
+        "web/src/components/admin/RoomAttendanceEditDialog.tsx",
+        "web/src/lib/admin/floor-types.ts"
+      ],
+      "evidence": [
+        "web/src/components/admin/AdminHomeFloorPlan.test.tsx"
+      ]
     },
     {
       "id": "ACC-UI-003",
@@ -479,8 +527,14 @@
         "카메라·QR 전체화면은 없다",
         "휴대폰 로그아웃도 접근 가능하고 공지 관리 메뉴는 없다"
       ],
-      "status": "specified",
-      "implementation": [],
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/admin/AdminSidebar.tsx",
+        "web/src/components/admin/AdminRail.tsx",
+        "web/src/components/admin/AdminBottomTabBar.tsx",
+        "web/src/components/admin/AdminMenuSheet.tsx",
+        "web/src/lib/admin/nav-items.ts"
+      ],
       "evidence": []
     },
     {
@@ -496,9 +550,18 @@
         "지정 문구와 다시 시도/로그인 동작을 제공한다",
         "미정의 문구를 이유로 서버 예외 검증을 생략하지 않는다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/admin/StatusBanner.tsx",
+        "web/src/components/admin/Toast.tsx",
+        "web/src/components/admin/AdminContentState.tsx",
+        "web/src/components/admin/ListRowsSkeleton.tsx",
+        "web/src/components/admin/AdminFloorPlanSkeleton.tsx"
+      ],
+      "evidence": [
+        "web/src/components/admin/StatusBanner.test.tsx",
+        "web/src/components/admin/Toast.test.tsx"
+      ]
     },
     {
       "id": "ACC-UI-007",
@@ -531,9 +594,19 @@
         "숫자 검색은 호실·학번이 정확히 같은 학생만, 이름 검색은 포함·초성 일치로 찾는다",
         "결과가 없으면 `검색 결과가 없습니다.`를 보여 준다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/admin/AdminVolunteerRoster.tsx",
+        "web/src/components/admin/VolunteerStudentDialog.tsx",
+        "web/src/lib/admin/volunteer-roster.ts",
+        "web/src/lib/admin/volunteer-api.ts",
+        "web/src/lib/admin/volunteer-history-gateway.tsx"
+      ],
+      "evidence": [
+        "web/src/components/admin/AdminVolunteerRoster.test.tsx",
+        "web/src/lib/admin/volunteer-roster.test.ts",
+        "web/src/lib/admin/volunteer-api.test.ts"
+      ]
     },
     {
       "id": "ACC-COM-002",
@@ -542,16 +615,26 @@
       ],
       "title": "봉사 횟수 가감",
       "given": "명단의 0회 및 2회 학생",
-      "when": "관리자가 +/−를 누르고 같은 요청을 재시도한다",
+      "when": "관리자가 학생 상세에서 −/+로 횟수를 정하고 사유를 적어 저장한 뒤 같은 요청을 재시도한다",
       "then": [
-        "각 +/− 클릭은 확인 없이 즉시 1회 반영되고 같은 요청 재전송은 중복 반영하지 않는다",
+        "횟수는 저장해야만 반영되고 닫기는 바꾸지 않으며, 같은 요청 재전송은 중복 반영하지 않는다",
         "0회에서 −는 비활성화되고 횟수는 음수가 될 수 없다",
-        "조정 날짜(MM/DD)만 기록하고 활동명은 없으며 횟수 조정은 알림을 만들지 않는다",
-        "+와 −의 성공/실패 문구는 `봉사 횟수를 변경했습니다.` / `봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.` 하나다"
+        "조정 날짜와 사유(선택)를 기록하고 이력의 활동명은 사유(없으면 종류별 기본 문구)이며 횟수 조정은 알림을 만들지 않는다",
+        "성공/실패 문구는 `봉사 횟수를 변경했습니다.` / `봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.` 하나다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/admin/student-management/AdminStudentManagement.tsx",
+        "web/src/components/admin/student-management/StudentDetailDialog.tsx",
+        "web/src/components/admin/student-management/CountStepper.tsx",
+        "web/src/lib/admin/student-management-gateway.tsx",
+        "web/src/lib/admin/volunteer-api.ts"
+      ],
+      "evidence": [
+        "web/src/components/admin/student-management/AdminStudentManagement.test.tsx",
+        "web/src/lib/admin/student-management-gateway.test.ts",
+        "web/src/lib/admin/volunteer-api.test.ts"
+      ]
     },
     {
       "id": "ACC-COM-003",
@@ -604,9 +687,18 @@
         "`완료`는 횟수를 한 번만 1 줄이고 `봉사 제외`는 횟수를 바꾸지 않는다",
         "오늘 지정이 없으면 `오늘 지정된 봉사자가 없습니다. 봉사자 명단에서 지정해 주세요.`를 보여 준다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/admin/AdminVolunteerDuty.tsx",
+        "web/src/components/admin/VolunteerDutyRow.tsx",
+        "web/src/lib/admin/volunteer-action.ts",
+        "web/src/lib/admin/volunteer-api.ts"
+      ],
+      "evidence": [
+        "web/src/components/admin/AdminVolunteerDuty.test.tsx",
+        "web/src/lib/admin/volunteer-action.test.ts",
+        "web/src/lib/admin/volunteer-api.test.ts"
+      ]
     },
     {
       "id": "ACC-OPS-001",
