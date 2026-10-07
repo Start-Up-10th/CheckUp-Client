@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import { operatingDayLabel } from "@/lib/admin/operating-day";
+import { adjustVolunteerCountBy } from "@/lib/admin/volunteer-api";
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 /** 학생 상세 다이얼로그에서 정한 값. 횟수는 바뀐 뒤의 값이고 사유는 비어 있을 수 있다. */
@@ -19,20 +19,28 @@ export type StudentManagementGateway = {
   ) => Promise<RosterStudent>;
 };
 
+/** 서버가 한 번에 받는 횟수 변화의 최대 크기(`VolunteerAdjustRequest.delta`는 -99~99). */
+const MAX_DELTA = 99;
+
 /**
- * 개발용 대역이다. 서버에 사유를 받는 횟수 일괄 변경 API가 아직 없어서(서버 봉사 API는 1회씩 `increase`/`decrease`만
- * 있다) 서버를 부르지 않고 화면 안 명단만 바꾼다. 서버 연동이 아니므로 이 API가 생기면 이 대역을 실제 호출로 바꾼다.
+ * 실제 서버 API다(`PATCH /api/v1/volunteer/{id}/count`). 화면의 횟수에서 지금 횟수를 뺀 변화를 사유와 함께 보낸다.
+ * 변화가 서버 한도(±99)를 넘으면 나눠 차례로 보내고 마지막 학생 상태를 돌려준다.
  */
-export const devStudentManagementGateway: StudentManagementGateway = {
-  saveCount: async (student, { count }) => ({
-    ...student,
-    count,
-    lastActivityDate: operatingDayLabel(new Date()),
-  }),
+export const apiStudentManagementGateway: StudentManagementGateway = {
+  saveCount: async (student, { count, reason }) => {
+    let remaining = count - student.count;
+    let latest = student;
+    while (remaining !== 0) {
+      const step = Math.max(-MAX_DELTA, Math.min(MAX_DELTA, remaining));
+      latest = await adjustVolunteerCountBy(student.id, step, reason);
+      remaining -= step;
+    }
+    return latest;
+  },
 };
 
 const StudentManagementGatewayContext = createContext<StudentManagementGateway>(
-  devStudentManagementGateway,
+  apiStudentManagementGateway,
 );
 
 export const StudentManagementGatewayProvider =
