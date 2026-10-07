@@ -53,7 +53,10 @@ describe("AdminQrGeneration 세션 만료", () => {
 
     render(<AdminQrGeneration />);
 
-    expect(await screen.findByText(/QR 자동 생성에 실패/)).toBeInTheDocument();
+    const message = await screen.findByText(/QR 자동 생성에 실패/);
+    expect(message).toBeInTheDocument();
+    // 다른 화면의 상태 메시지와 같은 위쪽 가운데 토스트(화면에 고정)로 보인다.
+    expect(message.closest(".fixed")).not.toBeNull();
     expect(redirectToAdminLogin).not.toHaveBeenCalled();
   });
 
@@ -129,6 +132,10 @@ describe("AdminQrGeneration 갱신 실패·만료", () => {
     });
 
     expect(await screen.findByText("남은 유효 시간")).toBeInTheDocument();
+    // 토스트는 사라지는 애니메이션(200ms) 동안 마지막 메시지를 그린다.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
     expect(
       screen.queryByText("잠시 후 다시 시도해 주세요."),
     ).not.toBeInTheDocument();
@@ -157,6 +164,10 @@ describe("AdminQrGeneration 갱신 실패·만료", () => {
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(HEARTBEAT_FIRST_TICK_MS);
+    });
+    // 토스트는 사라지는 애니메이션(200ms) 동안 마지막 메시지를 그린다.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
     });
     expect(
       screen.queryByText("잠시 후 다시 시도해 주세요."),
@@ -211,6 +222,10 @@ describe("AdminQrGeneration 갱신 실패·만료", () => {
     });
 
     expect(await screen.findByText("남은 유효 시간")).toBeInTheDocument();
+    // 토스트는 사라지는 애니메이션(200ms) 동안 마지막 메시지를 그린다.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
     expect(
       screen.queryByText("유효 시간이 만료되었습니다."),
     ).not.toBeInTheDocument();

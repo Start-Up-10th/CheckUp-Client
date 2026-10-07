@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel";
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer } from "@/components/admin/Toast";
 import { formatCountdown } from "@/lib/admin/qr-countdown";
 import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 import type { Purpose } from "@/lib/admin/purpose";
@@ -183,13 +183,14 @@ export function AdminQrGeneration() {
         </div>
       </div>
 
-      {bannerMessage && (
-        <StatusBanner
-          variant={bannerVariant}
-          message={bannerMessage}
-          compactOnPhone
-        />
-      )}
+      {/* 오류·만료·429 안내는 다른 화면의 상태 메시지와 같은 위쪽 가운데 토스트로 보인다. 상태가 풀릴 때까지 유지된다. */}
+      <ToastLayer
+        toast={
+          bannerMessage
+            ? { variant: bannerVariant, message: bannerMessage }
+            : null
+        }
+      />
 
       {session && countdownLabel ? (
         <QrCodeGenerationPanel
