@@ -27,7 +27,7 @@ describe("StatusBanner compactOnPhone", () => {
   });
 
   it("켜면 핸드폰 폭에서 글자 12px와 작은 여백·모서리·점을 쓰고 패드 이상은 Figma 크기로 돌아간다", () => {
-    render(<StatusBanner variant="success" message="문구" compactOnPhone />);
+    render(<StatusBanner variant="neutral" message="문구" compactOnPhone />);
 
     const banner = screen.getByRole("status");
     expect(banner).toHaveClass(
@@ -40,5 +40,25 @@ describe("StatusBanner compactOnPhone", () => {
     );
     expect(screen.getByText("문구")).toHaveClass("text-xs", "md:text-[13px]");
     expect(banner.firstElementChild).toHaveClass("size-1.5", "md:size-[7px]");
+  });
+});
+
+describe("StatusBanner 아이콘", () => {
+  it("성공은 체크 아이콘이고 높이를 늘리지 않는 16px 원이다", () => {
+    render(<StatusBanner variant="success" message="문구" />);
+
+    const icon = screen.getByRole("status").firstElementChild as HTMLElement;
+    expect(icon).toHaveTextContent("✓");
+    expect(icon).toHaveAttribute("aria-hidden", "true");
+    expect(icon).toHaveClass("size-4", "bg-admin-attendance-text");
+  });
+
+  it.each(["error", "neutral"] as const)("%s는 점 아이콘이다", (variant) => {
+    render(<StatusBanner variant={variant} message="문구" />);
+
+    const icon = screen.getByRole(variant === "error" ? "alert" : "status")
+      .firstElementChild as HTMLElement;
+    expect(icon).toHaveTextContent("");
+    expect(icon).toHaveClass("size-[7px]", "rounded-full");
   });
 });
