@@ -82,6 +82,8 @@ describe("AdminStudentManagement", () => {
       target: { value: "없는이름" },
     });
 
+    // 가로 배너가 아니라 공통 빈 상태 화면으로 보인다.
+    expect(screen.getByText("아직 데이터가 없어요")).toBeInTheDocument();
     expect(screen.getByText("검색 결과가 없습니다.")).toBeInTheDocument();
   });
 
