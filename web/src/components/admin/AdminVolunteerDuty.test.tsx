@@ -180,9 +180,14 @@ describe("AdminVolunteerDuty", () => {
     render(<AdminVolunteerDuty />);
 
     expect(screen.getByText("0명")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "오늘 지정된 봉사자가 없습니다. 봉사자 명단에서 지정해 주세요.",
-    );
+    // 가로 배너가 아니라 공통 빈 상태 화면(아이콘 + `아직 데이터가 없어요`)으로 보인다.
+    expect(screen.getByText("아직 데이터가 없어요")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "오늘 지정된 봉사자가 없습니다. 봉사자 명단에서 지정해 주세요.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
   it("목록 조회에 실패하면 오류 상태와 목록 조회 실패 문구를 보여 준다", async () => {
