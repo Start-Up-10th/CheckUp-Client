@@ -60,6 +60,8 @@ export function useFaceRecognition({
   const [qrNotice, setQrNotice] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [failure, setFailure] = useState(false);
+  // 서버가 요청이 너무 많다고(429) 한 동안 true다. 다음 프레임 응답이 오면 false로 돌아온다.
+  const [rateLimited, setRateLimited] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
 
@@ -151,6 +153,7 @@ export function useFaceRecognition({
             );
             if (cancelled) break;
             failures = 0;
+            setRateLimited(false);
             const outcome = applyFrame(state, result.faces, new Date());
             state = outcome.state;
             const found = outcome.success;
@@ -217,6 +220,7 @@ export function useFaceRecognition({
             }
             if (error instanceof RateLimitedError) {
               // 요청이 너무 많다는 안내(429)는 실패로 세지 않고 서버가 알려 준 시간(Retry-After, 없으면 1초)만큼 기다린다.
+              setRateLimited(true);
               delay = error.retryAfterMs;
             } else {
               failures += 1;
@@ -238,6 +242,7 @@ export function useFaceRecognition({
     setQrNotice(false);
     setSuccess(null);
     setFailure(false);
+    setRateLimited(false);
     /* eslint-enable react-hooks/set-state-in-effect */
     void run();
 
@@ -262,5 +267,5 @@ export function useFaceRecognition({
     };
   }, [cameraReady, purpose, gateway, attempt, capture, intervalMs, videoRef]);
 
-  return { status, qrNotice, success, failure, retry };
+  return { status, qrNotice, success, failure, rateLimited, retry };
 }

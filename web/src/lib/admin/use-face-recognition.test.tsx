@@ -288,6 +288,22 @@ describe("useFaceRecognition 프레임 전송", () => {
     expect(gateway.sendFrame).toHaveBeenCalledTimes(2);
   });
 
+  it("429를 받는 동안 rateLimited이고 다음 프레임 응답이 오면 풀린다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn()
+        .mockRejectedValueOnce(new RateLimitedError(1000))
+        .mockResolvedValue(frameOf([])),
+    });
+    const { result } = setup(gateway);
+
+    await tick();
+    expect(result.current.rateLimited).toBe(true);
+
+    await tick(1000);
+    expect(result.current.rateLimited).toBe(false);
+  });
+
   it("429는 연속 실패로 세지 않아 오류 상태가 되지 않는다", async () => {
     const gateway = makeGateway({
       sendFrame: vi.fn().mockRejectedValue(new RateLimitedError(100)),
