@@ -9,7 +9,11 @@ import { VolunteerDesignatedBar } from "@/components/admin/VolunteerDesignatedBa
 import { VolunteerRosterRow } from "@/components/admin/VolunteerRosterRow";
 import { VolunteerStudentDialog } from "@/components/admin/VolunteerStudentDialog";
 import type { Floor } from "@/lib/admin/floor-types";
-import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
+import {
+  failureToast,
+  listFailureToast,
+  useSingleFlight,
+} from "@/lib/admin/volunteer-action";
 import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
 import { groupByRoom } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
@@ -31,7 +35,8 @@ const DESIGNATE_FAILURE_MESSAGE =
  * 다녀와서 다시 들어오면 지정하기 전까지 숨는다). 명단에 학생을 추가·제외하는 단계는 없다.
  */
 export function AdminVolunteerRoster() {
-  const { roster, status, updateStudent, reload } = useVolunteerRoster();
+  const { roster, status, rateLimited, updateStudent, reload } =
+    useVolunteerRoster();
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -56,9 +61,9 @@ export function AdminVolunteerRoster() {
 
   useEffect(() => {
     if (status === "error") {
-      showToast({ variant: "error", message: LIST_FAILURE_MESSAGE });
+      showToast(listFailureToast(rateLimited, LIST_FAILURE_MESSAGE));
     }
-  }, [status, showToast]);
+  }, [status, rateLimited, showToast]);
 
   function handleDesignate(studentId: string) {
     const target = roster.find((student) => student.studentId === studentId);

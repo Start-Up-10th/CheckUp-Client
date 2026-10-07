@@ -1,3 +1,4 @@
+import { throwIfRateLimited } from "@/lib/rate-limit";
 import type { RoomMate } from "@/components/student/RoomMap";
 
 /** 로그인이 필요하다(401). */
@@ -43,6 +44,7 @@ export async function fetchMyRoomMates(
     credentials: "include",
   });
   if (res.status === 401) throw new RoomLoginRequiredError();
+  throwIfRateLimited(res);
   if (!res.ok) throw new Error(`roomRoster: ${res.status}`);
   const body = (await res.json()) as unknown;
   if (!Array.isArray(body)) throw new Error("roomRoster: unexpected response");

@@ -12,15 +12,16 @@ import { toNotificationTimeLabel } from "@/lib/student/notification-time";
 import { NotificationItem } from "./NotificationItem";
 import { NotificationListSkeleton } from "./NotificationListSkeleton";
 import { StudentEmptyState } from "./StudentEmptyState";
-import { StudentErrorState } from "./StudentErrorState";
+import { RATE_LIMITED_COPY, StudentErrorState } from "./StudentErrorState";
 import { StudentPageHeader } from "./StudentPageHeader";
 import { StudentShell } from "./StudentShell";
+import { RateLimitedError } from "@/lib/rate-limit";
 
 type NotificationRow = { id: number; message: string; timeLabel: string };
 
 type LoadState =
   | { status: "loading" }
-  | { status: "error" }
+  | { status: "error"; rateLimited?: boolean }
   | { status: "notStudent" }
   | { status: "ready"; rows: NotificationRow[] };
 
@@ -65,12 +66,14 @@ export function StudentNotifications() {
           router.replace("/login");
           return;
         }
-        setState({
-          status:
-            reason instanceof NotificationNotStudentError
-              ? "notStudent"
-              : "error",
-        });
+        setState(
+          reason instanceof NotificationNotStudentError
+            ? { status: "notStudent" }
+            : {
+                status: "error",
+                rateLimited: reason instanceof RateLimitedError,
+              },
+        );
       });
     return () => {
       cancelled = true;
@@ -89,7 +92,12 @@ export function StudentNotifications() {
           <StudentPageHeader title="알림" backHref="/main" />
           <div className="px-[18px] md:px-0">
             {state.status === "loading" && <NotificationListSkeleton />}
-            {state.status === "error" && <StudentErrorState onRetry={retry} />}
+            {state.status === "error" && (
+              <StudentErrorState
+                onRetry={retry}
+                {...(state.rateLimited ? RATE_LIMITED_COPY : {})}
+              />
+            )}
             {state.status === "notStudent" && (
               <StudentErrorState
                 title="학생 계정만 이용할 수 있어요"

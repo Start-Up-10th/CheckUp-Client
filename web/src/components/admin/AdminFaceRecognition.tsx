@@ -4,6 +4,7 @@ import { ToastLayer } from "@/components/admin/Toast";
 import { CameraPanel } from "@/components/admin/CameraPanel";
 import { successMessage } from "@/lib/admin/face-results";
 import { useFaceRecognition } from "@/lib/admin/use-face-recognition";
+import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { useCameraStream } from "@/lib/admin/use-camera-stream";
 import type { Purpose } from "@/lib/admin/purpose";
 
@@ -41,14 +42,16 @@ export function AdminFaceRecognition() {
         </div>
       </div>
 
-      {/* 다른 화면의 토스트와 같은 위치·크기(위쪽 가운데)로 보인다. QR 안내가 먼저이고 인식 실패는 그 뒤에 보인다. */}
+      {/* 다른 화면의 토스트와 같은 위치·크기(위쪽 가운데)로 보인다. QR 안내가 먼저이고 인식 실패는 그 뒤에 보이며, 429(요청이 너무 많음)일 때는 `잠시 후 다시 시도` 안내를 보인다. */}
       <ToastLayer
         toast={
           recognition.qrNotice
             ? { variant: "error", message: QR_NOTICE_MESSAGE }
             : recognition.failure
               ? { variant: "error", message: FAILURE_MESSAGE }
-              : null
+              : recognition.rateLimited
+                ? { variant: "neutral", message: RATE_LIMIT_MESSAGE }
+                : null
         }
       />
 

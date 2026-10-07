@@ -9,6 +9,7 @@ import {
 import type { ReactElement } from "react";
 import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
+import { RateLimitedError } from "@/lib/rate-limit";
 import { VolunteerApiError } from "@/lib/admin/volunteer-api";
 import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
 import { VolunteerHistoryGatewayProvider } from "@/lib/admin/volunteer-history-gateway";
@@ -134,6 +135,26 @@ describe("AdminVolunteerRoster", () => {
     expect(
       await screen.findByRole("region", { name: "412호" }),
     ).toBeInTheDocument();
+  });
+
+  it("명단 조회가 429로 막히면 잠시 후 다시 시도 안내를 보인다", async () => {
+    resetRoster();
+    const list = vi.fn().mockRejectedValue(new RateLimitedError(2000));
+
+    renderPlain(
+      <VolunteerGatewayProvider value={{ ...mockGateway, list }}>
+        <AdminVolunteerRoster />
+      </VolunteerGatewayProvider>,
+    );
+
+    expect(
+      await screen.findByText("잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        "학생 명단을 불러오지 못했습니다. 다시 시도해 주세요.",
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it("명단 조회에 실패하면 오류 상태와 명단 조회 실패 문구를 보여 주고 다시 시도하면 불러온다", async () => {

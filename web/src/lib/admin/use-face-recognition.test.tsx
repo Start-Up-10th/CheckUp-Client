@@ -13,11 +13,11 @@ import {
   FRAME_INTERVAL_MS,
   MAX_CONSECUTIVE_FAILURES,
   QR_NOTICE_HOLD_MS,
-  RATE_LIMIT_BACKOFF_MS,
   SUCCESS_HOLD_MS,
   useFaceRecognition,
 } from "./use-face-recognition";
 import { AdminUnauthorizedError } from "./qr-api";
+import { RateLimitedError } from "@/lib/rate-limit";
 import type { Purpose } from "./purpose";
 
 const redirectToAdminLogin = vi.hoisted(() => vi.fn());
@@ -271,21 +271,51 @@ describe("useFaceRecognition 프레임 전송", () => {
     expect(gateway.sendFrame).not.toHaveBeenCalled();
   });
 
-  it("429면 길게 기다렸다 이어 간다", async () => {
+  it("429면 Retry-After만큼 기다렸다 이어 간다", async () => {
     const gateway = makeGateway({
       sendFrame: vi
         .fn()
-        .mockRejectedValueOnce(new FaceApiError(429, "FACE_FRAME_RATE_LIMITED"))
+        .mockRejectedValueOnce(new RateLimitedError(3000))
         .mockResolvedValue(frameOf([])),
     });
     setup(gateway);
     await tick();
     expect(gateway.sendFrame).toHaveBeenCalledTimes(1);
 
-    await tick(RATE_LIMIT_BACKOFF_MS - 1);
+    await tick(3000 - 1);
     expect(gateway.sendFrame).toHaveBeenCalledTimes(1);
     await tick(1);
     expect(gateway.sendFrame).toHaveBeenCalledTimes(2);
+  });
+
+  it("429를 받는 동안 rateLimited이고 다음 프레임 응답이 오면 풀린다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn()
+        .mockRejectedValueOnce(new RateLimitedError(1000))
+        .mockResolvedValue(frameOf([])),
+    });
+    const { result } = setup(gateway);
+
+    await tick();
+    expect(result.current.rateLimited).toBe(true);
+
+    await tick(1000);
+    expect(result.current.rateLimited).toBe(false);
+  });
+
+  it("429는 연속 실패로 세지 않아 오류 상태가 되지 않는다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi.fn().mockRejectedValue(new RateLimitedError(100)),
+    });
+    const { result } = setup(gateway);
+
+    await tick(100 * (MAX_CONSECUTIVE_FAILURES + 3));
+
+    expect(
+      (gateway.sendFrame as ReturnType<typeof vi.fn>).mock.calls.length,
+    ).toBeGreaterThan(MAX_CONSECUTIVE_FAILURES);
+    expect(result.current.status).toBe("running");
   });
 
   it("404면 새 세션을 만들어 이어 간다", async () => {

@@ -1,4 +1,5 @@
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
+import { throwIfRateLimited } from "@/lib/rate-limit";
 import type { DutyStatus, RosterStudent } from "@/lib/admin/volunteer-types";
 
 /** 서버 봉사 API 응답 한 건(`VolunteerResponse`). 시각은 ISO-8601 문자열이다. */
@@ -91,6 +92,7 @@ async function request(path: string, init?: RequestInit): Promise<Response> {
     credentials: "include",
   });
   if (res.status === 401) throw new AdminUnauthorizedError();
+  throwIfRateLimited(res);
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as {
       code?: unknown;

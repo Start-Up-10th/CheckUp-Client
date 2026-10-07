@@ -1,3 +1,4 @@
+import { throwIfRateLimited } from "@/lib/rate-limit";
 export type ConsentChoices = {
   /** 개인정보 수집 및 이용 동의(필수) */
   privacy: boolean;
@@ -36,5 +37,6 @@ export async function submitConsent(choices: ConsentChoices): Promise<void> {
   });
   if (res.status === 401) throw new ConsentLoginRequiredError();
   if (res.status === 403) throw new ConsentNotStudentError();
+  throwIfRateLimited(res);
   if (!res.ok) throw new Error(`consent: ${res.status}`);
 }
