@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { AdminLoginButton } from "@/components/admin/AdminLoginButton";
 import { AdminLoginRedirect } from "@/components/admin/AdminLoginRedirect";
 
 /**
@@ -34,21 +35,7 @@ export default function AdminLoginPage() {
 
       {/* DataGSM 로그인 버튼 */}
       <div className="absolute left-1/2 top-[77.84%] -translate-x-1/2 md:top-[71.78%] xl:top-[71.11%]">
-        <a
-          href="/api/v1/auth/login"
-          className="relative flex h-12 w-[300px] items-center rounded-[6px] border border-[#e2e8f0] bg-[#f8fafc]"
-        >
-          <Image
-            src="/icons/admin-login/datagsm-icon.svg"
-            alt="DataGSM"
-            width={14}
-            height={14}
-            className="absolute left-5 top-1/2 -translate-y-1/2"
-          />
-          <span className="flex-1 pl-[34px] text-center text-[14px] font-medium leading-none text-[#0f172a]">
-            DataGSM으로 계속하기
-          </span>
-        </a>
+        <AdminLoginButton />
       </div>
     </>
   );
