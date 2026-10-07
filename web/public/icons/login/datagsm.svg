@@ -1,3 +1,16 @@
-<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="10.7333" height="12.8333" viewBox="0 0 10.7333 12.8333" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path id="Vector" d="M7.16699 11.5V12.333H0.5V11.5H7.16699ZM8.7002 9.66699V10.5H6.63379V9.66699H8.7002ZM2.56641 9.66699V10.5H0.5V9.66699H2.56641ZM10.2334 7.83301V8.66699H8.16699V7.83301H10.2334ZM2.56641 7.83301V8.66699H0.5V7.83301H2.56641ZM10.2334 6V6.83301H8.16699V6H10.2334ZM2.56641 6V6.83301H0.5V6H2.56641ZM10.2334 4.16699V5H8.16699V4.16699H10.2334ZM2.56641 4.16699V5H0.5V4.16699H2.56641ZM8.7002 2.33301V3.16699H6.63379V2.33301H8.7002ZM2.56641 2.33301V3.16699H0.5V2.33301H2.56641ZM7.16699 0.5V1.33301H0.5V0.5H7.16699Z" fill="white" stroke="white"/>
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Vector">
+<path d="M10 0H0V2H10V0Z" fill="#FFFFFF"/>
+<path d="M4 2H0V4H4V2Z" fill="#FFFFFF"/>
+<path d="M12 2H8V4H12V2Z" fill="#FFFFFF"/>
+<path d="M4 4H0V6H4V4Z" fill="#FFFFFF"/>
+<path d="M14 4H10V6H14V4Z" fill="#FFFFFF"/>
+<path d="M4 6H0V8H4V6Z" fill="#FFFFFF"/>
+<path d="M14 6H10V8H14V6Z" fill="#FFFFFF"/>
+<path d="M4 8H0V10H4V8Z" fill="#FFFFFF"/>
+<path d="M14 8H10V10H14V8Z" fill="#FFFFFF"/>
+<path d="M4 10H0V12H4V10Z" fill="#FFFFFF"/>
+<path d="M12 10H8V12H12V10Z" fill="#FFFFFF"/>
+<path d="M10 12H0V14H10V12Z" fill="#FFFFFF"/>
+</g>
 </svg>

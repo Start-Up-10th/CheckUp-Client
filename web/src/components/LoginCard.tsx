@@ -33,7 +33,7 @@ export const DATAGSM_BUTTON_CLASS =
   "relative block h-11 w-[230px] shrink-0 rounded-[6px] border border-[#e2e8f0] bg-black transition-colors hover:bg-[#1c1c1e]";
 
 /**
- * 버튼 안쪽: 흰색 D 아이콘(10.7×12.8)은 왼쪽 6.67%, 글자(Pretendard Medium 14px 흰색)는 왼쪽 33%~오른쪽 21.33% 칸의 가운데다.
+ * 버튼 안쪽: 흰색으로 채운 굵은 D 마크(14×14, DataGSM 마크)는 왼쪽 6.67%, 글자(Pretendard Medium 14px 흰색)는 왼쪽 33%~오른쪽 21.33% 칸의 가운데다.
  */
 export function DataGsmButtonContent() {
   return (
@@ -42,8 +42,8 @@ export function DataGsmButtonContent() {
         src="/icons/login/datagsm.svg"
         alt=""
         aria-hidden="true"
-        width={11}
-        height={13}
+        width={14}
+        height={14}
         className="absolute left-[6.67%] top-1/2 -translate-y-1/2"
       />
       <span className="absolute inset-y-0 left-[33%] right-[21.33%] flex items-center justify-center whitespace-nowrap text-center text-[14px] font-medium leading-none text-white">
