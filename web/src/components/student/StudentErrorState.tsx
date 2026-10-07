@@ -1,5 +1,13 @@
 "use client";
 
+import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
+
+/** 요청이 너무 많아서(429) 조회하지 못했을 때의 문구. `title`·`description`에 펼쳐 쓴다. */
+export const RATE_LIMITED_COPY = {
+  title: RATE_LIMIT_MESSAGE,
+  description: "요청이 많아 잠시 처리하지 못했어요.",
+} as const;
+
 /**
  * REQ-UI-006 공통 오류/재시도 — 학생 화면 목록·조회 실패 시 내용 자리를 대신한다
  * (Figma 봉사 활동 오류: 핸드폰 459:991 354×260, 노트북 460:218 640×300, 흰 배경).

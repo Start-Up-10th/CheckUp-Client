@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { RateLimitedError } from "@/lib/rate-limit";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import {
   fetchFloorRooms,
@@ -145,5 +146,24 @@ describe("saveRoomAttendance", () => {
       status: 400,
       code: "STUDENT_NOT_IN_ROOM",
     } satisfies Partial<RoomApiError>);
+  });
+});
+
+describe("429 응답", () => {
+  it("호실 API가 429면 Retry-After를 담은 RateLimitedError다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 429,
+        headers: new Headers({ "Retry-After": "2" }),
+        json: async () => ({}),
+      }),
+    );
+
+    const error = await fetchFloorRooms(4).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(RateLimitedError);
+    expect((error as RateLimitedError).retryAfterMs).toBe(2000);
   });
 });

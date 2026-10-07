@@ -15,6 +15,7 @@ import type { RoomMate } from "./RoomMap";
 import { QrFab } from "./QrFab";
 import { StudentEmptyState } from "./StudentEmptyState";
 import { StudentShell } from "./StudentShell";
+import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 
 export type MainLoadStatus = "ready" | "error";
 
@@ -48,7 +49,7 @@ export function StudentMain({
 type RosterState =
   | { status: "loading" }
   | { status: "ready"; mates: RoomMate[] }
-  | { status: "error" };
+  | { status: "error"; rateLimited?: boolean };
 
 /** 공통 틀 안에서 본인 정보를 꺼내 쓰는 홈 본문. */
 function StudentMainContent({
@@ -72,7 +73,12 @@ function StudentMainContent({
       .catch((reason: unknown) => {
         if (cancelled) return;
         if (reason instanceof RoomLoginRequiredError) router.replace("/login");
-        else setRoster({ status: "error" });
+        else {
+          setRoster({
+            status: "error",
+            rateLimited: reason instanceof RateLimitedError,
+          });
+        }
       });
     return () => {
       cancelled = true;
@@ -133,10 +139,14 @@ function StudentMainContent({
       <QrFab />
       {showError && (
         <div className="pointer-events-none fixed inset-x-[18px] bottom-[176px] z-40 md:inset-x-auto md:bottom-auto md:right-8 md:top-8 md:w-[380px]">
-          <StatusBanner
-            variant="error"
-            message="서버와 연결이 원활하지 않습니다."
-          />
+          {roster.status === "error" && roster.rateLimited ? (
+            <StatusBanner variant="neutral" message={RATE_LIMIT_MESSAGE} />
+          ) : (
+            <StatusBanner
+              variant="error"
+              message="서버와 연결이 원활하지 않습니다."
+            />
+          )}
         </div>
       )}
     </>

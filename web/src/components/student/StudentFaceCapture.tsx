@@ -20,6 +20,7 @@ import { FaceCaptureActions } from "./FaceCaptureActions";
 import { FaceCaptureStatus } from "./FaceCaptureStatus";
 import { FaceLaptopNotice } from "./FaceLaptopNotice";
 import { StudentErrorState } from "./StudentErrorState";
+import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 
 // 카운트다운 숫자는 Figma대로 Roboto Mono SemiBold(600). 루트는 400만 불러와 여기서 600을 더 불러온다.
 const countdownFont = Roboto_Mono({ subsets: ["latin"], weight: ["600"] });
@@ -31,7 +32,12 @@ type Entry = "checking" | "allowed" | "notStudent" | "notEligible";
 
 /** 등록 실패 종류. rejected·lowLight·multipleFaces는 서버가 영상을 거절한 경우(422)다. */
 type Failure =
-  "rejected" | "lowLight" | "multipleFaces" | "failed" | "notStudent";
+  | "rejected"
+  | "lowLight"
+  | "multipleFaces"
+  | "failed"
+  | "notStudent"
+  | "rateLimited";
 
 // rejected·lowLight·failed 문구는 REQ-FACE-001. 여러 명 문구는 명세·Figma에 없어 같은 말투로 정했다.
 const FAILURE_MESSAGES: Record<Failure, string> = {
@@ -40,6 +46,7 @@ const FAILURE_MESSAGES: Record<Failure, string> = {
   multipleFaces: "여러 명의 얼굴이 보여요. 본인만 나오게 다시 촬영해 주세요.",
   failed: "얼굴 등록에 실패했습니다. 다시 시도해 주세요.",
   notStudent: "학생 계정만 이용할 수 있어요.",
+  rateLimited: RATE_LIMIT_MESSAGE,
 };
 
 const COUNTDOWN_FROM = 3;
@@ -180,7 +187,11 @@ export function StudentFaceCapture() {
           return;
         }
         setFailure(
-          reason instanceof FaceNotStudentError ? "notStudent" : "failed",
+          reason instanceof FaceNotStudentError
+            ? "notStudent"
+            : reason instanceof RateLimitedError
+              ? "rateLimited"
+              : "failed",
         );
       })
       .finally(() => {

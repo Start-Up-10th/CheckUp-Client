@@ -1,3 +1,4 @@
+import { throwIfRateLimited } from "@/lib/rate-limit";
 export type StudentNotification = {
   id: number;
   /** 화면에 그대로 보여 줄 문구. 서버가 만든다. */
@@ -31,6 +32,7 @@ export class NotificationNotStudentError extends Error {
 function assertOk(res: Response, name: string) {
   if (res.status === 401) throw new NotificationLoginRequiredError();
   if (res.status === 403) throw new NotificationNotStudentError();
+  throwIfRateLimited(res);
   if (!res.ok) throw new Error(`${name}: ${res.status}`);
 }
 

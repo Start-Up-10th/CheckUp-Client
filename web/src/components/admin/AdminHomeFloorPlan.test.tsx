@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Room } from "@/lib/admin/floor-types";
 import { RoomApiError } from "@/lib/admin/room-api";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
+import { RateLimitedError } from "@/lib/rate-limit";
 import {
   type RoomGateway,
   RoomGatewayProvider,
@@ -109,6 +110,29 @@ describe("AdminHomeFloorPlan 층 현황", () => {
     expect(gateway.floor).toHaveBeenCalledTimes(2);
   });
 
+  it("조회가 429로 막히면 잠시 후 다시 시도 안내를 보이고 다시 시도하면 받아 온다", async () => {
+    const gateway = createMockRoomGateway();
+    const ok = gateway.floor;
+    gateway.floor = vi
+      .fn()
+      .mockRejectedValueOnce(new RateLimitedError(2000))
+      .mockImplementation(ok);
+    renderWith(gateway);
+
+    expect(
+      await screen.findByText("잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("전개도를 불러오지 못했습니다."),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+
+    expect(
+      await screen.findByRole("button", { name: /^401/ }),
+    ).toBeInTheDocument();
+  });
+
   it("로그인이 끊겼으면(401) 관리자 로그인으로 보낸다", async () => {
     const gateway = createMockRoomGateway();
     gateway.floor = vi.fn().mockRejectedValue(new AdminUnauthorizedError());
@@ -149,6 +173,19 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "출석" })[1]);
 
     expect(screen.getByText("배정 3명 · 출석 3명")).toBeInTheDocument();
+  });
+
+  it("명단 조회가 429로 막히면 잠시 후 다시 시도 안내를 보이고 상세는 열지 않는다", async () => {
+    const gateway = createMockRoomGateway();
+    gateway.students = vi.fn().mockRejectedValue(new RateLimitedError(2000));
+    renderWith(gateway);
+
+    fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
+
+    expect(
+      await screen.findByText("잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("명단을 못 받으면 실패 문구를 보이고 상세는 열지 않는다", async () => {
@@ -229,6 +266,19 @@ describe("AdminHomeFloorPlan 호실 수정", () => {
 
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await waitFor(() => expect(floor).toHaveBeenCalledTimes(2));
+  });
+
+  it("저장이 429로 막히면 잠시 후 다시 시도 안내를 보이고 다이얼로그를 유지한다", async () => {
+    const gateway = createMockRoomGateway();
+    gateway.save = vi.fn().mockRejectedValue(new RateLimitedError(2000));
+    renderWith(gateway);
+
+    await changeFirstRoomAndSave();
+
+    expect(
+      await screen.findByText("잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   it("저장 중 로그인이 끊겼으면(401) 관리자 로그인으로 보낸다", async () => {
