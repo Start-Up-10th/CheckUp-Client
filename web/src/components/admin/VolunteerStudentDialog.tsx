@@ -2,6 +2,8 @@
 
 import { useEffect, useId, useState } from "react";
 import { StatusBanner } from "@/components/admin/StatusBanner";
+import { redirectToAdminLogin } from "@/lib/admin/admin-session";
+import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import {
   useVolunteerHistoryGateway,
   type VolunteerHistoryItem,
@@ -43,8 +45,13 @@ export function VolunteerStudentDialog({
       .then((items) => {
         if (!cancelled) setHistory({ status: "ready", items });
       })
-      .catch(() => {
-        if (!cancelled) setHistory({ status: "error" });
+      .catch((error) => {
+        if (cancelled) return;
+        if (error instanceof AdminUnauthorizedError) {
+          redirectToAdminLogin();
+          return;
+        }
+        setHistory({ status: "error" });
       });
     return () => {
       cancelled = true;
@@ -118,7 +125,8 @@ export function VolunteerStudentDialog({
                       : "text-admin-danger-text"
                   }`}
                 >
-                  {item.delta > 0 ? "+1회" : "−1회"}
+                  {item.delta > 0 ? "+" : "−"}
+                  {Math.abs(item.delta)}회
                 </p>
               </div>
             ))
