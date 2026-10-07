@@ -50,7 +50,7 @@ export function CameraPanel({
           className="size-full object-cover"
         />
 
-        {/* REQ-FACE-006: 카메라 하단에 성공을 잠시 보인다. 인식 실패는 오른쪽 상단 토스트로 보인다. */}
+        {/* REQ-FACE-006: 카메라 하단에 성공을 잠시 보인다. 인식 실패는 위쪽 가운데 토스트로 보인다. */}
         {status !== "error" && successMessage && (
           <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-col items-center gap-2 md:bottom-4">
             {successMessage && (

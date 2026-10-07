@@ -55,6 +55,19 @@ describe("AdminHomeFloorPlan 층 현황", () => {
     expect(screen.getByText("4층 전개도")).toBeInTheDocument();
   });
 
+  it("호실이 하나도 없는 층은 빈 상태를 보이고 헤더와 층 탭은 유지한다", async () => {
+    const gateway = createMockRoomGateway();
+    gateway.floor = vi.fn().mockResolvedValue([]);
+    renderWith(gateway);
+
+    expect(await screen.findByText("아직 데이터가 없어요")).toBeInTheDocument();
+    expect(screen.getByText("4층 전개도")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "5층" })).toBeInTheDocument();
+    expect(
+      screen.queryByText("전개도를 불러오지 못했습니다."),
+    ).not.toBeInTheDocument();
+  });
+
   it("불러오는 동안은 스켈레톤을 보인다", () => {
     const gateway = createMockRoomGateway();
     gateway.floor = vi.fn(() => new Promise<Room[]>(() => {}));
@@ -116,6 +129,26 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     expect(students).toHaveBeenCalledWith("402");
     expect(screen.getByText("402호")).toBeInTheDocument();
+  });
+
+  it("상세·수정 다이얼로그는 N인실 대신 배정·출석 인원으로 표기한다", async () => {
+    const gateway = createMockRoomGateway();
+    gateway.students = vi.fn().mockResolvedValue([
+      { studentId: "1", name: "김도현", present: true },
+      { studentId: "2", name: "박서연", present: false },
+      { studentId: "3", name: "이지후", present: true },
+    ]);
+    renderWith(gateway);
+
+    fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
+
+    expect(await screen.findByText("배정 3명 · 출석 2명")).toBeInTheDocument();
+    expect(screen.queryByText(/인실/)).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "수정" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "출석" })[1]);
+
+    expect(screen.getByText("배정 3명 · 출석 3명")).toBeInTheDocument();
   });
 
   it("명단을 못 받으면 실패 문구를 보이고 상세는 열지 않는다", async () => {
