@@ -12,6 +12,7 @@ import {
   StudentManagementGatewayProvider,
   type StudentManagementGateway,
 } from "@/lib/admin/student-management-gateway";
+import { createMockStudentManagementGateway } from "@/lib/admin/student-management-mock-gateway";
 import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
 import { createMockVolunteerGateway } from "@/lib/admin/volunteer-mock-gateway";
 import { resetRoster, setRoster } from "@/lib/admin/volunteer-roster-store";
@@ -19,20 +20,19 @@ import { AdminStudentManagement } from "./AdminStudentManagement";
 
 const volunteerGateway = createMockVolunteerGateway();
 
-function render(ui: ReactElement, gateway?: StudentManagementGateway) {
+function render(
+  ui: ReactElement,
+  gateway: StudentManagementGateway = createMockStudentManagementGateway(),
+) {
   const page = (
     <VolunteerGatewayProvider value={volunteerGateway}>
       {ui}
     </VolunteerGatewayProvider>
   );
   return renderPlain(
-    gateway ? (
-      <StudentManagementGatewayProvider value={gateway}>
-        {page}
-      </StudentManagementGatewayProvider>
-    ) : (
-      page
-    ),
+    <StudentManagementGatewayProvider value={gateway}>
+      {page}
+    </StudentManagementGatewayProvider>,
   );
 }
 
