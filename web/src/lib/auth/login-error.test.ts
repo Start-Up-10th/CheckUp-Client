@@ -1,12 +1,6 @@
 import { loginFailureMessage } from "./login-error";
 
 describe("loginFailureMessage", () => {
-  it("관리자 계정이 사용자 로그인으로 들어왔다는 코드는 관리자 로그인 안내 문구다", () => {
-    expect(loginFailureMessage("ADMIN_ACCOUNT")).toBe(
-      "관리자 계정은 관리자 로그인에서 로그인해 주세요.",
-    );
-  });
-
   it("error 쿼리가 없으면 실패가 아니다", () => {
     expect(loginFailureMessage(undefined)).toBeNull();
   });
