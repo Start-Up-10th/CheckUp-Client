@@ -8,20 +8,28 @@ import {
 } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
+import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import { VolunteerApiError } from "@/lib/admin/volunteer-api";
 import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
 import { VolunteerHistoryGatewayProvider } from "@/lib/admin/volunteer-history-gateway";
+import { createMockVolunteerHistoryGateway } from "@/lib/admin/volunteer-history-mock-gateway";
 import { createMockVolunteerGateway } from "@/lib/admin/volunteer-mock-gateway";
 import { resetRoster, setRoster } from "@/lib/admin/volunteer-roster-store";
 import { AdminVolunteerRoster } from "./AdminVolunteerRoster";
 
+const redirectToAdminLogin = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/admin/admin-session", () => ({ redirectToAdminLogin }));
+
 const mockGateway = createMockVolunteerGateway();
+const mockHistoryGateway = createMockVolunteerHistoryGateway();
 
 /** 서버 대신 목업 게이트웨이를 쓰는 화면. */
 function render(ui: ReactElement) {
   return renderPlain(
     <VolunteerGatewayProvider value={mockGateway}>
-      {ui}
+      <VolunteerHistoryGatewayProvider value={mockHistoryGateway}>
+        {ui}
+      </VolunteerHistoryGatewayProvider>
     </VolunteerGatewayProvider>,
   );
 }
@@ -216,6 +224,46 @@ describe("AdminVolunteerRoster", () => {
 
       expect(await screen.findByRole("alert")).toHaveTextContent(
         "봉사 이력을 불러오지 못했습니다. 다시 시도해 주세요.",
+      );
+    });
+    it("한 번에 여러 회 바뀐 이력은 그 횟수로 보여 준다", async () => {
+      renderPlain(
+        <VolunteerGatewayProvider value={mockGateway}>
+          <VolunteerHistoryGatewayProvider
+            value={{
+              list: async () => [
+                { id: "a", date: "10/02", title: "청소 당번 대체", delta: -3 },
+                { id: "b", date: "09/17", title: "봉사 횟수 추가", delta: 2 },
+              ],
+            }}
+          >
+            <AdminVolunteerRoster />
+          </VolunteerHistoryGatewayProvider>
+        </VolunteerGatewayProvider>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+
+      expect(await screen.findByText("−3회")).toBeInTheDocument();
+      expect(screen.getByText("+2회")).toBeInTheDocument();
+      expect(screen.getByText("청소 당번 대체")).toBeInTheDocument();
+    });
+
+    it("이력을 받다가 로그인이 끊기면(401) 관리자 로그인으로 보낸다", async () => {
+      renderPlain(
+        <VolunteerGatewayProvider value={mockGateway}>
+          <VolunteerHistoryGatewayProvider
+            value={{
+              list: () => Promise.reject(new AdminUnauthorizedError()),
+            }}
+          >
+            <AdminVolunteerRoster />
+          </VolunteerHistoryGatewayProvider>
+        </VolunteerGatewayProvider>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+
+      await waitFor(() =>
+        expect(redirectToAdminLogin).toHaveBeenCalledTimes(1),
       );
     });
   });
