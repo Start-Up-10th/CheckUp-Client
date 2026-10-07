@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Room } from "@/lib/admin/floor-types";
 import { RoomApiError } from "@/lib/admin/room-api";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
-import { RateLimitedError } from "@/lib/admin/rate-limit";
+import { RateLimitedError } from "@/lib/rate-limit";
 import {
   type RoomGateway,
   RoomGatewayProvider,

@@ -1,5 +1,5 @@
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
-import { throwIfRateLimited } from "@/lib/admin/rate-limit";
+import { throwIfRateLimited } from "@/lib/rate-limit";
 import type { Floor, Room, Student } from "@/lib/admin/floor-types";
 
 /** 서버가 준 오류. `code`는 서버 ErrorCode 이름(예: `STUDENT_NOT_IN_ROOM`)이고 본문이 없으면 null이다. */

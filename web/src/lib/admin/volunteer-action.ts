@@ -4,7 +4,7 @@ import { useCallback, useRef } from "react";
 import { redirectToAdminLogin } from "@/lib/admin/admin-session";
 import type { ToastMessage } from "@/components/admin/Toast";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
-import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/admin/rate-limit";
+import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 import { VolunteerApiError } from "@/lib/admin/volunteer-api";
 
 /** 서버가 막은 이유별 안내(Figma 07 state messages, 봉사 없음·완료는 하네스 REQ-COM-006 문구). */

@@ -9,7 +9,7 @@ import {
 import type { ReactElement } from "react";
 import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
-import { RateLimitedError } from "@/lib/admin/rate-limit";
+import { RateLimitedError } from "@/lib/rate-limit";
 import { VolunteerApiError } from "@/lib/admin/volunteer-api";
 import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
 import { VolunteerHistoryGatewayProvider } from "@/lib/admin/volunteer-history-gateway";

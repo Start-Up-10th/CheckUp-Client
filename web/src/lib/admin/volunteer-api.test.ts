@@ -1,4 +1,4 @@
-import { RateLimitedError } from "./rate-limit";
+import { RateLimitedError } from "@/lib/rate-limit";
 import { AdminUnauthorizedError } from "./qr-api";
 import {
   VolunteerApiError,

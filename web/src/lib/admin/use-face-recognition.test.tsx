@@ -17,7 +17,7 @@ import {
   useFaceRecognition,
 } from "./use-face-recognition";
 import { AdminUnauthorizedError } from "./qr-api";
-import { RateLimitedError } from "./rate-limit";
+import { RateLimitedError } from "@/lib/rate-limit";
 import type { Purpose } from "./purpose";
 
 const redirectToAdminLogin = vi.hoisted(() => vi.fn());

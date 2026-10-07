@@ -5,7 +5,7 @@ import {
   FaceGatewayProvider,
   type FaceGateway,
 } from "@/lib/admin/face-gateway";
-import { RateLimitedError } from "@/lib/admin/rate-limit";
+import { RateLimitedError } from "@/lib/rate-limit";
 import { createMockFaceGateway } from "@/lib/admin/face-mock-gateway";
 import { AdminFaceRecognition } from "./AdminFaceRecognition";
 

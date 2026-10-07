@@ -14,7 +14,7 @@ import { useFaceGateway } from "@/lib/admin/face-gateway";
 import { applyFrame, INITIAL_RECOGNITION } from "@/lib/admin/face-results";
 import type { Purpose } from "@/lib/admin/purpose";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
-import { RateLimitedError } from "@/lib/admin/rate-limit";
+import { RateLimitedError } from "@/lib/rate-limit";
 
 /** 응답이 온 뒤 다음 프레임을 보내기까지의 간격. 서버 최소 간격(200ms)보다 넉넉히 둔다. */
 export const FRAME_INTERVAL_MS = 500;

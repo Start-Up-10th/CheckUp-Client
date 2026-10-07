@@ -4,7 +4,7 @@ import { ToastLayer } from "@/components/admin/Toast";
 import { CameraPanel } from "@/components/admin/CameraPanel";
 import { successMessage } from "@/lib/admin/face-results";
 import { useFaceRecognition } from "@/lib/admin/use-face-recognition";
-import { RATE_LIMIT_MESSAGE } from "@/lib/admin/rate-limit";
+import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { useCameraStream } from "@/lib/admin/use-camera-stream";
 import type { Purpose } from "@/lib/admin/purpose";
 

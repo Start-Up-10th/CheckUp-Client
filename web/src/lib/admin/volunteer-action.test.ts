@@ -1,5 +1,5 @@
 import { AdminUnauthorizedError } from "./qr-api";
-import { RATE_LIMIT_MESSAGE, RateLimitedError } from "./rate-limit";
+import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 import { failureToast, listFailureToast } from "./volunteer-action";
 import { VolunteerApiError } from "./volunteer-api";
 

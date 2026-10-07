@@ -18,7 +18,7 @@ import {
   type Student,
 } from "@/lib/admin/floor-types";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
-import { RateLimitedError, failureNotice } from "@/lib/admin/rate-limit";
+import { RateLimitedError, failureNotice } from "@/lib/rate-limit";
 import { RoomApiError } from "@/lib/admin/room-api";
 import { useRoomGateway } from "@/lib/admin/room-gateway";
 

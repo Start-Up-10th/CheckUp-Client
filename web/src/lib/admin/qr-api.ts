@@ -1,5 +1,5 @@
 import type { Purpose } from "@/lib/admin/purpose";
-import { throwIfRateLimited } from "@/lib/admin/rate-limit";
+import { throwIfRateLimited } from "@/lib/rate-limit";
 
 export type ApiPurpose = "DORMITORY" | "STUDY_ROOM";
 

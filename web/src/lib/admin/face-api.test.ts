@@ -1,5 +1,5 @@
 import { AdminUnauthorizedError } from "./qr-api";
-import { RateLimitedError } from "./rate-limit";
+import { RateLimitedError } from "@/lib/rate-limit";
 import {
   FaceApiError,
   closeFaceSession,

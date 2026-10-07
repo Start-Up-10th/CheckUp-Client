@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { RateLimitedError } from "@/lib/admin/rate-limit";
+import { RateLimitedError } from "@/lib/rate-limit";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import {
   fetchFloorRooms,

@@ -1,5 +1,5 @@
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
-import { throwIfRateLimited } from "@/lib/admin/rate-limit";
+import { throwIfRateLimited } from "@/lib/rate-limit";
 import type { DutyStatus, RosterStudent } from "@/lib/admin/volunteer-types";
 
 /** 서버 봉사 API 응답 한 건(`VolunteerResponse`). 시각은 ISO-8601 문자열이다. */

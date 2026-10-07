@@ -5,7 +5,7 @@ import { QrCodeGenerationPanel } from "@/components/admin/QrCodeGenerationPanel"
 import { QrCodeGenerationSkeleton } from "@/components/admin/QrCodeGenerationSkeleton";
 import { StatusBanner } from "@/components/admin/StatusBanner";
 import { formatCountdown } from "@/lib/admin/qr-countdown";
-import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/admin/rate-limit";
+import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 import type { Purpose } from "@/lib/admin/purpose";
 import { redirectToAdminLogin } from "@/lib/admin/admin-session";
 import {

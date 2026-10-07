@@ -7,7 +7,7 @@ import {
   useVolunteerGateway,
   type VolunteerGateway,
 } from "@/lib/admin/volunteer-gateway";
-import { RateLimitedError } from "@/lib/admin/rate-limit";
+import { RateLimitedError } from "@/lib/rate-limit";
 import { replaceStudent } from "@/lib/admin/volunteer-roster";
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
