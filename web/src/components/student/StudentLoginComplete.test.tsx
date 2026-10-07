@@ -66,38 +66,76 @@ describe("StudentLoginComplete", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/login?error=1"));
   });
 
-  it("관리자는 관리자 홈으로", async () => {
+  it("관리자 로그인에서 시작한 관리자는 관리자 홈으로", async () => {
+    rememberLoginApp("admin");
     mockMe(200, { name: "사감", role: "ADMIN" });
     render(<StudentLoginComplete />);
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin"));
   });
 
-  it("사용자 앱으로 로그인한 기숙사 자치위원(학생 정보가 있는 관리자)은 학생 홈으로", async () => {
-    rememberLoginApp("user");
-    mockMe(200, COMMITTEE);
+  it("어느 로그인인지 알 수 없는 관리자도 쫓아내지 않고 관리자 홈으로", async () => {
+    mockMe(200, { name: "사감", role: "ADMIN" });
     render(<StudentLoginComplete />);
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/main"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin"));
   });
 
-  it("시작한 앱을 적지 않았어도(기본) 기숙사 자치위원은 학생 홈으로", async () => {
-    mockMe(200, COMMITTEE);
-    render(<StudentLoginComplete />);
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/main"));
-  });
-
-  it("관리자 앱으로 로그인한 기숙사 자치위원은 관리자 홈으로", async () => {
+  it("관리자 로그인에서 시작한 기숙사 자치위원도 관리자 홈으로", async () => {
     rememberLoginApp("admin");
     mockMe(200, COMMITTEE);
     render(<StudentLoginComplete />);
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin"));
   });
 
-  it("시작한 앱 기록은 한 번 읽고 지운다", async () => {
+  it("사용자 로그인으로 들어온 관리자 권한 계정은 로그아웃하고 안내로 보낸다(기숙사 자치위원 포함)", async () => {
+    rememberLoginApp("user");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify(COMMITTEE), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<StudentLoginComplete />);
+
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith("/login?error=ADMIN_ACCOUNT"),
+    );
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/v1/auth/logout",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("로그아웃이 실패해도 안내로 보낸다", async () => {
+    rememberLoginApp("user");
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify(COMMITTEE), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        )
+        .mockRejectedValueOnce(new Error("network")),
+    );
+    render(<StudentLoginComplete />);
+
+    await waitFor(() =>
+      expect(replace).toHaveBeenCalledWith("/login?error=ADMIN_ACCOUNT"),
+    );
+  });
+
+  it("시작한 로그인 기록은 한 번 읽고 지운다", async () => {
     rememberLoginApp("admin");
     mockMe(200, COMMITTEE);
     render(<StudentLoginComplete />);
     await waitFor(() => expect(replace).toHaveBeenCalled());
-    expect(takeLoginApp()).toBe("user");
+    expect(takeLoginApp()).toBeNull();
   });
 
   it("QR 링크로 왔던 학생은 저장한 QR 주소로 돌아가고 값은 지운다", async () => {
@@ -108,12 +146,11 @@ describe("StudentLoginComplete", () => {
     expect(window.sessionStorage.getItem(QR_RETURN_URL_KEY)).toBeNull();
   });
 
-  it("QR 링크로 왔던 관리자(기숙사 자치위원)도 저장한 QR 주소로 돌아가고 값은 지운다", async () => {
+  it("QR 링크로 왔더라도 관리자(로그인 시작을 알 수 없음)는 관리자 홈으로 간다(관리자는 QR 출석을 하지 않는다)", async () => {
     window.sessionStorage.setItem(QR_RETURN_URL_KEY, QR_URL);
-    mockMe(200, { name: "자치위원", role: "ADMIN" });
+    mockMe(200, { name: "사감", role: "ADMIN" });
     render(<StudentLoginComplete />);
-    await waitFor(() => expect(replace).toHaveBeenCalledWith(QR_URL));
-    expect(window.sessionStorage.getItem(QR_RETURN_URL_KEY)).toBeNull();
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin"));
   });
 
   it("아직 동의하지 않은 학생은 개인정보 동의로", async () => {

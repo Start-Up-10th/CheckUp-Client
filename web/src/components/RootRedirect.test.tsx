@@ -55,7 +55,7 @@ describe("RootRedirect(사용자 앱 첫 화면)", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/main"));
   });
 
-  it("기숙사 자치위원(학생 정보가 있는 관리자)도 사용자 앱으로 들어오면 학생 홈으로", async () => {
+  it("기숙사 자치위원(학생 정보가 있는 관리자)도 관리자라서 관리자 홈으로", async () => {
     mockMe(200, {
       name: "자치위원",
       role: "ADMIN",
@@ -63,7 +63,7 @@ describe("RootRedirect(사용자 앱 첫 화면)", () => {
       student: STUDENT_INFO,
     });
     render(<RootRedirect />);
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/main"));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin"));
   });
 
   it("학생 정보가 없는 관리자(사감 등)는 관리자 홈으로", async () => {

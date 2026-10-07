@@ -3,6 +3,15 @@ import { takeLoginApp } from "@/lib/auth/login-app";
 import { StudentLogin } from "./StudentLogin";
 
 describe("StudentLogin", () => {
+  it("카드 아래에 관리자 로그인 링크가 있다", () => {
+    render(<StudentLogin />);
+
+    expect(screen.getByRole("link", { name: "관리자 로그인" })).toHaveAttribute(
+      "href",
+      "/admin/login",
+    );
+  });
+
   it("로고·한 줄 소개·DataGSM 버튼이 카드에 있다", () => {
     render(<StudentLogin />);
 

@@ -8,11 +8,13 @@ const REJECTED_ACCOUNT_MESSAGES: Record<string, string> = {
   INACTIVE_ACCOUNT: "올바르지 않은 계정 상태입니다.",
   MISSING_STUDENT_INFO: "학생 정보가 없습니다.",
   UNSUPPORTED_ACCOUNT: "이용 권한이 없는 계정입니다.",
+  // 서버 코드가 아니라 로그인 완료 화면이 붙인다: 관리자 권한 계정이 사용자 로그인으로 로그인한 경우(DEC-055).
+  ADMIN_ACCOUNT: "관리자 계정은 관리자 로그인에서 로그인해 주세요.",
 };
 
 /**
  * 로그인 화면 쿼리의 `error` 값으로 보여 줄 실패 문구를 정한다(REQ-AUTH-001).
- * 쿼리가 없으면 실패가 아니므로 null이다. 계정이 거부된 세 코드는 서버 문구를, 그 밖의 값
+ * 쿼리가 없으면 실패가 아니므로 null이다. 계정이 거부된 코드와 관리자 계정 안내는 서버 문구를, 그 밖의 값
  * (DataGSM 오류·state 오류·취소와 로그인 완료 화면이 붙이는 `error=1`)은 일반 실패 문구를 돌려준다.
  */
 export function loginFailureMessage(error: string | undefined): string | null {
