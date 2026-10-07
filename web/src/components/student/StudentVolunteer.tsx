@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { StatusBanner } from "@/components/admin/StatusBanner";
+import { ToastLayer } from "@/components/admin/Toast";
 import { useCurrentStudent } from "@/lib/student/current-student";
 import {
   VolunteerLoginRequiredError,
@@ -141,11 +141,11 @@ function StudentVolunteerContent() {
           )}
         </div>
       </div>
-      {failed && (
-        <div className="pointer-events-none fixed inset-x-[18px] bottom-[18px] z-40 md:inset-x-auto md:bottom-auto md:right-8 md:top-8 md:w-[380px]">
-          <StatusBanner variant="error" message={LOAD_FAILED_MESSAGE} />
-        </div>
-      )}
+      <ToastLayer
+        toast={
+          failed ? { variant: "error", message: LOAD_FAILED_MESSAGE } : null
+        }
+      />
     </main>
   );
 }
