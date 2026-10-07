@@ -11,7 +11,11 @@ import { StudentRoomGroup } from "@/components/admin/student-management/StudentR
 import { StudentSearchField } from "@/components/admin/student-management/StudentSearchField";
 import type { Floor } from "@/lib/admin/floor-types";
 import { useStudentManagementGateway } from "@/lib/admin/student-management-gateway";
-import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
+import {
+  failureToast,
+  listFailureToast,
+  useSingleFlight,
+} from "@/lib/admin/volunteer-action";
 import { groupByRoom } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
 
@@ -31,13 +35,14 @@ const COUNT_FAILURE_MESSAGE =
  * (`apiStudentManagementGateway`).
  */
 export function AdminStudentManagement() {
-  const { roster, status, updateStudent, reload } = useVolunteerRoster();
+  const { roster, status, rateLimited, updateStudent, reload } =
+    useVolunteerRoster();
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const gateway = useStudentManagementGateway();
   const singleFlight = useSingleFlight();
-  const { toast, showToast } = useToast();
+  const { toasts, showToast } = useToast();
 
   const groups = useMemo(
     () => groupByRoom(roster, { floor, query }),
@@ -48,9 +53,9 @@ export function AdminStudentManagement() {
 
   useEffect(() => {
     if (status === "error") {
-      showToast({ variant: "error", message: LIST_FAILURE_MESSAGE });
+      showToast(listFailureToast(rateLimited, LIST_FAILURE_MESSAGE));
     }
-  }, [status, showToast]);
+  }, [status, rateLimited, showToast]);
 
   function handleSave(change: { count: number; reason: string }) {
     if (!selected) return;
@@ -73,7 +78,7 @@ export function AdminStudentManagement() {
 
   return (
     <div className="flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} />
+      <ToastLayer toasts={toasts} />
 
       <div className="flex w-full items-end justify-between">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">

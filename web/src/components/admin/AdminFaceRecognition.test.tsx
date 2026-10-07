@@ -5,6 +5,7 @@ import {
   FaceGatewayProvider,
   type FaceGateway,
 } from "@/lib/admin/face-gateway";
+import { RateLimitedError } from "@/lib/rate-limit";
 import { createMockFaceGateway } from "@/lib/admin/face-mock-gateway";
 import { AdminFaceRecognition } from "./AdminFaceRecognition";
 
@@ -87,6 +88,25 @@ describe("AdminFaceRecognition", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
   });
 
+  it("서버가 429로 막으면 잠시 후 다시 시도 안내를 보이고 풀리면 사라진다", async () => {
+    const gateway = createMockFaceGateway([[]]);
+    vi.spyOn(gateway, "sendFrame")
+      .mockRejectedValueOnce(new RateLimitedError(1000))
+      .mockResolvedValue({ frameId: "f", faces: [] });
+    renderWith(gateway);
+    await tick();
+
+    expect(screen.getByText("잠시 후 다시 시도해 주세요.")).toBeInTheDocument();
+    expect(screen.queryByText("불러오지 못했어요")).not.toBeInTheDocument();
+
+    await tick(1_500);
+    // 사라지는 애니메이션(200ms) 동안은 마지막 토스트를 그린다.
+    await tick(300);
+    expect(
+      screen.queryByText("잠시 후 다시 시도해 주세요."),
+    ).not.toBeInTheDocument();
+  });
+
   it("용도 탭·전체화면 버튼·최근 인식 목록은 없다", async () => {
     renderWith(createMockFaceGateway([[known()]]));
     await tick();
@@ -112,6 +132,8 @@ describe("AdminFaceRecognition", () => {
     ).toBeInTheDocument();
 
     await tick(10_000);
+    // 사라지는 애니메이션(200ms) 동안은 마지막 토스트를 그린다.
+    await tick(300);
     expect(
       screen.queryByText("인식 실패 · 3회 초과 시 QR로 출석"),
     ).not.toBeInTheDocument();

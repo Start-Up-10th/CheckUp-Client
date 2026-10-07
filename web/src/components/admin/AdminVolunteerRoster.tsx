@@ -9,7 +9,11 @@ import { VolunteerDesignatedBar } from "@/components/admin/VolunteerDesignatedBa
 import { VolunteerRosterRow } from "@/components/admin/VolunteerRosterRow";
 import { VolunteerStudentDialog } from "@/components/admin/VolunteerStudentDialog";
 import type { Floor } from "@/lib/admin/floor-types";
-import { failureToast, useSingleFlight } from "@/lib/admin/volunteer-action";
+import {
+  failureToast,
+  listFailureToast,
+  useSingleFlight,
+} from "@/lib/admin/volunteer-action";
 import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
 import { groupByRoom } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
@@ -31,7 +35,8 @@ const DESIGNATE_FAILURE_MESSAGE =
  * 다녀와서 다시 들어오면 지정하기 전까지 숨는다). 명단에 학생을 추가·제외하는 단계는 없다.
  */
 export function AdminVolunteerRoster() {
-  const { roster, status, updateStudent, reload } = useVolunteerRoster();
+  const { roster, status, rateLimited, updateStudent, reload } =
+    useVolunteerRoster();
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -39,7 +44,7 @@ export function AdminVolunteerRoster() {
   const [designatedHere, setDesignatedHere] = useState(false);
   const gateway = useVolunteerGateway();
   const singleFlight = useSingleFlight();
-  const { toast, showToast } = useToast();
+  const { toasts, showToast } = useToast();
   const selected =
     roster.find((student) => student.studentId === selectedId) ?? null;
   // 봉사자 관리(06)가 보여 주는 사람과 같게, 완료한 학생은 빼고 아직 완료하지 않은 지정만 센다.
@@ -56,9 +61,9 @@ export function AdminVolunteerRoster() {
 
   useEffect(() => {
     if (status === "error") {
-      showToast({ variant: "error", message: LIST_FAILURE_MESSAGE });
+      showToast(listFailureToast(rateLimited, LIST_FAILURE_MESSAGE));
     }
-  }, [status, showToast]);
+  }, [status, rateLimited, showToast]);
 
   function handleDesignate(studentId: string) {
     const target = roster.find((student) => student.studentId === studentId);
@@ -81,7 +86,7 @@ export function AdminVolunteerRoster() {
 
   return (
     <div className="relative flex h-full w-full flex-col gap-3.5 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} />
+      <ToastLayer toasts={toasts} />
 
       <div className="flex w-full items-end justify-between">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">

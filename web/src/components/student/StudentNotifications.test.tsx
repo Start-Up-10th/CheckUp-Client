@@ -139,6 +139,20 @@ describe("StudentNotifications", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/login"));
   });
 
+  it("429면 잠시 후 다시 시도 안내를 보여 주고, 다시 시도하면 다시 불러온다", async () => {
+    mockApi([{ status: 429 }, { status: 200, body: LIST }]);
+    render(<StudentNotifications />);
+
+    expect(
+      await screen.findByText("잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("불러오지 못했어요")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+
+    expect(await screen.findAllByRole("listitem")).toHaveLength(2);
+  });
+
   it("불러오지 못하면 오류를 보여 주고, 다시 시도하면 다시 불러온다", async () => {
     mockApi([{ status: 500 }, { status: 200, body: LIST }]);
     render(<StudentNotifications />);

@@ -18,6 +18,7 @@ import {
   type Student,
 } from "@/lib/admin/floor-types";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
+import { RateLimitedError, failureNotice } from "@/lib/rate-limit";
 import { RoomApiError } from "@/lib/admin/room-api";
 import { useRoomGateway } from "@/lib/admin/room-gateway";
 
@@ -32,6 +33,8 @@ type DialogStage = "view" | "edit";
 
 /** 어떤 층·요청 차례(`attempt`)의 결과인지 함께 두어, 층을 바꾸거나 다시 시도했을 때 이전 결과를 쓰지 않는다. */
 type FloorResult = { floor: Floor; attempt: number };
+/** 조회 실패. `rateLimited`는 429(요청이 너무 많음) 때문인지다. */
+type FloorFailure = FloorResult & { rateLimited: boolean };
 
 /**
  * REQ-UI-001·002: 관리자 홈(전개도). 층 현황과 호실 명단은 서버(`RoomGateway`)에서 받는다. 호실 카드를 누르면 그 호실
@@ -45,14 +48,14 @@ export function AdminHomeFloorPlan() {
   const [loaded, setLoaded] = useState<
     (FloorResult & { rooms: Room[] }) | null
   >(null);
-  const [failed, setFailed] = useState<FloorResult | null>(null);
+  const [failed, setFailed] = useState<FloorFailure | null>(null);
   const [dialogRoom, setDialogRoom] = useState<RoomDetail | null>(null);
   const [dialogStage, setDialogStage] = useState<DialogStage>("view");
   // 호실 명단 요청이 겹칠 때 가장 최근 요청만 받아들이기 위한 번호.
   const roomRequest = useRef(0);
   // 저장 요청이 끝나기 전의 중복 저장을 막는다.
   const saving = useRef(false);
-  const { toast, showToast } = useToast();
+  const { toasts, showToast } = useToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -69,7 +72,11 @@ export function AdminHomeFloorPlan() {
           redirectToAdminLogin();
           return;
         }
-        setFailed({ floor: selectedFloor, attempt });
+        setFailed({
+          floor: selectedFloor,
+          attempt,
+          rateLimited: error instanceof RateLimitedError,
+        });
       });
     return () => {
       cancelled = true;
@@ -91,9 +98,14 @@ export function AdminHomeFloorPlan() {
 
   useEffect(() => {
     if (loadFailed) {
-      showToast({ variant: "error", message: LOAD_FAILED_MESSAGE });
+      showToast(
+        failureNotice(
+          failed?.rateLimited ? new RateLimitedError() : null,
+          LOAD_FAILED_MESSAGE,
+        ),
+      );
     }
-  }, [loadFailed, showToast]);
+  }, [loadFailed, failed, showToast]);
 
   if (isLoading) return <AdminFloorPlanSkeleton />;
 
@@ -120,7 +132,7 @@ export function AdminHomeFloorPlan() {
         redirectToAdminLogin();
         return;
       }
-      showToast({ variant: "error", message: ROOM_LOAD_FAILED_MESSAGE });
+      showToast(failureNotice(error, ROOM_LOAD_FAILED_MESSAGE));
     }
   }
 
@@ -157,7 +169,7 @@ export function AdminHomeFloorPlan() {
         redirectToAdminLogin();
         return;
       }
-      showToast({ variant: "error", message: SAVE_FAILED_MESSAGE });
+      showToast(failureNotice(error, SAVE_FAILED_MESSAGE));
       // 서버의 호실 명단과 어긋났으면(호실 학생이 아님) 이 다이얼로그의 명단은 낡았으므로 닫고 현황을 다시 받는다.
       if (
         error instanceof RoomApiError &&
@@ -189,7 +201,7 @@ export function AdminHomeFloorPlan() {
 
   return (
     <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
-      <ToastLayer toast={toast} />
+      <ToastLayer toasts={toasts} />
 
       {/* 헤더: 제목 좌측 + 층 탭 우측 */}
       <div className="flex w-full items-center justify-between md:h-[57px] xl:h-auto xl:items-end">
