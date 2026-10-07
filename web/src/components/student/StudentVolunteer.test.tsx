@@ -91,6 +91,16 @@ describe("StudentVolunteer", () => {
     expect(screen.getByText("2회")).toBeInTheDocument();
   });
 
+  it("429면 잠시 후 다시 시도 안내를 보여 준다", async () => {
+    mockApi({ history: [{ status: 429 }] });
+    render(<StudentVolunteer />);
+
+    expect(
+      await screen.findByText("잠시 후 다시 시도해 주세요."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("불러오지 못했어요")).not.toBeInTheDocument();
+  });
+
   it("불러오지 못하면 오류를 보여 주고, 다시 시도하면 다시 불러온다", async () => {
     mockApi({ history: [{ status: 500 }, { status: 200, body: HISTORY }] });
     render(<StudentVolunteer />);

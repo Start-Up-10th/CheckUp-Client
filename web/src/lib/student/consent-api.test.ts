@@ -1,3 +1,4 @@
+import { RateLimitedError } from "@/lib/rate-limit";
 import {
   ConsentLoginRequiredError,
   ConsentNotStudentError,
@@ -55,5 +56,31 @@ describe("submitConsent", () => {
     mockFetch(status);
 
     await expect(submitConsent(CHOICES)).rejects.toThrow(`consent: ${status}`);
+  });
+});
+
+describe("429 응답", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("429면 Retry-After를 담은 RateLimitedError다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(
+        async () =>
+          new Response(null, {
+            status: 429,
+            headers: { "Retry-After": "3" },
+          }),
+      ),
+    );
+
+    const error = await submitConsent({
+      privacy: true,
+      face: true,
+      noticeAlarm: false,
+    }).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(RateLimitedError);
+    expect((error as RateLimitedError).retryAfterMs).toBe(3000);
   });
 });

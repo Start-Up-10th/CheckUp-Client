@@ -1,5 +1,6 @@
 import { AdminUnauthorizedError } from "./qr-api";
-import { failureToast } from "./volunteer-action";
+import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
+import { failureToast, listFailureToast } from "./volunteer-action";
 import { VolunteerApiError } from "./volunteer-api";
 
 const redirectToAdminLogin = vi.hoisted(() => vi.fn());
@@ -15,6 +16,15 @@ describe("failureToast", () => {
 
     expect(toast).toBeNull();
     expect(redirectToAdminLogin).toHaveBeenCalledTimes(1);
+    expect(onStale).not.toHaveBeenCalled();
+  });
+
+  it("429는 잠시 후 다시 시도 안내(neutral)이고 명단을 다시 받지 않는다", () => {
+    const onStale = vi.fn();
+
+    const toast = failureToast(new RateLimitedError(3000), "실패", onStale);
+
+    expect(toast).toEqual({ variant: "neutral", message: RATE_LIMIT_MESSAGE });
     expect(onStale).not.toHaveBeenCalled();
   });
 
@@ -62,5 +72,18 @@ describe("failureToast", () => {
 
     expect(toast).toEqual({ variant: "error", message: "실패" });
     expect(onStale).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("listFailureToast", () => {
+  it("429면 잠시 후 다시 시도 안내, 아니면 목록 오류 문구다", () => {
+    expect(listFailureToast(true, "목록 실패")).toEqual({
+      variant: "neutral",
+      message: RATE_LIMIT_MESSAGE,
+    });
+    expect(listFailureToast(false, "목록 실패")).toEqual({
+      variant: "error",
+      message: "목록 실패",
+    });
   });
 });
