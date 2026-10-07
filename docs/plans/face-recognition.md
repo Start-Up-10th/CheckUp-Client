@@ -22,8 +22,8 @@
 - [ ] `GET` + `File[]` body가 실제 클라이언트와 FastAPI에서 가능한지 확인한다.
 - [ ] 단일 `student_id`·`success` 응답을 track ID, known/unknown, score, model version으로 확장할 계약을 정한다.
 - [ ] unknown을 임의 학생 ID로 바꾸지 않고 `null` 신원으로 전달한다.
-- [ ] 얼굴 인식 결과의 Spring 출석 반영과 offline sync 계약을 `qr-attendance.md`와 맞춘다.
-- [ ] 브라우저 오프라인 인식은 실제 모델 실행을 검증하기 전 지원 완료로 표시하지 않는다.
+- [ ] 얼굴 인식 결과의 Spring 출석 반영 계약을 `qr-attendance.md`와 맞춘다.
+- 브라우저 오프라인 인식은 범위에서 제외됐다(DEC-041).
 
 ## 기준·검증
 
