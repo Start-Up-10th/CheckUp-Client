@@ -69,7 +69,7 @@ const CAPTURE_MS = 3000;
  * 노트북 폭(md 이상)은 Figma가 없어 같은 화면을 키워 보여 준다: 카메라 화면은 가운데 최대 816px 4:3 둥근 상자, 카운트다운 숫자
  * 160px, 단계 안내·버튼도 크게(DEC-061). 화면은 Figma 그대로다(카운트다운 숫자와 아래 단계 안내만, 코너 가이드·"얼굴을 화면 안에 맞춰 주세요"
  * 없음 — 사용자 결정 2026-09-25). 영상은 셀카처럼 좌우 반전한다(보내는 영상은 반전하지 않은 원본). 위 56px
- * 흰 띠는 Figma 상태바 자리(보이는 위치 그대로 기준). 실패 문구 위치·등록 중 안내·녹화를 지원하지 않는
+ * 흰 띠는 Figma의 가짜 상태바 자리라 사용자 결정(2026-10-08)으로 없애고 그 자리까지 카메라로 채운다. 실패 문구 위치·등록 중 안내·녹화를 지원하지 않는
  * 브라우저 안내는 Figma에 없어 기존 오류 배너·오류 화면을 썼다.
  */
 export function StudentFaceCapture() {
@@ -223,7 +223,7 @@ export function StudentFaceCapture() {
         }
       />
 
-      <div className="flex flex-1 flex-col pt-14 md:w-full md:max-w-[880px] md:flex-none md:px-8 md:pt-0">
+      <div className="flex flex-1 flex-col md:w-full md:max-w-[880px] md:flex-none md:px-8">
         <h1 className="sr-only">얼굴 등록</h1>
         {entry === "notStudent" ? (
           <div className="flex flex-1 items-center justify-center px-[18px]">
