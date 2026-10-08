@@ -6,12 +6,13 @@ type RoomCardProps = {
 };
 
 /**
- * REQ-UI-001: 전원 출석은 라임 계열, 일부 미출석은 회색 계열로 구분한다.
+ * REQ-UI-001: 전원 출석은 라임 계열, 일부 미출석과 등록한 학생이 없는 호실(0/0)은 회색 계열로 구분한다.
  * 폰(Figma 관리자-핸드폰)은 호실 번호만 가운데에 표시하고, 패드·컴퓨터는 호실 번호와 출석 인원을 함께 보여준다.
  */
 export function RoomCard({ room, onClick }: RoomCardProps) {
   const { assigned, present } = roomAttendance(room);
-  const fullyPresent = present >= assigned;
+  // 등록한 학생이 없는 호실(0/0)은 전원 출석이 아니라 회색이다(DEC-059).
+  const fullyPresent = assigned > 0 && present >= assigned;
 
   return (
     <button
