@@ -15,10 +15,8 @@ import {
   startFaceRecording,
 } from "@/lib/student/face-recorder";
 import { useFaceCamera } from "@/lib/student/use-face-camera";
-import { useIsLaptop } from "@/lib/student/use-is-laptop";
 import { FaceCaptureActions } from "./FaceCaptureActions";
 import { FaceCaptureStatus } from "./FaceCaptureStatus";
-import { FaceLaptopNotice } from "./FaceLaptopNotice";
 import { StudentErrorState } from "./StudentErrorState";
 import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 
@@ -54,9 +52,9 @@ const COUNTDOWN_FROM = 3;
 const CAPTURE_MS = 3000;
 
 /**
- * 학생 휴대폰 최초 얼굴 등록(REQ-FACE-001). 셔터 없이 카메라가 준비되면 3→2→1 후 자동 촬영,
+ * 학생 최초 얼굴 등록(REQ-FACE-001). 셔터 없이 카메라가 준비되면 3→2→1 후 자동 촬영,
  * 카운트다운(Figma 4:2) → 촬영 중(692:5) → 완료(692:24) 세 단계. 완료에서 `다시 찍기`는
- * 카운트다운부터, `완료`는 서버에 등록한 뒤 학생 홈으로 간다. 노트북(md 이상, 239:2)은 카메라를 켜지 않고 안내만 보인다.
+ * 카운트다운부터, `완료`는 서버에 등록한 뒤 학생 홈으로 간다. 노트북에서도 같은 흐름으로 촬영한다(DEC-061).
  *
  * 들어오면 서버에서 본인 상태를 확인한다(`GET /api/v1/face/me`). 이미 등록했으면 학생 홈으로(다시 바꾸는
  * 기능은 없다), 필수 동의가 없으면 동의 화면으로, 로그인이 안 돼 있으면 로그인 화면으로 보낸다. 등록 대상이
@@ -75,10 +73,9 @@ const CAPTURE_MS = 3000;
  */
 export function StudentFaceCapture() {
   const router = useRouter();
-  const isLaptop = useIsLaptop();
   const [entry, setEntry] = useState<Entry>("checking");
   const { videoRef, status, stream } = useFaceCamera({
-    enabled: isLaptop === false && entry === "allowed",
+    enabled: entry === "allowed",
   });
   const [phase, setPhase] = useState<Phase>("countdown");
   const [count, setCount] = useState(COUNTDOWN_FROM);
@@ -213,10 +210,6 @@ export function StudentFaceCapture() {
 
   return (
     <main className="flex min-h-dvh flex-col bg-admin-surface md:items-center md:justify-center md:bg-admin-bg md:py-10">
-      <div className="hidden md:block">
-        <FaceLaptopNotice />
-      </div>
-
       {/* 등록 실패는 다른 화면의 상태 메시지와 같은 토스트로 보이고 다시 찍으면 닫힌다. */}
       <ToastLayer
         toast={
@@ -229,7 +222,7 @@ export function StudentFaceCapture() {
         }
       />
 
-      <div className="flex flex-1 flex-col pt-14 md:hidden">
+      <div className="flex flex-1 flex-col pt-14">
         <h1 className="sr-only">얼굴 등록</h1>
         {entry === "notStudent" ? (
           <div className="flex flex-1 items-center justify-center px-[18px]">
