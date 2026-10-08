@@ -18,6 +18,7 @@ import { useFaceCamera } from "@/lib/student/use-face-camera";
 import { useIsLaptop } from "@/lib/student/use-is-laptop";
 import { FaceCaptureActions } from "./FaceCaptureActions";
 import { FaceCaptureStatus } from "./FaceCaptureStatus";
+import { FaceLaptopBackButton } from "./FaceLaptopBackButton";
 import { FaceLaptopNotice } from "./FaceLaptopNotice";
 import { StudentErrorState } from "./StudentErrorState";
 import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
@@ -212,7 +213,8 @@ export function StudentFaceCapture() {
         : "촬영이 완료되었어요";
 
   return (
-    <main className="flex min-h-dvh flex-col bg-admin-surface md:items-center md:justify-center md:bg-admin-bg md:py-10">
+    <main className="relative flex min-h-dvh flex-col bg-admin-surface md:items-center md:justify-center md:bg-admin-bg md:py-10">
+      <FaceLaptopBackButton />
       <div className="hidden md:block">
         <FaceLaptopNotice />
       </div>
