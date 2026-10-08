@@ -32,9 +32,12 @@ describe("fetchFloorRooms", () => {
       ],
     });
 
-    await expect(fetchFloorRooms(4)).resolves.toEqual([
+    const rooms = await fetchFloorRooms(4);
+
+    expect(rooms.slice(0, 3)).toEqual([
       { number: "401", assigned: 4, present: 3 },
       { number: "402", assigned: 4, present: 2 },
+      { number: "403", assigned: 0, present: 0 },
     ]);
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/v1/room/floor?floor=4&purpose=DORMITORY",
@@ -45,15 +48,19 @@ describe("fetchFloorRooms", () => {
   it("출석이 배정보다 많게 와도 배정을 넘기지 않는다", async () => {
     respond(200, { rooms: [{ dormitoryRoom: 301, attended: 9, assigned: 4 }] });
 
-    await expect(fetchFloorRooms(3)).resolves.toEqual([
-      { number: "301", assigned: 4, present: 4 },
-    ]);
+    const rooms = await fetchFloorRooms(3);
+
+    expect(rooms[0]).toEqual({ number: "301", assigned: 4, present: 4 });
   });
 
-  it("호실이 없는 층은 빈 목록이다", async () => {
+  it("등록한 학생이 없어 서버가 호실을 주지 않아도 이 층의 모든 호실을 0/0으로 돌려준다", async () => {
     respond(200, { rooms: [] });
 
-    await expect(fetchFloorRooms(5)).resolves.toEqual([]);
+    const rooms = await fetchFloorRooms(5);
+
+    expect(rooms).toHaveLength(18);
+    expect(rooms[0]).toEqual({ number: "501", assigned: 0, present: 0 });
+    expect(rooms.at(-1)).toEqual({ number: "518", assigned: 0, present: 0 });
   });
 
   it("응답이 계약과 다르면 오류를 던진다", async () => {
