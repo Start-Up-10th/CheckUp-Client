@@ -5,7 +5,6 @@ const mocks = vi.hoisted(() => {
   const router = { push: vi.fn(), replace: vi.fn() };
   return {
     router,
-    isLaptop: { current: false as boolean | null },
     cameraEnabled: [] as boolean[],
     videoType: { current: "video/webm" as string | null },
     finish: vi.fn(),
@@ -17,9 +16,6 @@ const mocks = vi.hoisted(() => {
 vi.mock("next/navigation", () => ({ useRouter: () => mocks.router }));
 vi.mock("next/font/google", () => ({
   Roboto_Mono: () => ({ className: "mono" }),
-}));
-vi.mock("@/lib/student/use-is-laptop", () => ({
-  useIsLaptop: () => mocks.isLaptop.current,
 }));
 // 카메라 대역: 켜도 되면(enabled) 바로 준비된 것으로 본다.
 vi.mock("@/lib/student/use-face-camera", () => ({
@@ -91,7 +87,6 @@ const retakeButton = () => screen.getByRole("button", { name: "다시 찍기" })
 
 beforeEach(() => {
   vi.useFakeTimers();
-  mocks.isLaptop.current = false;
   mocks.videoType.current = "video/webm";
   mocks.cameraEnabled.length = 0;
   // 실제 영상이 아닌 테스트용 바이트다.
@@ -180,13 +175,15 @@ describe("StudentFaceCapture 들어올 때", () => {
     expect(screen.getByText("3초 후 자동으로 촬영합니다")).toBeInTheDocument();
   });
 
-  it("노트북에서는 카메라를 켜지 않는다", async () => {
-    mocks.isLaptop.current = true;
+  it("노트북 폭에서도 휴대폰 전용 안내 없이 카메라를 켠다", async () => {
     mockApi(READY);
     render(<StudentFaceCapture />);
     await advance();
 
-    expect(mocks.cameraEnabled).not.toContain(true);
+    expect(
+      screen.queryByText("얼굴 등록은 휴대폰에서만 가능해요"),
+    ).not.toBeInTheDocument();
+    expect(mocks.cameraEnabled.at(-1)).toBe(true);
   });
 
   it("녹화할 수 없는 브라우저면 안내를 보여 준다", async () => {
