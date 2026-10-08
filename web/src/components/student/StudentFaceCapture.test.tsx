@@ -180,32 +180,14 @@ describe("StudentFaceCapture 들어올 때", () => {
     expect(screen.getByText("3초 후 자동으로 촬영합니다")).toBeInTheDocument();
   });
 
-  it("노트북 안내 화면의 뒤로가기를 누르면 이전 화면으로 돌아간다", () => {
+  it("노트북 안내 화면의 뒤로가기를 누르면 로그인 화면으로 간다", () => {
     mocks.isLaptop.current = true;
-    const history = vi
-      .spyOn(window.history, "length", "get")
-      .mockReturnValue(3);
     render(<StudentFaceCapture />);
 
     fireEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
-    history.mockRestore();
 
-    expect(mocks.router.back).toHaveBeenCalledTimes(1);
-    expect(mocks.router.replace).not.toHaveBeenCalledWith("/main");
-  });
-
-  it("이전 화면이 없으면(주소로 바로 들어온 경우) 뒤로가기가 학생 홈으로 간다", () => {
-    mocks.isLaptop.current = true;
-    const history = vi
-      .spyOn(window.history, "length", "get")
-      .mockReturnValue(1);
-    render(<StudentFaceCapture />);
-
-    fireEvent.click(screen.getByRole("button", { name: "뒤로 가기" }));
-    history.mockRestore();
-
+    expect(mocks.router.replace).toHaveBeenCalledWith("/login");
     expect(mocks.router.back).not.toHaveBeenCalled();
-    expect(mocks.router.replace).toHaveBeenCalledWith("/main");
   });
 
   it("노트북에서는 카메라를 켜지 않는다", async () => {
