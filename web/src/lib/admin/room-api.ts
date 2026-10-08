@@ -1,5 +1,6 @@
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import { throwIfRateLimited } from "@/lib/rate-limit";
+import { withAllRooms } from "@/lib/admin/floor-rooms";
 import type { Floor, Room, Student } from "@/lib/admin/floor-types";
 
 /** 서버가 준 오류. `code`는 서버 ErrorCode 이름(예: `STUDENT_NOT_IN_ROOM`)이고 본문이 없으면 null이다. */
@@ -53,13 +54,14 @@ const isCount = (value: unknown): value is number =>
 
 /**
  * `GET /api/v1/room/floor`: 한 층의 호실별 배정·출석 인원(기숙사, 호실 번호 오름차순).
- * 배정된 학생이 없는 호실은 서버가 주지 않는다. 응답이 계약과 다르면 오류를 던진다.
+ * 배정된 학생이 없는 호실은 서버가 주지 않으므로 이 층의 모든 호실을 합쳐 돌려준다(등록하지 않은 호실은 0/0, DEC-059).
+ * 응답이 계약과 다르면 오류를 던진다.
  */
 export async function fetchFloorRooms(floor: Floor): Promise<Room[]> {
   const res = await request(`/floor?floor=${floor}&purpose=DORMITORY`);
   const body = (await res.json()) as FloorApiBody;
   if (!Array.isArray(body.rooms)) throw new Error("room floor: unexpected");
-  return body.rooms.map((room) => {
+  const rooms = body.rooms.map((room) => {
     if (
       !isCount(room.dormitoryRoom) ||
       !isCount(room.attended) ||
@@ -73,6 +75,7 @@ export async function fetchFloorRooms(floor: Floor): Promise<Room[]> {
       present: Math.min(room.attended, room.assigned),
     };
   });
+  return withAllRooms(floor, rooms);
 }
 
 /** `GET /api/v1/room/attendance`: 호실 학생 명단과 오늘 기숙사 출석 여부. */

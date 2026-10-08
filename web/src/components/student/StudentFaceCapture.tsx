@@ -15,10 +15,8 @@ import {
   startFaceRecording,
 } from "@/lib/student/face-recorder";
 import { useFaceCamera } from "@/lib/student/use-face-camera";
-import { useIsLaptop } from "@/lib/student/use-is-laptop";
 import { FaceCaptureActions } from "./FaceCaptureActions";
 import { FaceCaptureStatus } from "./FaceCaptureStatus";
-import { FaceLaptopNotice } from "./FaceLaptopNotice";
 import { StudentErrorState } from "./StudentErrorState";
 import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 
@@ -54,9 +52,9 @@ const COUNTDOWN_FROM = 3;
 const CAPTURE_MS = 3000;
 
 /**
- * 학생 휴대폰 최초 얼굴 등록(REQ-FACE-001). 셔터 없이 카메라가 준비되면 3→2→1 후 자동 촬영,
+ * 학생 최초 얼굴 등록(REQ-FACE-001). 셔터 없이 카메라가 준비되면 3→2→1 후 자동 촬영,
  * 카운트다운(Figma 4:2) → 촬영 중(692:5) → 완료(692:24) 세 단계. 완료에서 `다시 찍기`는
- * 카운트다운부터, `완료`는 서버에 등록한 뒤 학생 홈으로 간다. 노트북(md 이상, 239:2)은 카메라를 켜지 않고 안내만 보인다.
+ * 카운트다운부터, `완료`는 서버에 등록한 뒤 학생 홈으로 간다. 노트북에서도 같은 흐름으로 촬영한다(DEC-061).
  *
  * 들어오면 서버에서 본인 상태를 확인한다(`GET /api/v1/face/me`). 이미 등록했으면 학생 홈으로(다시 바꾸는
  * 기능은 없다), 필수 동의가 없으면 동의 화면으로, 로그인이 안 돼 있으면 로그인 화면으로 보낸다. 등록 대상이
@@ -68,17 +66,17 @@ const CAPTURE_MS = 3000;
  * 다시 찍기·화면 이탈 때 바로 버린다. 그래서 등록이 실패하면 보낼 영상이 없어 `완료`는 막히고 `다시 찍기`로
  * 새로 촬영한다. 프레임 추출·품질 평가는 서버(AI)가 한다.
  *
- * 화면은 Figma 그대로다(카운트다운 숫자와 아래 단계 안내만, 코너 가이드·"얼굴을 화면 안에 맞춰 주세요"
+ * 노트북 폭(md 이상)은 Figma가 없어 같은 화면을 키워 보여 준다: 카메라 화면은 가운데 최대 816px 4:3 둥근 상자, 카운트다운 숫자
+ * 160px, 단계 안내·버튼도 크게(DEC-061). 화면은 Figma 그대로다(카운트다운 숫자와 아래 단계 안내만, 코너 가이드·"얼굴을 화면 안에 맞춰 주세요"
  * 없음 — 사용자 결정 2026-09-25). 영상은 셀카처럼 좌우 반전한다(보내는 영상은 반전하지 않은 원본). 위 56px
- * 흰 띠는 Figma 상태바 자리(보이는 위치 그대로 기준). 실패 문구 위치·등록 중 안내·녹화를 지원하지 않는
+ * 흰 띠는 Figma의 가짜 상태바 자리라 사용자 결정(2026-10-08)으로 없애고 그 자리까지 카메라로 채운다. 실패 문구 위치·등록 중 안내·녹화를 지원하지 않는
  * 브라우저 안내는 Figma에 없어 기존 오류 배너·오류 화면을 썼다.
  */
 export function StudentFaceCapture() {
   const router = useRouter();
-  const isLaptop = useIsLaptop();
   const [entry, setEntry] = useState<Entry>("checking");
   const { videoRef, status, stream } = useFaceCamera({
-    enabled: isLaptop === false && entry === "allowed",
+    enabled: entry === "allowed",
   });
   const [phase, setPhase] = useState<Phase>("countdown");
   const [count, setCount] = useState(COUNTDOWN_FROM);
@@ -213,10 +211,6 @@ export function StudentFaceCapture() {
 
   return (
     <main className="flex min-h-dvh flex-col bg-admin-surface md:items-center md:justify-center md:bg-admin-bg md:py-10">
-      <div className="hidden md:block">
-        <FaceLaptopNotice />
-      </div>
-
       {/* 등록 실패는 다른 화면의 상태 메시지와 같은 토스트로 보이고 다시 찍으면 닫힌다. */}
       <ToastLayer
         toast={
@@ -229,7 +223,7 @@ export function StudentFaceCapture() {
         }
       />
 
-      <div className="flex flex-1 flex-col pt-14 md:hidden">
+      <div className="flex flex-1 flex-col md:w-full md:max-w-[880px] md:flex-none md:px-8">
         <h1 className="sr-only">얼굴 등록</h1>
         {entry === "notStudent" ? (
           <div className="flex flex-1 items-center justify-center px-[18px]">
@@ -265,7 +259,7 @@ export function StudentFaceCapture() {
           </div>
         ) : (
           <>
-            <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[#f0f0f1]">
+            <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[#f0f0f1] md:aspect-[4/3] md:flex-none md:rounded-3xl">
               <video
                 ref={videoRef}
                 autoPlay
@@ -277,14 +271,16 @@ export function StudentFaceCapture() {
               {phase === "countdown" && status === "ready" && (
                 <span
                   aria-hidden="true"
-                  className={`${countdownFont.className} relative text-8xl font-semibold leading-normal text-admin-text`}
+                  className={`${countdownFont.className} relative text-8xl font-semibold leading-normal text-admin-text md:text-[160px]`}
                 >
                   {count}
                 </span>
               )}
               <div
                 className={`absolute inset-x-0 flex justify-center ${
-                  done ? "bottom-[34px]" : "bottom-[116px]"
+                  done
+                    ? "bottom-[34px] md:bottom-8"
+                    : "bottom-[116px] md:bottom-24"
                 }`}
               >
                 <FaceCaptureStatus
@@ -294,7 +290,7 @@ export function StudentFaceCapture() {
               </div>
             </div>
             {done && (
-              <div className="pb-8 pt-[22px]">
+              <div className="pb-8 pt-[22px] md:pb-0 md:pt-6">
                 <FaceCaptureActions
                   onRetake={retake}
                   onComplete={complete}
