@@ -18,7 +18,7 @@ import {
 import { groupByRoom } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
 
-const DEFAULT_FLOOR: Floor = 4;
+const DEFAULT_FLOOR: Floor = 3;
 
 /** Figma 08 학생 관리 state messages. */
 const LIST_FAILURE_MESSAGE =

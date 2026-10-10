@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -33,6 +34,15 @@ function renderWith(gateway: RoomGateway = createMockRoomGateway()) {
   );
 }
 
+/** 기본 층이 3층이라, 401·402호가 있는 4층 탭을 눌러 4층 전개도가 보일 때까지 기다린다. */
+async function renderOnFloorFour(
+  gateway: RoomGateway = createMockRoomGateway(),
+) {
+  renderWith(gateway);
+  fireEvent.click(await screen.findByRole("button", { name: "4층" }));
+  await screen.findByText("4층 전개도");
+}
+
 /** 전원 출석인 402호를 열어 수동 수정에서 첫 학생을 미출석으로 바꾼 뒤 저장한다. */
 async function changeFirstRoomAndSave() {
   fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
@@ -48,7 +58,7 @@ describe("AdminHomeFloorPlan 층 현황", () => {
       { number: "401", assigned: 4, present: 3 },
       { number: "402", assigned: 3, present: 3 },
     ]);
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     expect(await screen.findByText("3/4명")).toBeInTheDocument();
     expect(screen.getByText("3/3명")).toBeInTheDocument();
@@ -62,7 +72,7 @@ describe("AdminHomeFloorPlan 층 현황", () => {
     renderWith(gateway);
 
     expect(await screen.findByText("아직 데이터가 없어요")).toBeInTheDocument();
-    expect(screen.getByText("4층 전개도")).toBeInTheDocument();
+    expect(screen.getByText("3층 전개도")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "5층" })).toBeInTheDocument();
     expect(
       screen.queryByText("전개도를 불러오지 못했습니다."),
@@ -74,14 +84,27 @@ describe("AdminHomeFloorPlan 층 현황", () => {
     gateway.floor = vi.fn(() => new Promise<Room[]>(() => {}));
     renderWith(gateway);
 
-    expect(screen.queryByText("4층 전개도")).not.toBeInTheDocument();
+    expect(screen.queryByText("3층 전개도")).not.toBeInTheDocument();
+  });
+
+  it("처음에는 3층 전개도를 보인다", async () => {
+    const gateway = createMockRoomGateway();
+    const floor = vi.spyOn(gateway, "floor");
+    renderWith(gateway);
+
+    expect(await screen.findByText("3층 전개도")).toBeInTheDocument();
+    expect(floor).toHaveBeenCalledWith(3);
+    expect(screen.getByRole("button", { name: "3층" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 
   it("층을 바꾸면 그 층 현황을 다시 받는다", async () => {
     const gateway = createMockRoomGateway();
     const floor = vi.spyOn(gateway, "floor");
     renderWith(gateway);
-    await screen.findByText("4층 전개도");
+    await screen.findByText("3층 전개도");
 
     fireEvent.click(screen.getByRole("button", { name: "5층" }));
 
@@ -89,65 +112,109 @@ describe("AdminHomeFloorPlan 층 현황", () => {
     expect(floor).toHaveBeenLastCalledWith(5);
   });
 
-  it("층을 바꾸는 동안에는 화면 전체가 아니라 호실 격자만 로딩 상태이고 헤더·층 탭은 그대로다", async () => {
-    const gateway = createMockRoomGateway();
-    const ok = gateway.floor;
-    let release: (rooms: Room[]) => void = () => {};
-    gateway.floor = vi.fn((floor) =>
-      floor === 5
-        ? new Promise<Room[]>((resolve) => {
-            release = resolve;
-          })
-        : ok(floor),
-    );
-    renderWith(gateway);
-    await screen.findByText("4층 전개도");
-    expect(screen.getByRole("button", { name: /^401/ })).toBeInTheDocument();
+  describe("층을 바꿀 때 깜빡이지 않는다", () => {
+    afterEach(() => vi.useRealTimers());
 
-    fireEvent.click(screen.getByRole("button", { name: "5층" }));
+    /** 5층 응답을 직접 풀어 줄 수 있는 게이트웨이. 3·4층은 바로 답한다. */
+    function gatewayWithSlowFive() {
+      const gateway = createMockRoomGateway();
+      const ok = gateway.floor;
+      const slow: { release: (rooms: Room[]) => void } = {
+        release: () => {},
+      };
+      gateway.floor = vi.fn((floor) =>
+        floor === 5
+          ? new Promise<Room[]>((resolve) => {
+              slow.release = resolve;
+            })
+          : ok(floor),
+      );
+      return { gateway, slow };
+    }
 
-    // 전체 스켈레톤으로 바뀌지 않고 제목·탭이 남아 있으며, 격자만 로딩 중이고 합계는 이전 층 숫자를 쓰지 않는다.
-    expect(screen.getByText("5층 전개도")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "4층" })).toBeInTheDocument();
-    expect(document.querySelector("[aria-busy='true']")).not.toBeNull();
-    expect(
-      screen.queryByRole("button", { name: /^401/ }),
-    ).not.toBeInTheDocument();
-    expect(screen.getAllByText("–")).toHaveLength(2);
+    it("새 층이 빨리 오면 스켈레톤을 한 번도 보이지 않고 이전 격자가 한 번에 바뀐다", async () => {
+      const { gateway } = gatewayWithSlowFive();
+      renderWith(gateway);
+      await screen.findByText("3층 전개도");
 
-    release([{ number: "501", assigned: 2, present: 2 }]);
+      // 4층은 바로 온다. 누른 직후에도 격자가 비거나 스켈레톤이 되지 않는다.
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
+      expect(document.querySelector("[aria-busy='true']")).toBeNull();
+      expect(screen.getByRole("button", { name: /^301/ })).toBeInTheDocument();
 
-    expect(await screen.findByText("2/2명")).toBeInTheDocument();
-    expect(document.querySelector("[aria-busy='true']")).toBeNull();
-  });
+      expect(await screen.findByText("4층 전개도")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^401/ })).toBeInTheDocument();
+      expect(document.querySelector("[aria-busy='true']")).toBeNull();
+    });
 
-  it("느린 이전 층 응답이 늦게 와도 지금 고른 층 현황을 덮어쓰지 않는다", async () => {
-    const gateway = createMockRoomGateway();
-    const ok = gateway.floor;
-    let releaseFive: (rooms: Room[]) => void = () => {};
-    gateway.floor = vi.fn((floor) =>
-      floor === 5
-        ? new Promise<Room[]>((resolve) => {
-            releaseFive = resolve;
-          })
-        : ok(floor),
-    );
-    renderWith(gateway);
-    await screen.findByText("4층 전개도");
+    it("새 층이 오기 전에는 이전 층의 제목·합계·격자를 그대로 두고, 오래 걸릴 때만 격자를 스켈레톤으로 바꾼다", async () => {
+      const { gateway, slow } = gatewayWithSlowFive();
+      renderWith(gateway);
+      await screen.findByText("3층 전개도");
+      vi.useFakeTimers();
 
-    // 5층을 누른 뒤 응답이 오기 전에 3층으로 바꾼다.
-    fireEvent.click(screen.getByRole("button", { name: "5층" }));
-    fireEvent.click(screen.getByRole("button", { name: "3층" }));
-    expect(
-      await screen.findByRole("button", { name: /^301/ }),
-    ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "5층" }));
 
-    releaseFive([{ number: "501", assigned: 9, present: 9 }]);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+      // 누른 직후: 탭만 5층으로 바뀌고 화면은 3층 그대로다.
+      expect(screen.getByRole("button", { name: "5층" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(screen.getByText("3층 전개도")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^301/ })).toBeInTheDocument();
+      expect(document.querySelector("[aria-busy='true']")).toBeNull();
 
-    expect(screen.getByText("3층 전개도")).toBeInTheDocument();
-    expect(screen.queryByText("9/9명")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /^301/ })).toBeInTheDocument();
+      // 오래 걸리면 그제서야 격자만 스켈레톤이고 합계는 `–`다.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(400);
+      });
+      expect(document.querySelector("[aria-busy='true']")).not.toBeNull();
+      expect(screen.getAllByText("–")).toHaveLength(2);
+      expect(screen.getByRole("button", { name: "4층" })).toBeInTheDocument();
+
+      await act(async () => {
+        slow.release([{ number: "501", assigned: 2, present: 2 }]);
+      });
+      vi.useRealTimers();
+
+      expect(await screen.findByText("5층 전개도")).toBeInTheDocument();
+      expect(screen.getByText("2/2명")).toBeInTheDocument();
+      expect(document.querySelector("[aria-busy='true']")).toBeNull();
+    });
+
+    it("이미 본 층으로 돌아가면 받는 동안에도 그 층을 바로 보인다", async () => {
+      const { gateway } = gatewayWithSlowFive();
+      renderWith(gateway);
+      await screen.findByText("3층 전개도");
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
+      await screen.findByText("4층 전개도");
+
+      // 다시 3층을 누르면 받아 둔 3층 격자가 바로 보인다.
+      fireEvent.click(screen.getByRole("button", { name: "3층" }));
+
+      expect(screen.getByText("3층 전개도")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^301/ })).toBeInTheDocument();
+      expect(document.querySelector("[aria-busy='true']")).toBeNull();
+    });
+
+    it("느린 이전 층 응답이 늦게 와도 지금 고른 층 현황을 덮어쓰지 않는다", async () => {
+      const { gateway, slow } = gatewayWithSlowFive();
+      renderWith(gateway);
+      await screen.findByText("3층 전개도");
+
+      // 5층을 누른 뒤 응답이 오기 전에 4층으로 바꾼다.
+      fireEvent.click(screen.getByRole("button", { name: "5층" }));
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
+      expect(await screen.findByText("4층 전개도")).toBeInTheDocument();
+
+      await act(async () => {
+        slow.release([{ number: "501", assigned: 9, present: 9 }]);
+      });
+
+      expect(screen.getByText("4층 전개도")).toBeInTheDocument();
+      expect(screen.queryByText("9/9명")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /^401/ })).toBeInTheDocument();
+    });
   });
 
   it("조회에 실패하면 명세 문구를 보여 주고 다시 시도하면 받아 온다", async () => {
@@ -166,7 +233,7 @@ describe("AdminHomeFloorPlan 층 현황", () => {
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
     expect(
-      await screen.findByRole("button", { name: /^401/ }),
+      await screen.findByRole("button", { name: /^301/ }),
     ).toBeInTheDocument();
     expect(gateway.floor).toHaveBeenCalledTimes(2);
   });
@@ -190,7 +257,7 @@ describe("AdminHomeFloorPlan 층 현황", () => {
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
     expect(
-      await screen.findByRole("button", { name: /^401/ }),
+      await screen.findByRole("button", { name: /^301/ }),
     ).toBeInTheDocument();
   });
 
@@ -207,7 +274,7 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
   it("호실을 누르면 서버 명단을 받아 상세를 연다", async () => {
     const gateway = createMockRoomGateway();
     const students = vi.spyOn(gateway, "students");
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
 
@@ -223,7 +290,7 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
       { studentId: "2", name: "박서연", present: false },
       { studentId: "3", name: "이지후", present: true },
     ]);
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
 
@@ -239,7 +306,7 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
   it("명단 조회가 429로 막히면 잠시 후 다시 시도 안내를 보이고 상세는 열지 않는다", async () => {
     const gateway = createMockRoomGateway();
     gateway.students = vi.fn().mockRejectedValue(new RateLimitedError(2000));
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
 
@@ -252,7 +319,7 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
   it("명단을 못 받으면 실패 문구를 보이고 상세는 열지 않는다", async () => {
     const gateway = createMockRoomGateway();
     gateway.students = vi.fn().mockRejectedValue(new Error("fail"));
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
 
@@ -267,7 +334,7 @@ describe("AdminHomeFloorPlan 호실 수정", () => {
   it("저장하면 바뀐 학생만 서버에 보내고 안내와 카드 인원을 갱신한다", async () => {
     const gateway = createMockRoomGateway();
     const save = vi.spyOn(gateway, "save");
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     await changeFirstRoomAndSave();
 
@@ -287,7 +354,7 @@ describe("AdminHomeFloorPlan 호실 수정", () => {
   it("바꾼 게 없으면 서버에 보내지 않고 안내만 한다", async () => {
     const gateway = createMockRoomGateway();
     const save = vi.spyOn(gateway, "save");
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
     fireEvent.click(await screen.findByRole("button", { name: "수정" }));
@@ -302,7 +369,7 @@ describe("AdminHomeFloorPlan 호실 수정", () => {
   it("저장이 실패하면 실패 문구를 보이고 다이얼로그를 유지한다", async () => {
     const gateway = createMockRoomGateway();
     gateway.save = vi.fn().mockRejectedValue(new Error("fail"));
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     await changeFirstRoomAndSave();
 
@@ -321,18 +388,20 @@ describe("AdminHomeFloorPlan 호실 수정", () => {
       .fn()
       .mockRejectedValue(new RoomApiError(400, "STUDENT_NOT_IN_ROOM"));
     const floor = vi.spyOn(gateway, "floor");
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     await changeFirstRoomAndSave();
 
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    await waitFor(() => expect(floor).toHaveBeenCalledTimes(2));
+    // 처음 3층, 4층 탭, 그리고 호실 학생이 아니라는 응답 뒤 4층을 다시 받는다.
+    await waitFor(() => expect(floor).toHaveBeenCalledTimes(3));
+    expect(floor).toHaveBeenLastCalledWith(4);
   });
 
   it("저장이 429로 막히면 잠시 후 다시 시도 안내를 보이고 다이얼로그를 유지한다", async () => {
     const gateway = createMockRoomGateway();
     gateway.save = vi.fn().mockRejectedValue(new RateLimitedError(2000));
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     await changeFirstRoomAndSave();
 
@@ -345,7 +414,7 @@ describe("AdminHomeFloorPlan 호실 수정", () => {
   it("저장 중 로그인이 끊겼으면(401) 관리자 로그인으로 보낸다", async () => {
     const gateway = createMockRoomGateway();
     gateway.save = vi.fn().mockRejectedValue(new AdminUnauthorizedError());
-    renderWith(gateway);
+    await renderOnFloorFour(gateway);
 
     await changeFirstRoomAndSave();
 
