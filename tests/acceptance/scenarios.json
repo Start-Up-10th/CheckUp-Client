@@ -64,9 +64,19 @@
         "실제 연동과 mock 상태가 명시된다",
         "계정이 거부되면(비활성·학생 정보 없음·기숙사부가 아닌 교직원) 서버 문구를 보여 주고 그 밖의 실패는 일반 실패 문구를 보여 준다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/student/StudentLogin.tsx",
+        "web/src/components/student/StudentLoginComplete.tsx",
+        "web/src/lib/auth/login-error.ts",
+        "web/src/lib/student/qr-return-url.ts"
+      ],
+      "evidence": [
+        "web/src/components/student/StudentLogin.test.tsx",
+        "web/src/components/student/StudentLoginComplete.test.tsx",
+        "web/src/lib/auth/login-error.test.ts",
+        "web/src/lib/student/qr-return-url.test.ts"
+      ]
     },
     {
       "id": "ACC-AUTH-002",
@@ -116,9 +126,15 @@
         "전체 동의와 개별 해제가 일치한다",
         "선택 알림 미동의여도 등록 가능하고 완료한 등록을 매 로그인 반복하지 않는다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/student/StudentConsent.tsx",
+        "web/src/lib/student/consent-api.ts"
+      ],
+      "evidence": [
+        "web/src/components/student/StudentConsent.test.tsx",
+        "web/src/lib/student/consent-api.test.ts"
+      ]
     },
     {
       "id": "ACC-AUTH-005",
@@ -133,9 +149,17 @@
         "학생은 추후 별도 원하는 사진을 설정할 수 있다",
         "확인 모달 없이 로그인 세션·운영 세션을 정리한다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/student/MyProfile.tsx",
+        "web/src/components/student/LogoutButton.tsx",
+        "web/src/lib/student/use-logout.ts",
+        "web/src/lib/admin/use-admin-logout.ts"
+      ],
+      "evidence": [
+        "web/src/components/student/StudentProfilePages.test.tsx",
+        "web/src/lib/admin/use-admin-logout.test.tsx"
+      ]
     },
     {
       "id": "ACC-FACE-001",
@@ -152,9 +176,20 @@
         "다시 찍기는 촬영본을 버리고 카운트다운부터 재시작하며 완료는 등록 후 홈으로 간다",
         "등록에 실패하면 지정 문구를 표시하고 완료 화면에 머문다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/student/StudentFaceCapture.tsx",
+        "web/src/components/student/FaceCaptureStatus.tsx",
+        "web/src/components/student/FaceCaptureActions.tsx",
+        "web/src/lib/student/face-recorder.ts",
+        "web/src/lib/student/face-enroll-api.ts",
+        "web/src/lib/student/use-face-camera.ts"
+      ],
+      "evidence": [
+        "web/src/components/student/StudentFaceCapture.test.tsx",
+        "web/src/lib/student/face-recorder.test.ts",
+        "web/src/lib/student/face-enroll-api.test.ts"
+      ]
     },
     {
       "id": "ACC-FACE-002",
@@ -368,9 +403,21 @@
         "성공·중복·만료·미운영의 지정 문구를 구분한다",
         "GPS 제한이나 필수 등록 우회가 없다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/student/StudentQrCamera.tsx",
+        "web/src/lib/student/use-qr-scanner.ts",
+        "web/src/lib/student/parse-qr-token.ts",
+        "web/src/lib/student/qr-attendance-api.ts",
+        "web/src/lib/student/qr-attendance-result.ts",
+        "web/src/lib/student/qr-return-url.ts"
+      ],
+      "evidence": [
+        "web/src/lib/student/parse-qr-token.test.ts",
+        "web/src/lib/student/qr-attendance-api.test.ts",
+        "web/src/lib/student/qr-attendance-result.test.ts",
+        "web/src/lib/student/qr-return-url.test.ts"
+      ]
     },
     {
       "id": "ACC-ATT-006",
@@ -473,9 +520,17 @@
         "다른 층 전체 학생 화면으로 임의 확장하지 않는다",
         "QR·마이·알림 진입과 서버 실패 문구가 있다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/student/StudentMain.tsx",
+        "web/src/components/student/MyRoomCard.tsx",
+        "web/src/components/student/RoomMap.tsx",
+        "web/src/components/student/RoomSeatCard.tsx",
+        "web/src/lib/student/room-roster-api.ts"
+      ],
+      "evidence": [
+        "web/src/lib/student/room-roster-api.test.ts"
+      ]
     },
     {
       "id": "ACC-UI-004",
@@ -490,9 +545,16 @@
         "노트북 사이드바와 호실 정보가 표시된다",
         "학생 출석 과거 이력 메뉴가 없다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/student/StudentShell.tsx",
+        "web/src/components/student/StudentBottomTabBar.tsx",
+        "web/src/components/student/StudentSidebar.tsx",
+        "web/src/components/student/StudentPageHeader.tsx"
+      ],
+      "evidence": [
+        "web/src/components/student/StudentShell.test.tsx"
+      ]
     },
     {
       "id": "ACC-UI-005",
@@ -558,9 +620,16 @@
         "레이아웃·정적 자산으로 이뤄진 앱 셸은 뜨지만, 데이터가 필요한 화면의 정상 동작은 보장하지 않는다",
         "출석·얼굴 인식 등 데이터 응답은 어떤 경로로도 캐시되지 않는다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/app/manifest.ts",
+        "web/public/sw.js",
+        "web/src/components/RootRedirect.tsx",
+        "web/src/components/ServiceWorkerRegistrar.tsx"
+      ],
+      "evidence": [
+        "web/src/components/RootRedirect.test.tsx"
+      ]
     },
     {
       "id": "ACC-COM-001",
@@ -633,9 +702,17 @@
         "내역이 없으면 남은 횟수 카드와 함께 빈 상태, 실패하면 오류와 다시 시도를 표시한다",
         "남은 횟수와 내역은 일일 초기화 후에도 유지된다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/student/StudentVolunteer.tsx",
+        "web/src/components/student/VolunteerCountCard.tsx",
+        "web/src/components/student/VolunteerHistoryItem.tsx",
+        "web/src/lib/student/volunteer-api.ts"
+      ],
+      "evidence": [
+        "web/src/components/student/StudentVolunteer.test.tsx",
+        "web/src/lib/student/volunteer-api.test.ts"
+      ]
     },
     {
       "id": "ACC-COM-005",
@@ -650,9 +727,17 @@
         "중복 인증으로 알림을 늘리지 않는다",
         "모바일 홈 벨·노트북 사이드바 벨의 빨간 점이 읽음 처리 후 사라지고, 노트북 사이드바 강조는 알림 화면에서만 보이며, 최신순·상대 시각을 표시한다"
       ],
-      "status": "specified",
-      "implementation": [],
-      "evidence": []
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/student/StudentNotifications.tsx",
+        "web/src/components/student/NotificationItem.tsx",
+        "web/src/lib/student/notification-api.ts",
+        "web/src/lib/student/unread-notification.ts"
+      ],
+      "evidence": [
+        "web/src/components/student/StudentNotifications.test.tsx",
+        "web/src/lib/student/notification-api.test.ts"
+      ]
     },
     {
       "id": "ACC-COM-006",
