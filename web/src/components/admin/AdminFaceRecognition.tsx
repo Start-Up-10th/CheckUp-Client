@@ -78,7 +78,7 @@ export function AdminFaceRecognition() {
         }
       />
 
-      <div className="flex min-h-[240px] w-full flex-1 md:min-h-0">
+      <div className="flex min-h-0 w-full flex-1">
         <CameraPanel videoRef={videoRef} status={status} />
       </div>
     </div>

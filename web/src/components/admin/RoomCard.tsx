@@ -18,7 +18,7 @@ export function RoomCard({ room, onClick }: RoomCardProps) {
     <button
       type="button"
       onClick={onClick ? () => onClick(room) : undefined}
-      className={`flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-[10px] border py-2.5 text-center transition hover:brightness-95 md:items-start md:justify-between md:rounded-[12px] md:p-[11px] md:text-left xl:aspect-auto xl:h-full xl:rounded-card xl:p-[15px] ${
+      className={`flex min-w-0 flex-col items-center justify-center overflow-hidden rounded-[10px] border py-2.5 text-center [@media(max-height:620px)]:py-1 md:[@media(max-height:620px)]:py-2.5 transition hover:brightness-95 md:items-start md:justify-between md:rounded-[12px] md:p-[11px] md:text-left xl:aspect-auto xl:h-full xl:rounded-card xl:p-[15px] ${
         fullyPresent
           ? "border-admin-attendance-border bg-admin-attendance-bg"
           : "border-admin-absence-border bg-admin-absence-bg"
