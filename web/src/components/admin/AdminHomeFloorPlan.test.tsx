@@ -89,6 +89,67 @@ describe("AdminHomeFloorPlan 층 현황", () => {
     expect(floor).toHaveBeenLastCalledWith(5);
   });
 
+  it("층을 바꾸는 동안에는 화면 전체가 아니라 호실 격자만 로딩 상태이고 헤더·층 탭은 그대로다", async () => {
+    const gateway = createMockRoomGateway();
+    const ok = gateway.floor;
+    let release: (rooms: Room[]) => void = () => {};
+    gateway.floor = vi.fn((floor) =>
+      floor === 5
+        ? new Promise<Room[]>((resolve) => {
+            release = resolve;
+          })
+        : ok(floor),
+    );
+    renderWith(gateway);
+    await screen.findByText("4층 전개도");
+    expect(screen.getByRole("button", { name: /^401/ })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "5층" }));
+
+    // 전체 스켈레톤으로 바뀌지 않고 제목·탭이 남아 있으며, 격자만 로딩 중이고 합계는 이전 층 숫자를 쓰지 않는다.
+    expect(screen.getByText("5층 전개도")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "4층" })).toBeInTheDocument();
+    expect(document.querySelector("[aria-busy='true']")).not.toBeNull();
+    expect(
+      screen.queryByRole("button", { name: /^401/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByText("–")).toHaveLength(2);
+
+    release([{ number: "501", assigned: 2, present: 2 }]);
+
+    expect(await screen.findByText("2/2명")).toBeInTheDocument();
+    expect(document.querySelector("[aria-busy='true']")).toBeNull();
+  });
+
+  it("느린 이전 층 응답이 늦게 와도 지금 고른 층 현황을 덮어쓰지 않는다", async () => {
+    const gateway = createMockRoomGateway();
+    const ok = gateway.floor;
+    let releaseFive: (rooms: Room[]) => void = () => {};
+    gateway.floor = vi.fn((floor) =>
+      floor === 5
+        ? new Promise<Room[]>((resolve) => {
+            releaseFive = resolve;
+          })
+        : ok(floor),
+    );
+    renderWith(gateway);
+    await screen.findByText("4층 전개도");
+
+    // 5층을 누른 뒤 응답이 오기 전에 3층으로 바꾼다.
+    fireEvent.click(screen.getByRole("button", { name: "5층" }));
+    fireEvent.click(screen.getByRole("button", { name: "3층" }));
+    expect(
+      await screen.findByRole("button", { name: /^301/ }),
+    ).toBeInTheDocument();
+
+    releaseFive([{ number: "501", assigned: 9, present: 9 }]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(screen.getByText("3층 전개도")).toBeInTheDocument();
+    expect(screen.queryByText("9/9명")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^301/ })).toBeInTheDocument();
+  });
+
   it("조회에 실패하면 명세 문구를 보여 주고 다시 시도하면 받아 온다", async () => {
     const gateway = createMockRoomGateway();
     const ok = gateway.floor;
