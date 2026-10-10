@@ -24,8 +24,8 @@ vi.mock("@/lib/admin/admin-session", () => ({ redirectToAdminLogin }));
 const mockGateway = createMockVolunteerGateway();
 const mockHistoryGateway = createMockVolunteerHistoryGateway();
 
-/** 서버 대신 목업 게이트웨이를 쓰는 화면. */
-function render(ui: ReactElement) {
+/** 서버 대신 목업 게이트웨이를 쓰는 화면. 기본 층(3층) 그대로다. */
+function renderDefaultFloor(ui: ReactElement) {
   return renderPlain(
     <VolunteerGatewayProvider value={mockGateway}>
       <VolunteerHistoryGatewayProvider value={mockHistoryGateway}>
@@ -35,6 +35,13 @@ function render(ui: ReactElement) {
   );
 }
 
+/** 목업 4층(412호 등) 명단을 쓰는 테스트가 많아 기본 3층에서 4층 탭을 눌러 둔 화면이다. */
+function render(ui: ReactElement) {
+  const result = renderDefaultFloor(ui);
+  fireEvent.click(screen.getByRole("button", { name: "4층" }));
+  return result;
+}
+
 beforeEach(() => setRoster(MOCK_VOLUNTEER_ROSTER));
 afterEach(() => {
   cleanup();
@@ -42,16 +49,18 @@ afterEach(() => {
 });
 
 describe("AdminVolunteerRoster", () => {
-  it("처음에는 4층 학생을 호실별로 묶어 보여 준다", () => {
-    render(<AdminVolunteerRoster />);
+  it("처음에는 3층 학생을 호실별로 묶어 보여 준다", () => {
+    renderDefaultFloor(<AdminVolunteerRoster />);
 
-    const room412 = screen.getByRole("region", { name: "412호" });
-    expect(within(room412).getByText("3명")).toBeInTheDocument();
-    expect(within(room412).getByText("김도현")).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: "415호" })).toBeInTheDocument();
+    const room301 = screen.getByRole("region", { name: "301호" });
+    expect(within(room301).getByText("백도윤")).toBeInTheDocument();
     expect(
-      screen.queryByRole("region", { name: "301호" }),
+      screen.queryByRole("region", { name: "412호" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "3층" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 
   it("층 탭을 누르면 그 층의 호실로 바뀐다", () => {
@@ -130,6 +139,7 @@ describe("AdminVolunteerRoster", () => {
         <AdminVolunteerRoster />
       </VolunteerGatewayProvider>,
     );
+    fireEvent.click(screen.getByRole("button", { name: "4층" }));
 
     expect(screen.getByText("불러오는 중…")).toBeInTheDocument();
     expect(
@@ -146,6 +156,7 @@ describe("AdminVolunteerRoster", () => {
         <AdminVolunteerRoster />
       </VolunteerGatewayProvider>,
     );
+    fireEvent.click(screen.getByRole("button", { name: "4층" }));
 
     expect(
       await screen.findByText("잠시 후 다시 시도해 주세요."),
@@ -169,6 +180,7 @@ describe("AdminVolunteerRoster", () => {
         <AdminVolunteerRoster />
       </VolunteerGatewayProvider>,
     );
+    fireEvent.click(screen.getByRole("button", { name: "4층" }));
 
     expect(await screen.findByText("불러오지 못했어요")).toBeInTheDocument();
     expect(
@@ -224,6 +236,7 @@ describe("AdminVolunteerRoster", () => {
           </VolunteerHistoryGatewayProvider>
         </VolunteerGatewayProvider>,
       );
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
       fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
 
       expect(
@@ -241,6 +254,7 @@ describe("AdminVolunteerRoster", () => {
           </VolunteerHistoryGatewayProvider>
         </VolunteerGatewayProvider>,
       );
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
       fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
 
       expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -262,6 +276,7 @@ describe("AdminVolunteerRoster", () => {
           </VolunteerHistoryGatewayProvider>
         </VolunteerGatewayProvider>,
       );
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
       fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
 
       expect(await screen.findByText("−3회")).toBeInTheDocument();
@@ -283,6 +298,7 @@ describe("AdminVolunteerRoster", () => {
           </VolunteerHistoryGatewayProvider>
         </VolunteerGatewayProvider>,
       );
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
       fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
 
       const dialog = screen.getByRole("dialog", { name: "김도현" });
@@ -312,6 +328,7 @@ describe("AdminVolunteerRoster", () => {
           </VolunteerHistoryGatewayProvider>
         </VolunteerGatewayProvider>,
       );
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
       fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
 
       await waitFor(() =>
@@ -390,6 +407,7 @@ describe("AdminVolunteerRoster", () => {
           <AdminVolunteerRoster />
         </VolunteerGatewayProvider>,
       );
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
 
       fireEvent.click(
         screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
@@ -455,6 +473,7 @@ describe("AdminVolunteerRoster", () => {
           <AdminVolunteerRoster />
         </VolunteerGatewayProvider>,
       );
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
       const button = screen.getByRole("button", {
         name: "이지후 당일 봉사자로 지정",
       });
@@ -478,6 +497,7 @@ describe("AdminVolunteerRoster", () => {
           <AdminVolunteerRoster />
         </VolunteerGatewayProvider>,
       );
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
 
       fireEvent.click(
         screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
@@ -507,6 +527,7 @@ describe("AdminVolunteerRoster", () => {
           <AdminVolunteerRoster />
         </VolunteerGatewayProvider>,
       );
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
 
       fireEvent.click(
         screen.getByRole("button", { name: "박서연 당일 봉사자로 지정" }),
@@ -529,6 +550,7 @@ describe("AdminVolunteerRoster", () => {
           <AdminVolunteerRoster />
         </VolunteerGatewayProvider>,
       );
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
       const button = screen.getByRole("button", {
         name: "박서연 당일 봉사자로 지정",
       });

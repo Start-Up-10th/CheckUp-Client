@@ -25,7 +25,10 @@ import { RateLimitedError, failureNotice } from "@/lib/rate-limit";
 import { RoomApiError } from "@/lib/admin/room-api";
 import { useRoomGateway } from "@/lib/admin/room-gateway";
 
-const DEFAULT_FLOOR: Floor = 4;
+const DEFAULT_FLOOR: Floor = 3;
+
+/** 새 층 현황이 이 시간 안에 오면 이전 화면을 그대로 두고, 더 걸릴 때만 격자를 스켈레톤으로 바꿔 깜빡임을 없앤다. */
+const SKELETON_DELAY_MS = 300;
 
 const LOAD_FAILED_MESSAGE = "전개도를 불러오지 못했습니다.";
 const ROOM_LOAD_FAILED_MESSAGE = "호실 명단을 불러오지 못했습니다.";
@@ -34,10 +37,9 @@ const SAVE_FAILED_MESSAGE = "전개도 변경에 실패했습니다. 다시 시�
 /** 호실 카드를 누르면 상세(읽기 전용) -> 수정(토글 편집) 2단계로 연다. */
 type DialogStage = "view" | "edit";
 
-/** 어떤 층·요청 차례(`attempt`)의 결과인지 함께 두어, 층을 바꾸거나 다시 시도했을 때 이전 결과를 쓰지 않는다. */
-type FloorResult = { floor: Floor; attempt: number };
+/** 어떤 층·요청 차례(`attempt`)의 실패인지 함께 두어, 층을 바꾸거나 다시 시도했을 때 이전 실패를 쓰지 않는다. */
 /** 조회 실패. `rateLimited`는 429(요청이 너무 많음) 때문인지다. */
-type FloorFailure = FloorResult & { rateLimited: boolean };
+type FloorFailure = { floor: Floor; attempt: number; rateLimited: boolean };
 
 /**
  * REQ-UI-001·002: 관리자 홈(전개도). 층 현황과 호실 명단은 서버(`RoomGateway`)에서 받는다. 호실 카드를 누르면 그 호실
@@ -48,9 +50,12 @@ export function AdminHomeFloorPlan() {
   const [selectedFloor, setSelectedFloor] = useState<Floor>(DEFAULT_FLOOR);
   // 서버에서 받은 층 현황과 다시 시도 차례. 호실 저장 결과는 받아 둔 현황에 바로 반영한다.
   const [attempt, setAttempt] = useState(0);
-  const [loaded, setLoaded] = useState<
-    (FloorResult & { rooms: Room[] }) | null
-  >(null);
+  // 층마다 마지막으로 받은 현황. 이미 본 층은 바로 보여 주고 뒤에서 다시 받아 갱신한다. 호실 저장 결과는 여기에 바로 반영한다.
+  const [byFloor, setByFloor] = useState<Partial<Record<Floor, Room[]>>>({});
+  // 지금 화면에 그려진 층. 새 층 현황이 오기 전에는 이전 층을 그대로 두고, 오면 제목·합계·격자를 한 번에 바꾼다.
+  const [shownFloor, setShownFloor] = useState<Floor | null>(null);
+  // 새 층이 `SKELETON_DELAY_MS`를 넘겨도 오지 않아 격자를 스켈레톤으로 바꿔야 하는 층.
+  const [slowFloor, setSlowFloor] = useState<Floor | null>(null);
   const [failed, setFailed] = useState<FloorFailure | null>(null);
   const [dialogRoom, setDialogRoom] = useState<RoomDetail | null>(null);
   const [dialogStage, setDialogStage] = useState<DialogStage>("view");
@@ -62,12 +67,15 @@ export function AdminHomeFloorPlan() {
 
   useEffect(() => {
     let cancelled = false;
+    const slowTimer = setTimeout(() => {
+      if (!cancelled) setSlowFloor(selectedFloor);
+    }, SKELETON_DELAY_MS);
     gateway
       .floor(selectedFloor)
       .then((rooms) => {
-        if (!cancelled) {
-          setLoaded({ floor: selectedFloor, attempt, rooms });
-        }
+        if (cancelled) return;
+        setByFloor((prev) => ({ ...prev, [selectedFloor]: rooms }));
+        setShownFloor(selectedFloor);
       })
       .catch((error) => {
         if (cancelled) return;
@@ -80,20 +88,27 @@ export function AdminHomeFloorPlan() {
           attempt,
           rateLimited: error instanceof RateLimitedError,
         });
-      });
+      })
+      .finally(() => clearTimeout(slowTimer));
     return () => {
       cancelled = true;
+      clearTimeout(slowTimer);
     };
   }, [gateway, selectedFloor, attempt]);
 
-  const loadedNow =
-    loaded?.floor === selectedFloor && loaded.attempt === attempt
-      ? loaded
-      : null;
+  const selectedRooms = byFloor[selectedFloor];
   const loadFailed =
     failed?.floor === selectedFloor && failed.attempt === attempt;
-  const isLoading = !loadedNow && !loadFailed;
-  const rooms = useMemo(() => loadedNow?.rooms ?? [], [loadedNow]);
+  // 받은 적 있는 층은 다시 받는 동안 이전 값을 그대로 보인다. 실패해도 이전 값을 두고 안내만 띄운다.
+  const displayFloor: Floor | null = selectedRooms ? selectedFloor : shownFloor;
+  const rooms = useMemo(
+    () => (displayFloor ? (byFloor[displayFloor] ?? []) : []),
+    [byFloor, displayFloor],
+  );
+  // 이미 받은 층이 하나도 없을 때만 전체 스켈레톤이다. 그 뒤에 오래 걸리는 층은 격자만 스켈레톤으로 바꾼다.
+  const showError = loadFailed && !selectedRooms;
+  const gridLoading =
+    !selectedRooms && !loadFailed && slowFloor === selectedFloor;
   const { present, absent } = useMemo(
     () => summarizeAttendance(rooms),
     [rooms],
@@ -110,12 +125,12 @@ export function AdminHomeFloorPlan() {
     }
   }, [loadFailed, failed, showToast]);
 
-  // 첫 진입은 전체 스켈레톤이다. 이미 한 번 받은 뒤 층을 바꾸거나 다시 시도하는 동안은 헤더·층 탭·합계 카드를 그대로 두고
-  // 호실 격자만 스켈레톤으로 바꿔 화면이 깜빡이지 않게 한다. 이때 합계는 이전 층 숫자 대신 `–`를 보인다.
-  if (isLoading && loaded === null) return <AdminFloorPlanSkeleton />;
+  if (displayFloor === null && !loadFailed) return <AdminFloorPlanSkeleton />;
 
   function handleSelectFloor(floor: Floor) {
     setSelectedFloor(floor);
+    // 이미 받아 둔 층이면 바로 그 층을 보인다(뒤에서 다시 받아 갱신).
+    if (byFloor[floor]) setShownFloor(floor);
     closeDialog();
   }
 
@@ -188,18 +203,19 @@ export function AdminHomeFloorPlan() {
       saving.current = false;
     }
     const presentCount = students.filter((student) => student.present).length;
-    setLoaded((prev) =>
-      prev
-        ? {
-            ...prev,
-            rooms: prev.rooms.map((room) =>
-              room.number === roomNumber
-                ? { ...room, present: presentCount }
-                : room,
-            ),
-          }
-        : prev,
-    );
+    setByFloor((prev) => {
+      if (displayFloor === null) return prev;
+      const floorRooms = prev[displayFloor];
+      if (!floorRooms) return prev;
+      return {
+        ...prev,
+        [displayFloor]: floorRooms.map((room) =>
+          room.number === roomNumber
+            ? { ...room, present: presentCount }
+            : room,
+        ),
+      };
+    });
     closeDialog();
     showToast({ variant: "success", message: "출석 상태를 저장했습니다." });
   }
@@ -216,23 +232,23 @@ export function AdminHomeFloorPlan() {
             <span className="hidden md:inline">FLOOR PLAN</span>
           </p>
           <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-[31px] md:tracking-[-0.78px] xl:text-[30px] xl:leading-[36px] xl:tracking-[-0.9px]">
-            {selectedFloor}층 전개도
+            {displayFloor ?? selectedFloor}층 전개도
           </h1>
         </div>
         <FloorTabs selected={selectedFloor} onSelect={handleSelectFloor} />
       </div>
 
       <AttendanceStatCards
-        present={isLoading ? "–" : present}
-        absent={isLoading ? "–" : absent}
+        present={gridLoading ? "–" : present}
+        absent={gridLoading ? "–" : absent}
       />
 
-      {isLoading ? (
+      {gridLoading ? (
         <RoomGridSkeleton />
-      ) : loadFailed || rooms.length === 0 ? (
+      ) : showError || rooms.length === 0 ? (
         // 조회 실패는 다시 시도, 배정된 호실이 하나도 없는 층은 빈 상태(REQ-UI-006)를 본문 자리에 보인다.
         <div className="flex w-full flex-1 items-center justify-center rounded-[16px] bg-admin-surface px-3.5 py-4 md:rounded-[18px] md:p-[20px] xl:rounded-panel">
-          {loadFailed ? (
+          {showError ? (
             <AdminContentState variant="error" onRetry={retryLoad} />
           ) : (
             <AdminContentState variant="empty" />
