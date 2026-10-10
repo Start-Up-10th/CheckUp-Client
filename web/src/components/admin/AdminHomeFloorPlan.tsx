@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AdminContentState } from "@/components/admin/AdminContentState";
-import { AdminFloorPlanSkeleton } from "@/components/admin/AdminFloorPlanSkeleton";
+import {
+  AdminFloorPlanSkeleton,
+  RoomGridSkeleton,
+} from "@/components/admin/AdminFloorPlanSkeleton";
 import { FloorTabs } from "@/components/admin/FloorTabs";
 import { AttendanceStatCards } from "@/components/admin/AttendanceStatCards";
 import { RoomGrid } from "@/components/admin/RoomGrid";
@@ -107,7 +110,9 @@ export function AdminHomeFloorPlan() {
     }
   }, [loadFailed, failed, showToast]);
 
-  if (isLoading) return <AdminFloorPlanSkeleton />;
+  // 첫 진입은 전체 스켈레톤이다. 이미 한 번 받은 뒤 층을 바꾸거나 다시 시도하는 동안은 헤더·층 탭·합계 카드를 그대로 두고
+  // 호실 격자만 스켈레톤으로 바꿔 화면이 깜빡이지 않게 한다. 이때 합계는 이전 층 숫자 대신 `–`를 보인다.
+  if (isLoading && loaded === null) return <AdminFloorPlanSkeleton />;
 
   function handleSelectFloor(floor: Floor) {
     setSelectedFloor(floor);
@@ -217,9 +222,14 @@ export function AdminHomeFloorPlan() {
         <FloorTabs selected={selectedFloor} onSelect={handleSelectFloor} />
       </div>
 
-      <AttendanceStatCards present={present} absent={absent} />
+      <AttendanceStatCards
+        present={isLoading ? "–" : present}
+        absent={isLoading ? "–" : absent}
+      />
 
-      {loadFailed || rooms.length === 0 ? (
+      {isLoading ? (
+        <RoomGridSkeleton />
+      ) : loadFailed || rooms.length === 0 ? (
         // 조회 실패는 다시 시도, 배정된 호실이 하나도 없는 층은 빈 상태(REQ-UI-006)를 본문 자리에 보인다.
         <div className="flex w-full flex-1 items-center justify-center rounded-[16px] bg-admin-surface px-3.5 py-4 md:rounded-[18px] md:p-[20px] xl:rounded-panel">
           {loadFailed ? (

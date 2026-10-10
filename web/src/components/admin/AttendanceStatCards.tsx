@@ -1,6 +1,7 @@
 type AttendanceStatCardsProps = {
-  present: number;
-  absent: number;
+  /** 층을 바꾸는 동안에는 이전 층 숫자를 쓰지 않고 `–`를 넘긴다. */
+  present: number | string;
+  absent: number | string;
 };
 
 /**

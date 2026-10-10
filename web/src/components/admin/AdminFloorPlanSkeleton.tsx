@@ -42,30 +42,43 @@ export function AdminFloorPlanSkeleton() {
         ))}
       </div>
 
-      {/* 호실 그리드 패널 — RoomGrid와 동일한 외곽 구조 */}
-      <div className="flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-[14px] md:rounded-[18px] md:px-[20px] md:pb-[46px] md:pt-[20px] xl:flex-1 xl:min-h-0 xl:overflow-visible xl:rounded-panel xl:pb-0">
-        {/* 범례: 실제 dot+text 높이 = 12px(mobile) / 14px(md) */}
-        <div className="flex items-center gap-2.5 md:gap-[10px]">
-          <div className="h-3 w-[44px] rounded-[3px] bg-admin-bg md:h-[14px] xl:w-[60px] xl:rounded-[4px]" />
-          <div className="h-3 w-[44px] rounded-[3px] bg-admin-bg md:h-[14px] xl:w-[60px] xl:rounded-[4px]" />
-          <div className="hidden h-[10px] w-[60px] rounded-[4px] bg-admin-bg xl:block" />
-        </div>
+      <RoomGridSkeleton pulse={false} />
+    </div>
+  );
+}
 
-        {/* 그리드 래퍼 — RoomGrid와 동일 */}
-        <div className="flex w-full flex-1 flex-col xl:min-h-0">
-          <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-[92px] md:gap-[8px] xl:auto-rows-auto xl:min-h-0 xl:flex-[650] xl:grid-cols-7 xl:grid-rows-3">
-            {Array.from({ length: 21 }, (_, i) => (
-              <div
-                key={i}
-                className="rounded-[10px] bg-admin-rowSurface md:rounded-[12px] xl:flex xl:flex-col xl:justify-between xl:rounded-card xl:p-3"
-              >
-                <div className="hidden h-[10px] w-7 rounded-[3px] bg-admin-border xl:block" />
-                <div className="hidden h-2 w-9 rounded-[3px] bg-admin-divider xl:block" />
-              </div>
-            ))}
-          </div>
-          <div className="hidden xl:block xl:min-h-0 xl:flex-[62]" />
+/**
+ * 층을 바꾸는 동안 호실 격자 자리만 보이는 스켈레톤이다. 헤더·층 탭·출석 합계 카드는 그대로 두고 이 격자만 바꿔
+ * 층 전환 때 화면 전체가 깜빡이지 않게 한다(첫 진입과 같은 격자 모양이라 층을 바꿨다는 것이 보인다).
+ */
+export function RoomGridSkeleton({ pulse = true }: { pulse?: boolean }) {
+  // 호실 그리드 패널 — RoomGrid와 동일한 외곽 구조. 전체 스켈레톤 안에서는 바깥이 이미 깜빡이므로 `pulse={false}`다.
+  return (
+    <div
+      aria-busy="true"
+      className={`${pulse ? "animate-pulse " : ""}flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-[14px] md:rounded-[18px] md:px-[20px] md:pb-[46px] md:pt-[20px] xl:flex-1 xl:min-h-0 xl:overflow-visible xl:rounded-panel xl:pb-0`}
+    >
+      {/* 범례: 실제 dot+text 높이 = 12px(mobile) / 14px(md) */}
+      <div className="flex items-center gap-2.5 md:gap-[10px]">
+        <div className="h-3 w-[44px] rounded-[3px] bg-admin-bg md:h-[14px] xl:w-[60px] xl:rounded-[4px]" />
+        <div className="h-3 w-[44px] rounded-[3px] bg-admin-bg md:h-[14px] xl:w-[60px] xl:rounded-[4px]" />
+        <div className="hidden h-[10px] w-[60px] rounded-[4px] bg-admin-bg xl:block" />
+      </div>
+
+      {/* 그리드 래퍼 — RoomGrid와 동일 */}
+      <div className="flex w-full flex-1 flex-col xl:min-h-0">
+        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-[92px] md:gap-[8px] xl:auto-rows-auto xl:min-h-0 xl:flex-[650] xl:grid-cols-7 xl:grid-rows-3">
+          {Array.from({ length: 21 }, (_, i) => (
+            <div
+              key={i}
+              className="rounded-[10px] bg-admin-rowSurface md:rounded-[12px] xl:flex xl:flex-col xl:justify-between xl:rounded-card xl:p-3"
+            >
+              <div className="hidden h-[10px] w-7 rounded-[3px] bg-admin-border xl:block" />
+              <div className="hidden h-2 w-9 rounded-[3px] bg-admin-divider xl:block" />
+            </div>
+          ))}
         </div>
+        <div className="hidden xl:block xl:min-h-0 xl:flex-[62]" />
       </div>
     </div>
   );

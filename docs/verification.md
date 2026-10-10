@@ -37,6 +37,25 @@ npm run check   # 위 다섯을 한 번에
 
 컴포넌트 테스트는 Vitest로 실행한다. 브라우저(E2E) 테스트 도구는 카메라·화면 동선 검증을 시작할 때 정해 등록한다.
 
+### 현재 상태 (2026-10-10)
+
+- `web/`의 `npm run check`(lint·typecheck·format·test·build)가 통과한다. 테스트는 Vitest 59개 파일 584개다.
+- CI는 `web.yml`(web 변경), `harness.yml`(하네스)이 돈다. develop·main에 push되면 열린 PR 브랜치를 자동으로 갱신하는 `auto-update-branches.yml`도 있다. main에 `web/**`가 반영되면 `cd.yml`이 학교 서버(GSM SV)에 배포하고 지금까지 모든 배포가 성공했다.
+- 배포 사이트 `https://checkup.https.gsmsv.site`의 `/`, `/admin`, `/admin/login`이 200을 응답하고 `manifest.webmanifest`가 최신이다.
+- 웹이 부르는 서버 API(`/api/v1/auth`·`consent`·`face`·`qr`·`room`·`volunteer`·`users`·`notifications`)는 배포 swagger(`/v3/api-docs`, 36개)와 대조해 연결했다. 웹 화면이 쓰지 않는 서버 엔드포인트는 `webhook/sync`, `attendance/me`, `face/recognitions`, `face/consent`, `users/{studentId}`다.
+- 개발용 대역(`*-mock-gateway.ts`)은 로그인 없이 보는 확인용 페이지(`/admin/state-demo/*`)와 테스트에서만 쓰고 운영 화면에는 쓰지 않는다.
+
+실행하지 못했거나 실측하지 못한 것(제출 시 미검증으로 본다):
+
+- 실제 DataGSM 로그인으로 끝까지 가는 E2E(로그인 → 동의 → 얼굴 등록 → QR 출석 → 관리자 수정). 로컬 주소는 DataGSM redirect_uri에 등록돼 있지 않아 로컬에서는 세션을 만들 수 없다.
+- 실제 웹캠으로 한 얼굴 등록이 서버 품질 검사를 통과하는지, 실제 얼굴 인식 정확도(AI·서버 담당).
+- 폰·노트북 실기기에서의 PWA 설치와 새 앱 아이콘 모양, 휴대폰 폭 실제 화면(헤드리스 크롬은 390px 창을 만들지 못한다).
+- Lighthouse 감사, 브라우저(E2E) 자동 테스트 도구 도입.
+
+### 과거 검증 기록 (2026-09-23, 당시 구현 기준)
+
+아래는 초기 구현 때의 Playwright 검증 기록이다. 당시 화면에 있던 `자습실/기숙사` 용도 탭, 얼굴 인식 전체화면, `최근 인식` 목록은 이후 사용자 결정으로 제거돼 현재 명세와 다르다(DEC-036 등). 현재 기준은 위 "현재 상태"다.
+
 2026-09-23 기준 관리자 컴퓨터 화면(이슈 #5, REQ-UI-001/002, REQ-ATT-003/004/006, REQ-FACE-004/007, REQ-COM-001/002)은
 `npm run lint`/`typecheck`/`build` 통과 후 Playwright(Chromium) 헤드리스로 실제 렌더링을 검증했다:
 관리자 홈 전개도를 Figma node 16:404와 픽셀 단위로 대조해 통계 카드·범례 스와치 라운드 불일치를 찾아 수정했고,
@@ -102,7 +121,11 @@ GitHub Actions의 조건부 건너뜀은 required check에서도 성공 상태�
 
 ## 현재 실행 범위
 
-하네스 파일·검사기와 수용 시나리오만 생성했다. 서비스 코드는 미구현이다.
+웹(`web/`)은 관리자 화면(전개도·QR 생성·얼굴 인식·봉사자 관리·학생 관리)과 학생 화면(로그인·동의·얼굴 등록·홈·QR 출석·마이·봉사·알림)이
+구현돼 있고 학교 서버에 배포된다. 서버(Spring)·AI(FastAPI) 코드는 이 저장소 범위 밖이며, 이 저장소에서는 하네스 파일·검사기와 웹만 검증한다.
+수용 시나리오 38개 중 21개는 웹 구현과 테스트가 있어 `implemented`이고, 17개는 서버·AI·운영 담당이라 `specified`로 남겨 뒀다.
+실측 증빙이 있는 `verified`는 아직 없다.
+
 현재 공통 스킬은 4개다. 파일 등록·동기화 확인과 두 도구의 실제 세션 동작 검증을 구분한다.
 Claude 실행·두 도구의 별도 새 세션 작업, GitHub Actions 원격 실행, DataGSM, 카메라, GSM SV 배포는 로컬 하네스 검사 대상이 아니다.
 마지막 로컬 검사 결과는 [개발 계획](plans/implementation.md)에 남긴다.
