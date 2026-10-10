@@ -18,7 +18,7 @@ import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
 import { groupByRoom } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
 
-const DEFAULT_FLOOR: Floor = 4;
+const DEFAULT_FLOOR: Floor = 3;
 
 /** 명단을 서버에서 받지 못했을 때(Figma 07 state messages). */
 const LIST_FAILURE_MESSAGE =

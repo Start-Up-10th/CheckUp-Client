@@ -20,7 +20,7 @@ import { AdminStudentManagement } from "./AdminStudentManagement";
 
 const volunteerGateway = createMockVolunteerGateway();
 
-function render(
+function renderDefaultFloor(
   ui: ReactElement,
   gateway: StudentManagementGateway = createMockStudentManagementGateway(),
 ) {
@@ -36,6 +36,13 @@ function render(
   );
 }
 
+/** 목업 4층(412호 등) 명단을 쓰는 테스트가 많아 기본 3층에서 4층 탭을 눌러 둔 화면이다. */
+function render(ui: ReactElement, gateway?: StudentManagementGateway) {
+  const result = renderDefaultFloor(ui, gateway);
+  fireEvent.click(screen.getByRole("button", { name: "4층" }));
+  return result;
+}
+
 beforeEach(() => setRoster(MOCK_VOLUNTEER_ROSTER));
 afterEach(() => {
   cleanup();
@@ -43,15 +50,18 @@ afterEach(() => {
 });
 
 describe("AdminStudentManagement", () => {
-  it("처음에는 4층 학생을 호실별로 묶어 보여 준다", () => {
-    render(<AdminStudentManagement />);
+  it("처음에는 3층 학생을 호실별로 묶어 보여 준다", () => {
+    renderDefaultFloor(<AdminStudentManagement />);
 
-    const room412 = screen.getByRole("region", { name: "412호" });
-    expect(within(room412).getByText("3명")).toBeInTheDocument();
-    expect(within(room412).getByText("김도현")).toBeInTheDocument();
+    const room301 = screen.getByRole("region", { name: "301호" });
+    expect(within(room301).getByText("백도윤")).toBeInTheDocument();
     expect(
-      screen.queryByRole("region", { name: "301호" }),
+      screen.queryByRole("region", { name: "412호" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "3층" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 
   it("층 탭을 누르면 그 층의 호실로 바뀐다", () => {
