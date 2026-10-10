@@ -43,6 +43,19 @@ describe("AdminAuthGate", () => {
     expect(replace).not.toHaveBeenCalled();
   });
 
+  it("확인하는 동안의 빈 화면은 100vh가 아니라 보이는 영역 높이(h-dvh)를 쓴다", () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise<Response>(() => {})),
+    );
+
+    const { container } = renderGate();
+
+    // 모바일 브라우저에서 100vh는 주소창·툴바 뒤까지 커서 화면 아래가 잘린다.
+    expect(container.querySelector("[aria-busy='true']")).toHaveClass("h-dvh");
+    expect(container.querySelector(".h-screen")).toBeNull();
+  });
+
   it("관리자 세션이면 화면을 보여 준다", async () => {
     const fetchMock = mockMe(200, { name: "김관리", role: "ADMIN" });
 

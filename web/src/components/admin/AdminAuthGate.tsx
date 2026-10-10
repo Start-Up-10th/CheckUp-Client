@@ -40,7 +40,7 @@ export function AdminAuthGate({ children }: { children: React.ReactNode }) {
 
   if (status === "error") {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-admin-bg">
+      <div className="flex h-dvh w-full items-center justify-center bg-admin-bg">
         <AdminContentState
           variant="error"
           onRetry={() => {
@@ -52,5 +52,5 @@ export function AdminAuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <div className="h-screen w-full bg-admin-bg" aria-busy="true" />;
+  return <div className="h-dvh w-full bg-admin-bg" aria-busy="true" />;
 }
