@@ -348,26 +348,6 @@ describe("StudentFaceCapture 완료", () => {
         ),
       ).toBeInTheDocument();
     });
-
-    it("취소를 누르면 마이페이지로 돌아간다", async () => {
-      mockApi(ENROLLED);
-      render(<StudentFaceCapture mode="reset" />);
-      await advance();
-
-      fireEvent.click(screen.getByRole("button", { name: "취소" }));
-
-      expect(mocks.router.push).toHaveBeenCalledWith("/my");
-    });
-
-    it("처음 등록 화면에는 취소 버튼이 없다", async () => {
-      mockApi(READY);
-      render(<StudentFaceCapture />);
-      await advance();
-
-      expect(
-        screen.queryByRole("button", { name: "취소" }),
-      ).not.toBeInTheDocument();
-    });
   });
 
   it("거절되면(422) 다시 촬영 문구를 보여 주고, 영상을 버려 완료를 막는다", async () => {

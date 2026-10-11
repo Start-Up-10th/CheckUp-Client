@@ -222,18 +222,7 @@ export function StudentFaceCapture({
         : "촬영이 완료되었어요";
 
   return (
-    <main className="relative flex min-h-dvh flex-col bg-admin-surface md:items-center md:justify-center md:bg-admin-bg md:py-10">
-      {mode === "reset" && (
-        // 다시 등록은 마이페이지에서 들어오므로 그만두고 돌아갈 길을 둔다(Figma에 없는 추가, DEC-067).
-        <button
-          type="button"
-          onClick={() => router.push("/my")}
-          className="absolute left-4 top-4 z-10 rounded-full bg-white/80 px-3.5 py-2 text-[13px] font-medium leading-normal text-admin-text md:left-8 md:top-8"
-        >
-          취소
-        </button>
-      )}
-
+    <main className="flex min-h-dvh flex-col bg-admin-surface md:items-center md:justify-center md:bg-admin-bg md:py-10">
       {/* 등록 실패는 다른 화면의 상태 메시지와 같은 토스트로 보이고 다시 찍으면 닫힌다. */}
       <ToastLayer
         toast={
