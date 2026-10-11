@@ -11,7 +11,7 @@ export type FaceStatus = {
 /**
  * 등록 요청을 서버가 판정한 결과.
  * - registered: 등록됨(201)
- * - alreadyRegistered: 이미 등록돼 있음(409). 다시 바꾸는 기능은 없다(REQ-FACE-001)
+ * - alreadyRegistered: 이미 등록돼 있음(409). 서버에 다시 등록 API가 없어 마이페이지 `얼굴 재설정`도 이 응답을 받는다(화면이 안내한다, DEC-067)
  * - consentRequired: 필수 동의가 먼저 필요함(403 `FACE_CONSENT_REQUIRED`)
  * - notEligible: 얼굴 등록 대상이 아님(403 `FACE_ENROLLMENT_NOT_ELIGIBLE`, 호실 미배정 등)
  * - lowLight: 영상이 어두움(422 `FACE_ENROLLMENT_LOW_LIGHT`)
