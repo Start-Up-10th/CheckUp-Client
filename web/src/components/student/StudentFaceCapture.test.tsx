@@ -296,6 +296,60 @@ describe("StudentFaceCapture 완료", () => {
     expect(mocks.router.push).toHaveBeenCalledWith("/main");
   });
 
+  describe("얼굴 다시 등록(마이페이지 얼굴 재설정)", () => {
+    const ENROLLED: Reply = {
+      status: 200,
+      body: { consented: true, enrolled: true },
+    };
+
+    async function renderResetUntilDone() {
+      render(<StudentFaceCapture mode="reset" />);
+      await advance();
+      await countdown();
+      await advance(3000);
+    }
+
+    it("이미 등록했어도 학생 홈으로 보내지 않고 카메라를 켠다", async () => {
+      mockApi(ENROLLED);
+      render(<StudentFaceCapture mode="reset" />);
+      await advance();
+
+      expect(mocks.router.replace).not.toHaveBeenCalledWith("/main");
+      expect(mocks.cameraEnabled.at(-1)).toBe(true);
+      expect(
+        screen.getByText("3초 후 자동으로 촬영합니다"),
+      ).toBeInTheDocument();
+    });
+
+    it("처음 등록과 같은 흐름으로 촬영하고 등록되면 학생 홈으로 간다", async () => {
+      const fetchMock = mockApi(ENROLLED, [{ status: 201 }]);
+      await renderResetUntilDone();
+
+      fireEvent.click(completeButton());
+      await advance();
+
+      expect(enrollCalls(fetchMock)).toHaveLength(1);
+      expect(mocks.router.push).toHaveBeenCalledWith("/main");
+    });
+
+    it("서버가 이미 등록됐다고(409) 거절하면 홈으로 보내지 않고 다시 등록할 수 없다고 알린다", async () => {
+      mockApi(ENROLLED, [
+        { status: 409, body: { code: "FACE_ALREADY_REGISTERED" } },
+      ]);
+      await renderResetUntilDone();
+
+      fireEvent.click(completeButton());
+      await advance();
+
+      expect(mocks.router.push).not.toHaveBeenCalledWith("/main");
+      expect(
+        screen.getByText(
+          "지금은 얼굴을 다시 등록할 수 없어요. 관리자에게 문의해 주세요.",
+        ),
+      ).toBeInTheDocument();
+    });
+  });
+
   it("거절되면(422) 다시 촬영 문구를 보여 주고, 영상을 버려 완료를 막는다", async () => {
     const fetchMock = mockApi(READY, [
       { status: 422, body: { code: "FACE_ENROLLMENT_REJECTED" } },

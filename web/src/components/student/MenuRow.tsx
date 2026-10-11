@@ -7,7 +7,7 @@ type MenuRowProps = {
 
 /**
  * 마이페이지 메뉴 한 줄 — 왼쪽 글자, 오른쪽 `›`(Figma 핸드폰 297:5, 노트북 297:11).
- * 줄 전체가 링크다. 지금은 `봉사 활동`(→ /volunteer, REQ-UI-004) 하나뿐이다.
+ * 줄 전체가 링크다. `봉사 활동`(→ /volunteer, REQ-UI-004)과 `얼굴 재설정`(→ /face?reset=1, Figma 핸드폰 1274:34·노트북 1275:44)이 쓴다.
  */
 export function MenuRow({ href, label }: MenuRowProps) {
   return (

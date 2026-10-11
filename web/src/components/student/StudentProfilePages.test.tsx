@@ -250,6 +250,24 @@ describe("StudentMyPage 본인 정보", () => {
     ).toBeInTheDocument();
   });
 
+  it("봉사 활동 아래에 얼굴 재설정 메뉴가 있고 누르면 얼굴 다시 등록 화면으로 간다", async () => {
+    mockMe(200, me());
+    render(<StudentMyPage />);
+
+    const main = screen.getByRole("main");
+    const volunteer = await within(main).findByRole("link", {
+      name: /봉사 활동/,
+    });
+    const reset = within(main).getByRole("link", { name: /얼굴 재설정/ });
+
+    expect(reset).toHaveAttribute("href", "/face?reset=1");
+    // 메뉴 순서: 봉사 활동 다음이 얼굴 재설정이다(Figma 6:2·227:2).
+    expect(
+      volunteer.compareDocumentPosition(reset) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it("호실이 배정되지 않았으면 호실 미배정", async () => {
     mockMe(200, me({ ...STUDENT, dormitoryRoom: null, dormitoryFloor: null }));
     render(<StudentMyPage />);
