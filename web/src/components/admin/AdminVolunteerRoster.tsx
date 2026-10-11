@@ -118,7 +118,7 @@ export function AdminVolunteerRoster() {
             onChange={(event) => setQuery(event.target.value)}
             aria-label="봉사자 검색"
             placeholder="이름, 학번 또는 호실로 검색"
-            className="min-w-0 flex-1 bg-transparent text-sm leading-[17px] text-admin-text placeholder:text-admin-textMuted focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-sm leading-[17px] text-admin-text placeholder:text-admin-textMuted focus:outline-none [@media(pointer:coarse)]:text-base [@media(pointer:coarse)]:leading-5"
           />
         </label>
       </div>

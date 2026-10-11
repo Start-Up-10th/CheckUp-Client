@@ -4,7 +4,7 @@ import type { CameraStatus } from "@/lib/admin/use-camera-stream";
 type CameraPanelProps = {
   videoRef: RefObject<HTMLVideoElement | null>;
   status: CameraStatus;
-  /** 화면 표시를 좌우 반전해 거울처럼 보일지(DEC-069). 서버로 보내는 프레임은 반전하지 않는다. */
+  /** 화면 표시를 좌우 반전해 거울처럼 보일지(DEC-070). 서버로 보내는 프레임은 반전하지 않는다. */
   mirrored?: boolean;
 };
 

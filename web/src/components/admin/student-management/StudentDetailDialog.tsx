@@ -79,7 +79,7 @@ export function StudentDetailDialog({
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             placeholder="사유를 입력해 주세요"
-            className="h-[72px] w-full resize-none rounded-xl border border-admin-border bg-admin-rowSurface px-3.5 py-3 text-[13px] leading-4 text-admin-text placeholder:text-admin-textMuted transition-colors focus:border-admin-textMuted focus:bg-admin-surface focus:outline-none motion-reduce:transition-none md:h-[76px] xl:h-20 xl:text-sm xl:leading-[17px]"
+            className="h-[72px] w-full resize-none rounded-xl border border-admin-border bg-admin-rowSurface px-3.5 py-3 text-[13px] leading-4 text-admin-text placeholder:text-admin-textMuted [@media(pointer:coarse)]:text-base [@media(pointer:coarse)]:leading-5 transition-colors focus:border-admin-textMuted focus:bg-admin-surface focus:outline-none motion-reduce:transition-none md:h-[76px] xl:h-20 xl:text-sm xl:leading-[17px]"
           />
         </div>
 
