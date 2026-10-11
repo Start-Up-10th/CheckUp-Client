@@ -26,7 +26,7 @@ const QR_NOTICE_MESSAGE = "인식 실패 · 3회 초과 시 QR로 출석";
  * 화면은 카메라 패널 하나다. 용도 탭·전체화면·최근 인식 목록은 없다(DEC-036).
  */
 export function AdminFaceRecognition() {
-  const { videoRef, status } = useCameraStream();
+  const { videoRef, status, mirrored } = useCameraStream();
   const recognition = useFaceRecognition({
     videoRef,
     cameraReady: status === "granted",
@@ -79,7 +79,7 @@ export function AdminFaceRecognition() {
       />
 
       <div className="flex min-h-0 w-full flex-1">
-        <CameraPanel videoRef={videoRef} status={status} />
+        <CameraPanel videoRef={videoRef} status={status} mirrored={mirrored} />
       </div>
     </div>
   );
