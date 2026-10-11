@@ -7,12 +7,15 @@ export type CameraStatus = "requesting" | "granted" | "error";
 /**
  * REQ-FACE-004: 관리자 카메라 세션 — 시작 버튼 없이 페이지 진입 시 자동 실행하고,
  * 페이지를 벗어나면(언마운트) 카메라 트랙을 정리한다. 허용 전에는 LIVE를 표시하지 않는다.
+ * `mirrored`는 화면 표시만 좌우 반전할지다(DEC-069). 서버로 보내는 프레임은 영상 원본을 캔버스로 떠서 보내므로 영향이 없다.
  * 허용은 됐지만 영상이 나오지 않는 경우(다른 앱이 카메라를 쓰는 중, 장치가 빠짐)에는 영상 트랙이 끊기거나(`ended`)
  * 멈추므로(`mute`) 실행 실패로 보고 LIVE를 내린다. 영상이 다시 나오면(`unmute`) 되돌린다.
  */
 export function useCameraStream() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [status, setStatus] = useState<CameraStatus>("requesting");
+  // 화면에 거울처럼(좌우 반전) 보일지. 후면 카메라(`environment`)만 그대로 보이고 전면·노트북 웹캠은 거울처럼 보인다.
+  const [mirrored, setMirrored] = useState(true);
 
   useEffect(() => {
     if (!navigator.mediaDevices?.getUserMedia) {
@@ -34,6 +37,10 @@ export function useCameraStream() {
           return;
         }
         activeStream = stream;
+        const facingMode = stream
+          .getVideoTracks()[0]
+          ?.getSettings?.().facingMode;
+        setMirrored(facingMode !== "environment");
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -71,5 +78,5 @@ export function useCameraStream() {
     };
   }, []);
 
-  return { videoRef, status };
+  return { videoRef, status, mirrored };
 }

@@ -4,6 +4,8 @@ import type { CameraStatus } from "@/lib/admin/use-camera-stream";
 type CameraPanelProps = {
   videoRef: RefObject<HTMLVideoElement | null>;
   status: CameraStatus;
+  /** 화면 표시를 좌우 반전해 거울처럼 보일지(DEC-069). 서버로 보내는 프레임은 반전하지 않는다. */
+  mirrored?: boolean;
 };
 
 /**
@@ -11,7 +13,11 @@ type CameraPanelProps = {
  * 인식 성공·실패·서버 오류 메시지는 이 패널이 아니라 토스트로 보인다(DEC-048).
  * 전체화면 모드·전체화면 버튼은 없다(Figma 2026-10-06 사용자 수정, DEC-036).
  */
-export function CameraPanel({ videoRef, status }: CameraPanelProps) {
+export function CameraPanel({
+  videoRef,
+  status,
+  mirrored = false,
+}: CameraPanelProps) {
   const live = status === "granted";
 
   return (
@@ -36,7 +42,7 @@ export function CameraPanel({ videoRef, status }: CameraPanelProps) {
           autoPlay
           muted
           playsInline
-          className="size-full object-cover"
+          className={`size-full object-cover ${mirrored ? "-scale-x-100" : ""}`}
         />
 
         {status === "error" && (
