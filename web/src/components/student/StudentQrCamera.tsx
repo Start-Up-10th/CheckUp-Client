@@ -3,8 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  QrConsentRequiredError,
   QrLoginRequiredError,
   QrNotStudentError,
+  QrRoomNotAssignedError,
   submitQrAttendance,
 } from "@/lib/student/qr-attendance-api";
 import { parseQrToken } from "@/lib/student/parse-qr-token";
@@ -21,9 +23,11 @@ import { StudentShell } from "./StudentShell";
 /**
  * 화면에 보여 줄 결과. 서버 판정 5종에 더해, 판정을 받지 못한 경우를 따로 둔다.
  * - notStudent: 학생 정보가 없는 계정(403, 교사 등)
+ * - roomNotAssigned: 학생이지만 호실이 배정되지 않음(403)
  * - retry: 네트워크 오류·서버 오류. 판정이 아니므로 "유효하지 않은 QR"로 뭉개지 않는다.
  */
-type QrOutcome = QrAttendanceResult | "notStudent" | "retry";
+type QrOutcome =
+  QrAttendanceResult | "notStudent" | "roomNotAssigned" | "retry";
 
 /** 결과별 문구·색. 문구는 REQ-ATT-004/005와 Figma state messages(4:71, 345:43)를 따른다. */
 const RESULT_MESSAGES: Record<QrOutcome, ToastMessage> = {
@@ -41,6 +45,11 @@ const RESULT_MESSAGES: Record<QrOutcome, ToastMessage> = {
   invalid: { variant: "error", message: "유효하지 않은 QR입니다." },
   // Figma에 없는 상태라 기존 오류 토스트 스타일로 안내한다.
   notStudent: { variant: "error", message: "학생 계정만 출석할 수 있어요." },
+  // 얼굴 등록의 `기숙사 호실이 배정된 학생만 등록할 수 있어요.`와 같은 말투로 정한 문구다(#262).
+  roomNotAssigned: {
+    variant: "error",
+    message: "기숙사 호실이 배정된 학생만 출석할 수 있어요.",
+  },
   retry: { variant: "error", message: "잠시 후 다시 시도해 주세요." },
 };
 
@@ -77,6 +86,7 @@ export function StudentQrCamera() {
   // 토큰을 제출한다. 우리 QR 형식이 아니어서 토큰이 없으면(null) 서버를 부르지 않고 바로
   // "유효하지 않은 QR"로 보여 준다(하네스 DEC-018). 토큰은 로그에 남기지 않는다.
   // 로그인이 안 돼 있으면(401) 같은 QR로 돌아올 주소를 남기고 로그인으로 보낸다.
+  // 필수 동의를 하지 않은 학생은 얼굴 등록 화면과 같이 동의 화면으로 보낸다(REQ-ATT-005, #262).
   const submitToken = useCallback(
     (token: string | null) => {
       setProcessing(true);
@@ -93,12 +103,20 @@ export function StudentQrCamera() {
             router.push("/login");
             return;
           }
+          if (error instanceof QrConsentRequiredError) {
+            router.replace("/consent");
+            return;
+          }
           if (error instanceof RateLimitedError) {
             // 요청이 너무 많다는 안내(429): `잠시 후 다시 시도해 주세요.`를 보이고 Retry-After 뒤에 다시 스캔한다.
             holdMsRef.current = Math.max(RESULT_TOAST_MS, error.retryAfterMs);
           }
           setResult(
-            error instanceof QrNotStudentError ? "notStudent" : "retry",
+            error instanceof QrNotStudentError
+              ? "notStudent"
+              : error instanceof QrRoomNotAssignedError
+                ? "roomNotAssigned"
+                : "retry",
           );
         });
     },

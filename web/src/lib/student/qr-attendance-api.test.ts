@@ -1,7 +1,9 @@
 import { RateLimitedError } from "@/lib/rate-limit";
 import {
+  QrConsentRequiredError,
   QrLoginRequiredError,
   QrNotStudentError,
+  QrRoomNotAssignedError,
   submitQrAttendance,
 } from "./qr-attendance-api";
 
@@ -61,11 +63,41 @@ describe("submitQrAttendance", () => {
     );
   });
 
-  it("403이면 학생 아님 오류", async () => {
+  it("403 MISSING_STUDENT_INFO면 학생 아님 오류", async () => {
     mockFetch(403, {
       code: "MISSING_STUDENT_INFO",
       message: "학생 정보가 없습니다.",
     });
+
+    await expect(submitQrAttendance(TOKEN)).rejects.toBeInstanceOf(
+      QrNotStudentError,
+    );
+  });
+
+  it("403 FACE_CONSENT_REQUIRED면 동의 필요 오류", async () => {
+    mockFetch(403, {
+      code: "FACE_CONSENT_REQUIRED",
+      message: "얼굴 정보 처리 동의가 필요합니다.",
+    });
+
+    await expect(submitQrAttendance(TOKEN)).rejects.toBeInstanceOf(
+      QrConsentRequiredError,
+    );
+  });
+
+  it("403 ROOM_NOT_ASSIGNED면 호실 미배정 오류", async () => {
+    mockFetch(403, {
+      code: "ROOM_NOT_ASSIGNED",
+      message: "기숙사 호실이 배정되지 않았습니다.",
+    });
+
+    await expect(submitQrAttendance(TOKEN)).rejects.toBeInstanceOf(
+      QrRoomNotAssignedError,
+    );
+  });
+
+  it("403인데 본문을 읽을 수 없으면 학생 아님 오류", async () => {
+    mockFetch(403);
 
     await expect(submitQrAttendance(TOKEN)).rejects.toBeInstanceOf(
       QrNotStudentError,
