@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Roboto_Mono } from "next/font/google";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
+import { ThemeRouteSync } from "@/components/ThemeRouteSync";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
       </head>
       <body className={`${robotoMono.variable} font-sans`}>
         {children}
+        <ThemeRouteSync />
         <ServiceWorkerRegistrar />
       </body>
     </html>

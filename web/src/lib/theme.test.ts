@@ -4,6 +4,7 @@ import {
   THEME_INIT_SCRIPT,
   THEME_STORAGE_KEY,
   setTheme,
+  syncTheme,
   useTheme,
 } from "./theme";
 
@@ -23,6 +24,7 @@ function runInitScript() {
 }
 
 afterEach(() => {
+  window.history.replaceState(null, "", "/");
   window.localStorage.clear();
   delete document.documentElement.dataset.theme;
   vi.unstubAllGlobals();
@@ -47,6 +49,31 @@ describe("첫 화면 모드 스크립트", () => {
     window.localStorage.setItem(THEME_STORAGE_KEY, "blue");
     runInitScript();
     expect(document.documentElement.dataset.theme).toBe("light");
+  });
+});
+
+describe("관리자 화면은 항상 라이트", () => {
+  it("다크를 골랐어도 관리자 주소에서는 첫 화면이 라이트다", () => {
+    mockSystemDark(true);
+    window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
+    window.history.replaceState(null, "", "/admin/students");
+    runInitScript();
+    expect(document.documentElement.dataset.theme).toBe("light");
+  });
+
+  it("학생 화면에서 관리자 화면으로 옮기면 라이트가 되고 돌아오면 고른 모드로 돌아온다", () => {
+    mockSystemDark(false);
+    setTheme("dark");
+    expect(document.documentElement.dataset.theme).toBe("dark");
+
+    window.history.replaceState(null, "", "/admin");
+    syncTheme();
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
+
+    window.history.replaceState(null, "", "/my");
+    syncTheme();
+    expect(document.documentElement.dataset.theme).toBe("dark");
   });
 });
 

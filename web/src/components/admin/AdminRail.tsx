@@ -16,7 +16,7 @@ export function AdminRail({ activePath }: { activePath?: string }) {
   const logout = useAdminLogout();
 
   return (
-    <aside className="hidden h-full w-[96px] shrink-0 shadow-[inset_-1px_0_0_rgb(var(--admin-border))] md:flex xl:hidden">
+    <aside className="hidden h-full w-[96px] shrink-0 shadow-[inset_-1px_0_0_#e3e3e5] md:flex xl:hidden">
       <div className="flex w-full flex-col items-center gap-2.5 bg-admin-surface px-2.5 py-[22px]">
         <div aria-hidden="true" className="h-3.5 w-px shrink-0" />
         <nav className="flex w-full flex-col items-center gap-2.5">
@@ -42,6 +42,7 @@ export function AdminRail({ activePath }: { activePath?: string }) {
         </nav>
 
         <div className="min-h-0 w-full flex-1" />
+
         <button
           type="button"
           aria-label="로그아웃"

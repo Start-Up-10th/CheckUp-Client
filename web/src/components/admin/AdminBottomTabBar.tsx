@@ -32,7 +32,7 @@ function TabIcon({ src }: { src: string }) {
 
 /**
  * REQ-UI-005: ~767px(관리자-핸드폰) 하단 바는 라벨 없이 아이콘만 있는 2칸이다. 홈과 메뉴(햄버거)이며, 메뉴를 열면
- * QR 코드 생성 / 얼굴 인식 생성 / 봉사자 관리 / 학생 관리 / 마이페이지 / 로그아웃이 시트로 나온다. 홈이 아닌 화면에서는 메뉴가
+ * QR 코드 생성 / 얼굴 인식 생성 / 봉사자 관리 / 학생 관리 / 로그아웃이 시트로 나온다. 홈이 아닌 화면에서는 메뉴가
  * 연두색이다.
  * `activePath`는 로그인 없이 보는 확인용 페이지에서 활성 항목을 지정할 때만 쓴다(기본은 현재 주소).
  */
@@ -54,16 +54,14 @@ export function AdminBottomTabBar({ activePath }: { activePath?: string }) {
           onLogout={logout}
         />
       ) : null}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-[60px] items-stretch bg-admin-surface shadow-[inset_0_1px_0_0_rgb(var(--admin-border))] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-[60px] items-stretch bg-admin-surface shadow-[inset_0_1px_0_0_#e3e3e5] md:hidden">
         <Link
           href="/admin"
           aria-label="홈"
           aria-current={homeActive ? "page" : undefined}
           onClick={() => setOpenedAt(null)}
           className={`flex flex-1 items-center justify-center ${
-            homeActive
-              ? "text-admin-attendance-text"
-              : "text-[#b9b9be] dark:text-admin-textFaint"
+            homeActive ? "text-admin-attendance-text" : "text-[#b9b9be]"
           }`}
         >
           <TabIcon src="/icons/tab/home.svg" />
@@ -74,9 +72,7 @@ export function AdminBottomTabBar({ activePath }: { activePath?: string }) {
           aria-expanded={menuOpen}
           onClick={() => setOpenedAt(menuOpen ? null : pathname)}
           className={`flex flex-1 items-center justify-center ${
-            homeActive
-              ? "text-[#b9b9be] dark:text-admin-textFaint"
-              : "text-admin-attendance-text"
+            homeActive ? "text-[#b9b9be]" : "text-admin-attendance-text"
           }`}
         >
           <TabIcon src="/icons/tab/menu.svg" />

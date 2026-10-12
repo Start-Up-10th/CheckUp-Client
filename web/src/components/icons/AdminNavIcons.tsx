@@ -108,8 +108,8 @@ export function VolunteerIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-/** Figma User / Users (1289:63) — 학생 관리. 두 사람 모양이고 선 두께는 1.3이다. */
-export function UsersIcon(props: SVGProps<SVGSVGElement>) {
+/** Figma icon/people (1150:46) — 학생 관리. 다른 메뉴 아이콘과 달리 선 두께가 1.53이다. */
+export function PeopleIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       viewBox="0 0 18 18"
@@ -117,39 +117,18 @@ export function UsersIcon(props: SVGProps<SVGSVGElement>) {
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <path
-        d="M15.75 14.9999C15.75 13.6937 14.4978 12.5825 12.75 12.1707M11.25 15C11.25 13.3431 9.23528 12 6.75 12C4.26472 12 2.25 13.3431 2.25 15M11.25 9.75C12.9069 9.75 14.25 8.40685 14.25 6.75C14.25 5.09315 12.9069 3.75 11.25 3.75M6.75 9.75C5.09315 9.75 3.75 8.40685 3.75 6.75C3.75 5.09315 5.09315 3.75 6.75 3.75C8.40685 3.75 9.75 5.09315 9.75 6.75C9.75 8.40685 8.40685 9.75 6.75 9.75Z"
+      <circle
+        cx="9"
+        cy="4.86"
+        r="2.295"
         stroke="currentColor"
-        strokeWidth="1.3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** Figma 관리자 사이드바 마이페이지 아이콘(1289:66, 19px) — 한 사람 모양. */
-export function UserIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 19 19"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
-      <path
-        d="M9.5 9.65833C11.1615 9.65833 12.5083 8.31146 12.5083 6.65C12.5083 4.98854 11.1615 3.64167 9.5 3.64167C7.83854 3.64167 6.49167 4.98854 6.49167 6.65C6.49167 8.31146 7.83854 9.65833 9.5 9.65833Z"
-        stroke="currentColor"
-        strokeWidth="1.425"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeWidth="1.53"
       />
       <path
-        d="M3.8 16.15C3.8 14.6383 4.40053 13.1884 5.46949 12.1195C6.53845 11.0505 7.98827 10.45 9.5 10.45C11.0117 10.45 12.4616 11.0505 13.5305 12.1195C14.5995 13.1884 15.2 14.6383 15.2 16.15"
+        d="M2.7 16.2C2.7 12.12 4.8 10.08 9 10.08C13.2 10.08 15.3 12.12 15.3 16.2"
         stroke="currentColor"
-        strokeWidth="1.425"
+        strokeWidth="1.53"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </svg>
   );

@@ -53,7 +53,7 @@ export function AdminContentState(props: AdminContentStateProps) {
           aria-hidden="true"
           width={32}
           height={32}
-          className="size-8 dark:invert"
+          className="size-8"
         />
       </span>
 
@@ -76,7 +76,7 @@ export function AdminContentState(props: AdminContentStateProps) {
         <button
           type="button"
           onClick={props.onRetry}
-          className="rounded-control bg-admin-solid-bg px-6 py-[13px] text-[15px] font-medium text-admin-solid-text transition-colors hover:bg-admin-solid-bgHover"
+          className="rounded-control bg-admin-text px-6 py-[13px] text-[15px] font-medium text-white transition-colors hover:bg-admin-ghost-text"
         >
           다시 시도
         </button>

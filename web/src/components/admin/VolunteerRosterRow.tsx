@@ -41,7 +41,7 @@ export function VolunteerRosterRow({
         type="button"
         aria-label={`${student.name} 학생 상세`}
         onClick={() => onSelect?.(student.studentId)}
-        className="absolute inset-0 rounded-[inherit] transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+        className="absolute inset-0 rounded-[inherit] transition-colors hover:bg-black/[0.04]"
       />
 
       <div className="flex min-w-0 items-center justify-between whitespace-nowrap md:flex-col md:items-start md:justify-start md:gap-[3px] xl:flex-row xl:items-center xl:gap-3.5">
