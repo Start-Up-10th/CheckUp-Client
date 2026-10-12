@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { CameraPanel } from "@/components/admin/CameraPanel";
-import { successMessage } from "@/lib/admin/face-results";
+import { alreadyDoneMessage, successMessage } from "@/lib/admin/face-results";
 import { useFaceRecognition } from "@/lib/admin/use-face-recognition";
 import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { useCameraStream } from "@/lib/admin/use-camera-stream";
@@ -41,6 +41,16 @@ export function AdminFaceRecognition() {
       showToast({ variant: "success", message: successMessage(success) });
     }
   }, [success, showToast]);
+  // 이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 이미 처리됐다고 안내한다(DEC-073).
+  const alreadyDone = recognition.alreadyDone;
+  useEffect(() => {
+    if (alreadyDone) {
+      showToast({
+        variant: "neutral",
+        message: alreadyDoneMessage(alreadyDone),
+      });
+    }
+  }, [alreadyDone, showToast]);
   const serverFailed = recognition.status === "error" && status !== "error";
 
   return (
