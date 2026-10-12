@@ -1,4 +1,10 @@
 const DEVICES = {
+  desktop: {
+    label: "컴퓨터",
+    width: 1440,
+    height: 900,
+    radius: "rounded-[12px]",
+  },
   pad: { label: "패드", width: 768, height: 1024, radius: "rounded-[24px]" },
   phone: { label: "핸드폰", width: 390, height: 844, radius: "rounded-[44px]" },
 } as const;
@@ -16,6 +22,14 @@ const SCREENS = {
     label: "07 · 봉사자 명단 편집",
     src: "/admin/state-demo/preview-frame/volunteer-roster",
   },
+  students: {
+    label: "08 · 학생 관리",
+    src: "/admin/state-demo/preview-frame/students",
+  },
+  mypage: {
+    label: "09 · 마이페이지",
+    src: "/admin/state-demo/preview-frame/mypage",
+  },
 } as const;
 
 export type PreviewDevice = keyof typeof DEVICES;
@@ -32,7 +46,7 @@ export function DeviceFramePreview({
   screen: string | undefined;
 }) {
   const current: keyof typeof SCREENS =
-    screen === "roster" || screen === "home" ? screen : "duty";
+    screen && screen in SCREENS ? (screen as keyof typeof SCREENS) : "duty";
   const frame = DEVICES[device];
   const links = (Object.keys(SCREENS) as (keyof typeof SCREENS)[]).map(
     (key) => (
@@ -53,12 +67,17 @@ export function DeviceFramePreview({
   return (
     <div className="flex min-h-screen flex-col items-center gap-4 bg-[#e8e8e9] p-6">
       <nav className="flex flex-wrap items-center justify-center gap-2 text-sm">
-        <a
-          href={`/admin/state-demo/${device === "pad" ? "phone" : "pad"}?screen=${current}`}
-          className="rounded-full bg-[#17200a] px-4 py-2 font-bold text-white"
-        >
-          {device === "pad" ? "핸드폰으로 보기" : "패드로 보기"}
-        </a>
+        {(Object.keys(DEVICES) as PreviewDevice[])
+          .filter((key) => key !== device)
+          .map((key) => (
+            <a
+              key={key}
+              href={`/admin/state-demo/${key}?screen=${current}`}
+              className="rounded-full bg-[#17200a] px-4 py-2 font-bold text-white"
+            >
+              {DEVICES[key].label}으로 보기
+            </a>
+          ))}
         {links}
       </nav>
       <iframe
@@ -71,7 +90,7 @@ export function DeviceFramePreview({
       <p className="max-w-[640px] text-center text-xs text-admin-textMuted">
         폭 {frame.width}px 프레임이라 창 크기와 상관없이 {frame.label}{" "}
         레이아웃으로 보입니다. 프레임 안에서 06 ↔ 07 이동과 지정·완료를 해 볼 수
-        있고, 하단 메뉴·레일의 다른 항목은 로그인이 필요한 실제 화면으로 갑니다.
+        있고, 메뉴의 다른 항목은 로그인이 필요한 실제 화면으로 갑니다.
       </p>
     </div>
   );
