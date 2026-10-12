@@ -78,9 +78,12 @@ const CAPTURE_MS = 3000;
  */
 export function StudentFaceCapture({
   mode = "enroll",
+  doneHref = "/main",
 }: {
   /** `reset`: 마이페이지 `얼굴 재설정`으로 들어온 다시 등록. 이미 등록돼 있어도 홈으로 돌려보내지 않는다. */
   mode?: "enroll" | "reset";
+  /** 등록을 마친 뒤 갈 곳. 관리자 마이페이지 `얼굴 등록`으로 들어오면 관리자 마이페이지다. */
+  doneHref?: string;
 }) {
   const router = useRouter();
   const [entry, setEntry] = useState<Entry>("checking");
@@ -182,7 +185,7 @@ export function StudentFaceCapture({
           // 다시 등록이 409로 거절됐다(경합 등). 홈으로 보내지 않고 안내한다.
           setFailure("resetUnavailable");
         } else if (result === "registered" || result === "alreadyRegistered") {
-          router.push("/main");
+          router.push(doneHref);
         } else if (result === "consentRequired") {
           router.replace("/consent");
         } else if (result === "notEligible") {
