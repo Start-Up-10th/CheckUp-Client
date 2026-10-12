@@ -20,7 +20,7 @@ export function StudentFloorTabs({
     <div
       role="group"
       aria-label="층 변경"
-      className="flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 md:gap-1.5 md:rounded-[14px] md:p-[5px] xl:gap-2 xl:rounded-2xl xl:p-1.5"
+      className="flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 dark:bg-admin-divider md:gap-1.5 md:rounded-[14px] md:p-[5px] xl:gap-2 xl:rounded-2xl xl:p-1.5"
     >
       {FLOORS.map((floor) => {
         const active = floor === selected;
