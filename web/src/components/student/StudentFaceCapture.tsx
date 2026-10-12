@@ -46,9 +46,9 @@ const FAILURE_MESSAGES: Record<Failure, string> = {
   failed: "얼굴 등록에 실패했습니다. 다시 시도해 주세요.",
   notStudent: "학생 계정만 이용할 수 있어요.",
   rateLimited: RATE_LIMIT_MESSAGE,
-  // 서버가 이미 등록됐다고(409) 거절한 다시 등록. 서버에 다시 등록 API가 없을 때 나온다(DEC-067).
+  // 다시 등록이 409(동시 요청 경합 같은 예외)로 거절됐을 때. 서버는 재등록을 허용하므로 일시 오류로 안내한다(DEC-072).
   resetUnavailable:
-    "지금은 얼굴을 다시 등록할 수 없어요. 관리자에게 문의해 주세요.",
+    "얼굴을 다시 등록하지 못했어요. 잠시 후 다시 시도해 주세요.",
 };
 
 const COUNTDOWN_FROM = 3;
@@ -179,7 +179,7 @@ export function StudentFaceCapture({
     enrollFace(video)
       .then((result) => {
         if (result === "alreadyRegistered" && mode === "reset") {
-          // 다시 등록은 서버가 이미 등록됐다고 거절했다. 홈으로 보내지 않고 안내한다.
+          // 다시 등록이 409로 거절됐다(경합 등). 홈으로 보내지 않고 안내한다.
           setFailure("resetUnavailable");
         } else if (result === "registered" || result === "alreadyRegistered") {
           router.push("/main");
