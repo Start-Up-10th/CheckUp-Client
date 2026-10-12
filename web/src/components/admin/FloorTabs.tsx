@@ -16,7 +16,7 @@ type FloorTabsProps = {
 export function FloorTabs({ selected, onSelect, className }: FloorTabsProps) {
   return (
     <div
-      className={`flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 md:gap-1.5 md:rounded-[14px] md:p-[5px] xl:gap-2 xl:rounded-[16px] xl:p-1.5 ${className ?? ""}`}
+      className={`flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 dark:bg-admin-divider md:gap-1.5 md:rounded-[14px] md:p-[5px] xl:gap-2 xl:rounded-[16px] xl:p-1.5 ${className ?? ""}`}
     >
       {FLOORS.map((floor) => {
         const active = floor === selected;
@@ -26,10 +26,10 @@ export function FloorTabs({ selected, onSelect, className }: FloorTabsProps) {
             type="button"
             aria-pressed={active}
             onClick={() => onSelect(floor)}
-            className={`rounded-lg px-3 py-[7px] text-xs leading-[14px] md:rounded-[10px] md:border md:px-[15px] md:py-2 md:text-sm md:font-medium md:leading-[17px] xl:rounded-control xl:border-transparent xl:px-[22px] xl:py-2.5 ${
+            className={`rounded-lg px-3 py-[7px] text-xs leading-[14px] md:rounded-[10px] md:border md:px-[15px] md:py-2 md:text-sm md:font-medium md:leading-[17px] xl:rounded-control xl:border-0 xl:px-[22px] xl:py-2.5 ${
               active
                 ? "bg-admin-attendance-bg font-bold text-admin-attendance-text md:border-admin-attendance-border xl:font-bold"
-                : "bg-admin-surface font-normal text-admin-ghost-text transition hover:brightness-95 md:border-transparent xl:font-normal xl:text-[#3a3a3c]"
+                : "bg-admin-surface font-normal text-admin-ghost-text transition hover:brightness-95 md:border-transparent xl:font-normal xl:text-admin-ghost-text"
             }`}
           >
             {floor}층

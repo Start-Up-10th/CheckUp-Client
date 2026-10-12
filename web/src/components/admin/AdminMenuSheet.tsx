@@ -46,7 +46,7 @@ type AdminMenuSheetProps = {
 
 /**
  * Figma 관리자-핸드폰 `공통 · 메뉴 시트`: 하단 바의 메뉴 탭을 누르면 하단 바 위로 올라오는 시트다. QR 코드 생성 /
- * 얼굴 인식 생성 / 봉사자 관리 / 학생 관리와 구분선 아래 로그아웃이 있다. 지금 화면의 메뉴는 연두색이다.
+ * 얼굴 인식 생성 / 봉사자 관리 / 학생 관리 / 마이페이지와 구분선 아래 로그아웃이 있다. 지금 화면의 메뉴는 연두색이다.
  */
 export function AdminMenuSheet({
   pathname,
@@ -63,7 +63,7 @@ export function AdminMenuSheet({
 
   return (
     <div
-      className="fixed inset-x-0 bottom-[60px] top-0 z-30 flex flex-col justify-end bg-[#1c1c1e]/45 md:hidden"
+      className="fixed inset-x-0 bottom-[60px] top-0 z-30 flex flex-col justify-end bg-[#1c1c1e]/45 dark:bg-black/60 md:hidden"
       role="presentation"
       onClick={onClose}
     >
