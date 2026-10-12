@@ -645,7 +645,7 @@
       "then": [
         "토글을 누르면 화면이 다크 모드로 바뀌고 다시 누르면 라이트 모드로 돌아온다",
         "학생 마이페이지에는 얼굴 재설정 아래에 화면 모드 줄이 있고 토글 모양은 Figma ModeToggle과 같다",
-        "다크를 고른 채 관리자 화면(/admin)으로 가면 라이트로 보이고 학생 화면으로 돌아오면 다시 다크다",
+        "다크를 골라 둔 채 관리자 화면(/admin)으로 가도 같은 다크 모드로 보이고, 관리자 마이페이지의 `화면 모드` 줄로도 바꿀 수 있다",
         "새로 고쳐도 고른 모드가 유지되고 처음부터 그 모드로 그린다",
         "고른 적이 없으면 기기 설정을 따른다",
         "고른 모드는 브라우저에만 저장되고 서버로 보내지 않는다"
@@ -658,7 +658,7 @@
         "web/src/app/layout.tsx",
         "web/src/components/ModeToggle.tsx",
         "web/src/components/student/ThemeMenuRow.tsx",
-        "web/src/components/ThemeRouteSync.tsx"
+        "web/src/components/admin/AdminMyPage.tsx"
       ],
       "evidence": [
         "web/src/lib/theme.test.ts",
