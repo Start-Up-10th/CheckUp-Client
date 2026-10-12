@@ -23,13 +23,13 @@ export function CameraPanel({
   return (
     <div className="flex h-full w-full flex-col gap-3 rounded-[18px] bg-[#1c1c1e] p-4 md:gap-[14px] md:p-5 xl:gap-[18px] xl:rounded-[20px] xl:p-6">
       <div className="flex w-full items-center justify-between">
-        <p className="text-xs leading-[14px] text-white/70 md:text-sm md:leading-[17px]">
+        <p className="text-xs leading-[14px] text-white md:text-sm md:leading-[17px] md:text-white/70">
           카메라 화면
         </p>
         {live && (
           <div className="flex items-center gap-1.5 md:gap-2">
             <span className="size-1.5 rounded-full bg-admin-accent-bg md:size-[7px]" />
-            <span className="text-[10px] leading-3 text-admin-accent-bg md:text-xs">
+            <span className="text-[10px] leading-3 text-admin-accent-bg md:text-xs md:text-white xl:text-admin-accent-bg">
               LIVE
             </span>
           </div>
