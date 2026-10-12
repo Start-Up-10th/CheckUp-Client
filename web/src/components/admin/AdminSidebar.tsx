@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LogoutIcon } from "@/components/icons/AdminNavIcons";
 import { ADMIN_NAV_ITEMS, isAdminNavActive } from "@/lib/admin/nav-items";
 import { useAdminLogout } from "@/lib/admin/use-admin-logout";
+import { AdminThemeToggle } from "./AdminThemeToggle";
 
 /** 반응형 기준: 1280px 이상(관리자-컴퓨터) — 라벨 있는 좌측 고정 사이드바 300px. */
 export function AdminSidebar() {
@@ -12,7 +13,7 @@ export function AdminSidebar() {
   const logout = useAdminLogout();
 
   return (
-    <aside className="hidden h-full w-[300px] shrink-0 flex-col bg-admin-surface px-4 py-6 shadow-[inset_-1px_0_0_#e3e3e5] xl:flex">
+    <aside className="hidden h-full w-[300px] shrink-0 flex-col bg-admin-surface px-4 py-6 shadow-[inset_-1px_0_0_rgb(var(--admin-border))] xl:flex">
       <div className="flex flex-col gap-0.5 overflow-hidden px-2 pb-6">
         <p className="font-mono text-[10px] leading-[13px] tracking-[2px] text-admin-textFaint">
           ADMIN
@@ -45,6 +46,7 @@ export function AdminSidebar() {
 
       <div className="flex-1" />
 
+      <AdminThemeToggle placement="sidebar" />
       <button
         type="button"
         onClick={logout}

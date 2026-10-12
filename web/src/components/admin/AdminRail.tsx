@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LogoutIcon } from "@/components/icons/AdminNavIcons";
 import { ADMIN_NAV_ITEMS, isAdminNavActive } from "@/lib/admin/nav-items";
 import { useAdminLogout } from "@/lib/admin/use-admin-logout";
+import { AdminThemeToggle } from "./AdminThemeToggle";
 
 /**
  * 반응형 기준: 768~1279px(관리자-패드) — 좌측 96px 아이콘 레일(오른쪽 선 1px은 안쪽에 그려 항목 폭 76px을 유지한다). 메뉴는 위에, 로그아웃은 맨 아래다(Figma 08 패드 레일).
@@ -16,7 +17,7 @@ export function AdminRail({ activePath }: { activePath?: string }) {
   const logout = useAdminLogout();
 
   return (
-    <aside className="hidden h-full w-[96px] shrink-0 shadow-[inset_-1px_0_0_#e3e3e5] md:flex xl:hidden">
+    <aside className="hidden h-full w-[96px] shrink-0 shadow-[inset_-1px_0_0_rgb(var(--admin-border))] md:flex xl:hidden">
       <div className="flex w-full flex-col items-center gap-2.5 bg-admin-surface px-2.5 py-[22px]">
         <div aria-hidden="true" className="h-3.5 w-px shrink-0" />
         <nav className="flex w-full flex-col items-center gap-2.5">
@@ -43,6 +44,7 @@ export function AdminRail({ activePath }: { activePath?: string }) {
 
         <div className="min-h-0 w-full flex-1" />
 
+        <AdminThemeToggle placement="rail" />
         <button
           type="button"
           aria-label="로그아웃"
