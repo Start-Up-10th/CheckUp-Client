@@ -332,7 +332,7 @@ describe("StudentFaceCapture 완료", () => {
       expect(mocks.router.push).toHaveBeenCalledWith("/main");
     });
 
-    it("서버가 이미 등록됐다고(409) 거절하면 홈으로 보내지 않고 다시 등록할 수 없다고 알린다", async () => {
+    it("409로 거절되면 홈으로 보내지 않고 다시 시도하라고 알린다", async () => {
       mockApi(ENROLLED, [
         { status: 409, body: { code: "FACE_ALREADY_REGISTERED" } },
       ]);
@@ -344,7 +344,7 @@ describe("StudentFaceCapture 완료", () => {
       expect(mocks.router.push).not.toHaveBeenCalledWith("/main");
       expect(
         screen.getByText(
-          "지금은 얼굴을 다시 등록할 수 없어요. 관리자에게 문의해 주세요.",
+          "얼굴을 다시 등록하지 못했어요. 잠시 후 다시 시도해 주세요.",
         ),
       ).toBeInTheDocument();
     });
