@@ -4,6 +4,7 @@ import {
   QR_NOTICE_ATTEMPTS,
   TRACK_MEMORY_MS,
   applyFrame,
+  alreadyDoneMessage,
   successMessage,
   type RecognitionState,
 } from "./face-results";
@@ -49,19 +50,62 @@ describe("applyFrame 성공", () => {
     expect(failure).toBe(false);
   });
 
-  it("이미 출석한 학생(DUPLICATE)도 성공 안내는 낸다", () => {
-    const { success } = run(INITIAL_RECOGNITION, [
+  it("이미 출석해 있던 학생(DUPLICATE)은 성공이 아니라 이미 처리됨으로 알린다", () => {
+    const { success, alreadyDone } = run(INITIAL_RECOGNITION, [
       known({ attendance: "DUPLICATE" }),
     ]);
 
+    expect(success).toBe(null);
+    expect(alreadyDone).toBe("2405 김도현");
+    expect(alreadyDoneMessage("2405 김도현")).toBe(
+      "이미 처리됐어요 · 2405 김도현",
+    );
+  });
+
+  it("이번에 기록된 학생(RECORDED)은 성공이고 이미 처리됨은 아니다", () => {
+    const { success, alreadyDone } = run(INITIAL_RECOGNITION, [known()]);
+
     expect(success).toBe("2405 김도현");
+    expect(alreadyDone).toBe(null);
+  });
+
+  it("같은 얼굴이 계속 서 있어도 성공 뒤에 곧바로 이미 처리됨으로 바뀌지 않는다", () => {
+    const first = run(INITIAL_RECOGNITION, [known()]);
+    const next = run(first.state, [known({ attendance: "DUPLICATE" })]);
+
+    expect(first.success).toBe("2405 김도현");
+    expect(next.success).toBe(null);
+    expect(next.alreadyDone).toBe(null);
+  });
+
+  it("이미 처리됨은 같은 얼굴 트랙에서 한 번만 알린다", () => {
+    const first = run(INITIAL_RECOGNITION, [
+      known({ attendance: "DUPLICATE" }),
+    ]);
+    const next = run(first.state, [known({ attendance: "DUPLICATE" })]);
+
+    expect(first.alreadyDone).toBe("2405 김도현");
+    expect(next.alreadyDone).toBe(null);
+  });
+
+  it("성공한 학생이 나갔다 다른 트랙으로 다시 인식되면 이미 처리됨으로 알린다", () => {
+    const first = run(INITIAL_RECOGNITION, [known({ trackId: "a" })]);
+    const later = new Date(NOW.getTime() + TRACK_MEMORY_MS + 1);
+    const again = run(
+      first.state,
+      [known({ trackId: "b", attendance: "DUPLICATE" })],
+      later,
+    );
+
+    expect(again.success).toBe(null);
+    expect(again.alreadyDone).toBe("2405 김도현");
   });
 
   it("서버가 거절한 출석(STALE·REJECTED)은 성공으로 세지 않는다", () => {
     for (const attendance of ["STALE", "REJECTED"] as const) {
-      expect(run(INITIAL_RECOGNITION, [known({ attendance })]).success).toBe(
-        null,
-      );
+      const outcome = run(INITIAL_RECOGNITION, [known({ attendance })]);
+      expect(outcome.success).toBe(null);
+      expect(outcome.alreadyDone).toBe(null);
     }
   });
 

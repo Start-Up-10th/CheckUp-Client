@@ -59,6 +59,8 @@ export function useFaceRecognition({
   const [status, setStatus] = useState<FaceSessionStatus>("starting");
   const [qrNotice, setQrNotice] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  // 이미 출석 처리된 학생을 다시 인식했을 때의 `학번 이름`(DEC-073). 성공과 따로 잠깐 보인다.
+  const [alreadyDone, setAlreadyDone] = useState<string | null>(null);
   const [failure, setFailure] = useState(false);
   // 서버가 요청이 너무 많다고(429) 한 동안 true다. 다음 프레임 응답이 오면 false로 돌아온다.
   const [rateLimited, setRateLimited] = useState(false);
@@ -74,6 +76,7 @@ export function useFaceRecognition({
     const timers = new Set<ReturnType<typeof setTimeout>>();
     let qrTimer: ReturnType<typeof setTimeout> | undefined;
     let successTimer: ReturnType<typeof setTimeout> | undefined;
+    let alreadyTimer: ReturnType<typeof setTimeout> | undefined;
     let failureTimer: ReturnType<typeof setTimeout> | undefined;
 
     function sleep(ms: number): Promise<void> {
@@ -165,6 +168,15 @@ export function useFaceRecognition({
                 successTimer,
               );
             }
+            const already = outcome.alreadyDone;
+            if (already) {
+              alreadyTimer = hold(
+                () => setAlreadyDone(already),
+                () => setAlreadyDone(null),
+                SUCCESS_HOLD_MS,
+                alreadyTimer,
+              );
+            }
             if (outcome.qrRecommended) {
               qrActive = true;
               qrTimer = hold(
@@ -241,6 +253,7 @@ export function useFaceRecognition({
     setStatus("starting");
     setQrNotice(false);
     setSuccess(null);
+    setAlreadyDone(null);
     setFailure(false);
     setRateLimited(false);
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -262,10 +275,19 @@ export function useFaceRecognition({
       timers.forEach(clearTimeout);
       clearTimeout(qrTimer);
       clearTimeout(successTimer);
+      clearTimeout(alreadyTimer);
       clearTimeout(failureTimer);
       closeCurrentSession();
     };
   }, [cameraReady, purpose, gateway, attempt, capture, intervalMs, videoRef]);
 
-  return { status, qrNotice, success, failure, rateLimited, retry };
+  return {
+    status,
+    qrNotice,
+    success,
+    alreadyDone,
+    failure,
+    rateLimited,
+    retry,
+  };
 }
