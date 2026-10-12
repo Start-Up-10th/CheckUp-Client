@@ -54,7 +54,7 @@ export function StatusBanner({
         // REQ-UI-006: 성공은 체크 아이콘, 오류·안내는 점. 아이콘은 글자 줄(16px)과 같아 배너 높이는 그대로다.
         <span
           aria-hidden="true"
-          className={`flex size-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold leading-none text-white ${style.dot}`}
+          className={`flex size-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold leading-none text-admin-surface ${style.dot}`}
         >
           ✓
         </span>
@@ -72,7 +72,7 @@ export function StatusBanner({
         <button
           type="button"
           onClick={action.onClick}
-          className={`ml-1 shrink-0 rounded-lg bg-admin-text py-1 text-white transition-colors hover:bg-admin-ghost-text ${compactOnPhone ? "px-2.5 text-[11px] leading-4 md:px-3 md:text-xs" : "px-3 text-xs leading-4"}`}
+          className={`ml-1 shrink-0 rounded-lg bg-admin-solid-bg py-1 text-admin-solid-text transition-colors hover:bg-admin-solid-bgHover ${compactOnPhone ? "px-2.5 text-[11px] leading-4 md:px-3 md:text-xs" : "px-3 text-xs leading-4"}`}
         >
           {action.label}
         </button>

@@ -29,7 +29,7 @@ export function StudentLogin({
   };
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-[#f5f5f7] px-4 md:bg-admin-bg">
+    <main className="flex min-h-dvh items-center justify-center bg-[#f5f5f7] dark:bg-admin-bg px-4 md:bg-admin-bg">
       <LoginCard>
         <DataGsmLoginButton onClick={login} />
       </LoginCard>

@@ -13,7 +13,7 @@ export function AdminFloorPlanSkeleton() {
           <div className="h-[26px] w-28 rounded-lg bg-admin-bg md:h-[39px] md:w-36" />
         </div>
         {/* FloorTabs: 모든 폭에서 회색 트랙 안 세그먼트 */}
-        <div className="flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 md:gap-1.5 md:rounded-[14px] md:p-[5px] xl:gap-2 xl:rounded-[16px] xl:p-1.5">
+        <div className="flex items-start gap-1 rounded-[11px] bg-[#e6e6e8] p-1 dark:bg-admin-bg md:gap-1.5 md:rounded-[14px] md:p-[5px] xl:gap-2 xl:rounded-[16px] xl:p-1.5">
           {[0, 1, 2].map((i) => (
             <div
               key={i}

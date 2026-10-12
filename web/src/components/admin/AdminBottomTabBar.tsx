@@ -54,14 +54,16 @@ export function AdminBottomTabBar({ activePath }: { activePath?: string }) {
           onLogout={logout}
         />
       ) : null}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-[60px] items-stretch bg-admin-surface shadow-[inset_0_1px_0_0_#e3e3e5] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-[60px] items-stretch bg-admin-surface shadow-[inset_0_1px_0_0_rgb(var(--admin-border))] md:hidden">
         <Link
           href="/admin"
           aria-label="홈"
           aria-current={homeActive ? "page" : undefined}
           onClick={() => setOpenedAt(null)}
           className={`flex flex-1 items-center justify-center ${
-            homeActive ? "text-admin-attendance-text" : "text-[#b9b9be]"
+            homeActive
+              ? "text-admin-attendance-text"
+              : "text-[#b9b9be] dark:text-admin-textFaint"
           }`}
         >
           <TabIcon src="/icons/tab/home.svg" />
@@ -72,7 +74,9 @@ export function AdminBottomTabBar({ activePath }: { activePath?: string }) {
           aria-expanded={menuOpen}
           onClick={() => setOpenedAt(menuOpen ? null : pathname)}
           className={`flex flex-1 items-center justify-center ${
-            homeActive ? "text-[#b9b9be]" : "text-admin-attendance-text"
+            homeActive
+              ? "text-[#b9b9be] dark:text-admin-textFaint"
+              : "text-admin-attendance-text"
           }`}
         >
           <TabIcon src="/icons/tab/menu.svg" />
