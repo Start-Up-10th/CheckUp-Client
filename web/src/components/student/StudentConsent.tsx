@@ -112,7 +112,7 @@ export function StudentConsent() {
   };
 
   return (
-    <main className="flex min-h-dvh flex-col bg-[#f5f5f7] px-[18px] pb-7 pt-[43px] md:items-center md:justify-center md:bg-admin-bg md:p-0">
+    <main className="flex min-h-dvh flex-col bg-[#f5f5f7] dark:bg-admin-bg px-[18px] pb-7 pt-[43px] md:items-center md:justify-center md:bg-admin-bg md:p-0">
       <div className="flex flex-1 flex-col justify-between md:w-[520px] md:flex-none md:justify-start md:gap-2.5">
         <div className="flex flex-col gap-1.5 md:gap-2.5">
           <h1 className="text-lg font-bold leading-normal text-admin-text md:text-[22px]">

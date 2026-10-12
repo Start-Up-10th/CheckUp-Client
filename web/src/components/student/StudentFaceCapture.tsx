@@ -271,7 +271,7 @@ export function StudentFaceCapture({
           </div>
         ) : (
           <>
-            <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[#f0f0f1] md:aspect-[4/3] md:flex-none md:rounded-3xl">
+            <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[#f0f0f1] dark:bg-admin-rowSurface md:aspect-[4/3] md:flex-none md:rounded-3xl">
               <video
                 ref={videoRef}
                 autoPlay

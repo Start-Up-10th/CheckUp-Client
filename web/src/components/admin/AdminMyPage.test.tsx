@@ -38,8 +38,6 @@ describe("AdminMyPage", () => {
       "true",
     );
     expect(document.documentElement.dataset.theme).toBe("dark");
-    expect(window.localStorage.getItem("checkup-admin-screen-mode")).toBe(
-      "dark",
-    );
+    expect(window.localStorage.getItem("checkup-theme")).toBe("dark");
   });
 });

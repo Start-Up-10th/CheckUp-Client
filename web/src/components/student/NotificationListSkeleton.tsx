@@ -8,7 +8,10 @@ export function NotificationListSkeleton() {
     <div role="status" aria-label="알림을 불러오는 중">
       <div aria-hidden="true" className="flex flex-col gap-4 md:gap-5">
         {Array.from({ length: 5 }, (_, i) => (
-          <div key={i} className="h-[52px] rounded-control bg-[#e7e7e9]" />
+          <div
+            key={i}
+            className="h-[52px] rounded-control bg-[#e7e7e9] dark:bg-admin-divider"
+          />
         ))}
       </div>
     </div>

@@ -26,7 +26,7 @@ export function RootRedirect() {
   }, []);
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-[#f5f5f7] md:bg-admin-bg">
+    <main className="flex min-h-dvh items-center justify-center bg-[#f5f5f7] dark:bg-admin-bg md:bg-admin-bg">
       <p role="status" className="sr-only">
         불러오는 중
       </p>

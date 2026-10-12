@@ -78,8 +78,73 @@
   font-display: swap;
 }
 
+/**
+ * 색 토큰(tailwind.config.ts의 `admin-*`)의 실제 값. RGB 세 숫자로 적어 `bg-admin-text/45`처럼 투명도를 붙일 수 있다.
+ * 라이트 값은 Figma 스타일 가이드 그대로다. 다크 값은 Figma에 없어 작업자가 정했다(DEC-074).
+ * 모드는 <html data-theme>로 정한다. 첫 화면을 그리기 전에 lib/theme.ts의 스크립트가 붙인다.
+ */
+:root {
+  color-scheme: light;
+  --admin-bg: 242 242 243; /* #f2f2f3 */
+  --admin-surface: 255 255 255; /* #ffffff */
+  --admin-row-surface: 246 246 247; /* #f6f6f7 */
+  --admin-divider: 235 235 237; /* #ebebed */
+  --admin-border: 227 227 229; /* #e3e3e5 */
+  --admin-text: 28 28 30; /* #1c1c1e */
+  --admin-text-muted: 142 142 147; /* #8e8e93 */
+  --admin-text-faint: 165 165 170; /* #a5a5aa */
+  --admin-text-secondary: 110 110 115; /* #6e6e73 */
+  --admin-attendance-bg: 244 251 226; /* #f4fbe2 */
+  --admin-attendance-border: 220 239 173; /* #dcefad */
+  --admin-attendance-text: 78 112 16; /* #4e7010 */
+  --admin-attendance-text-muted: 107 143 34; /* #6b8f22 */
+  --admin-absence-bg: 242 242 243; /* #f2f2f3 */
+  --admin-absence-border: 227 227 229; /* #e3e3e5 */
+  --admin-absence-text: 142 142 147; /* #8e8e93 */
+  --admin-danger-bg: 253 236 235; /* #fdeceb */
+  --admin-danger-border: 243 207 203; /* #f3cfcb */
+  --admin-danger-text: 192 57 43; /* #c0392b */
+  --admin-accent-bg: 185 238 132; /* #b9ee84 */
+  --admin-accent-text: 23 32 10; /* #17200a */
+  --admin-ghost-bg: 244 244 245; /* #f4f4f5 */
+  --admin-ghost-text: 58 58 60; /* #3a3a3c */
+  --admin-solid-bg: 28 28 30; /* #1c1c1e */
+  --admin-solid-bg-hover: 58 58 60; /* #3a3a3c */
+  --admin-solid-text: 255 255 255; /* #ffffff */
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --admin-bg: 17 17 19; /* #111113 */
+  --admin-surface: 28 28 30; /* #1c1c1e */
+  --admin-row-surface: 36 36 38; /* #242426 */
+  --admin-divider: 44 44 46; /* #2c2c2e */
+  --admin-border: 58 58 60; /* #3a3a3c */
+  --admin-text: 242 242 243; /* #f2f2f3 */
+  --admin-text-muted: 152 152 157; /* #98989d */
+  --admin-text-faint: 119 119 124; /* #77777c */
+  --admin-text-secondary: 174 174 178; /* #aeaeb2 */
+  --admin-attendance-bg: 31 42 16; /* #1f2a10 */
+  --admin-attendance-border: 58 79 24; /* #3a4f18 */
+  --admin-attendance-text: 185 238 132; /* #b9ee84 */
+  --admin-attendance-text-muted: 156 201 101; /* #9cc965 */
+  --admin-absence-bg: 36 36 38; /* #242426 */
+  --admin-absence-border: 58 58 60; /* #3a3a3c */
+  --admin-absence-text: 152 152 157; /* #98989d */
+  --admin-danger-bg: 58 26 23; /* #3a1a17 */
+  --admin-danger-border: 92 42 37; /* #5c2a25 */
+  --admin-danger-text: 255 138 122; /* #ff8a7a */
+  --admin-accent-bg: 185 238 132; /* #b9ee84 */
+  --admin-accent-text: 23 32 10; /* #17200a */
+  --admin-ghost-bg: 44 44 46; /* #2c2c2e */
+  --admin-ghost-text: 209 209 214; /* #d1d1d6 */
+  --admin-solid-bg: 242 242 243; /* #f2f2f3 */
+  --admin-solid-bg-hover: 209 209 214; /* #d1d1d6 */
+  --admin-solid-text: 28 28 30; /* #1c1c1e */
+}
+
 body {
-  background-color: #f2f2f3;
+  background-color: rgb(var(--admin-bg));
 }
 
 /*
