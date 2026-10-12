@@ -46,7 +46,10 @@ export function AdminMyPage() {
             className={`${ROW} transition-colors hover:bg-admin-rowSurface`}
           >
             <span>얼굴 등록</span>
-            <span aria-hidden="true" className="text-[#b9b9be]">
+            <span
+              aria-hidden="true"
+              className="text-[#b9b9be] dark:text-admin-textFaint"
+            >
               ›
             </span>
           </Link>

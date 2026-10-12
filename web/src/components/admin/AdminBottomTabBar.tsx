@@ -61,7 +61,9 @@ export function AdminBottomTabBar({ activePath }: { activePath?: string }) {
           aria-current={homeActive ? "page" : undefined}
           onClick={() => setOpenedAt(null)}
           className={`flex flex-1 items-center justify-center ${
-            homeActive ? "text-admin-attendance-text" : "text-[#b9b9be]"
+            homeActive
+              ? "text-admin-attendance-text"
+              : "text-[#b9b9be] dark:text-admin-textFaint"
           }`}
         >
           <TabIcon src="/icons/tab/home.svg" />
@@ -72,7 +74,9 @@ export function AdminBottomTabBar({ activePath }: { activePath?: string }) {
           aria-expanded={menuOpen}
           onClick={() => setOpenedAt(menuOpen ? null : pathname)}
           className={`flex flex-1 items-center justify-center ${
-            homeActive ? "text-[#b9b9be]" : "text-admin-attendance-text"
+            homeActive
+              ? "text-[#b9b9be] dark:text-admin-textFaint"
+              : "text-admin-attendance-text"
           }`}
         >
           <TabIcon src="/icons/tab/menu.svg" />

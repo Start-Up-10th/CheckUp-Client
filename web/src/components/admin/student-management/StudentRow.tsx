@@ -43,7 +43,10 @@ export function StudentRow({ student, onSelect }: StudentRowProps) {
         <span className="text-[13px] font-bold leading-4 text-admin-text xl:text-sm xl:leading-[17px]">
           {student.count}회
         </span>
-        <span aria-hidden="true" className="text-xl leading-6 text-[#c7c7ca]">
+        <span
+          aria-hidden="true"
+          className="text-xl leading-6 text-[#c7c7ca] dark:text-admin-textFaint"
+        >
           ›
         </span>
       </span>
