@@ -48,7 +48,7 @@ export function AdminSidebar() {
       <button
         type="button"
         onClick={logout}
-        className="flex items-center justify-center gap-2.5 rounded-control bg-admin-danger-bg px-3.5 py-3 text-sm font-medium text-admin-danger-text transition-colors hover:bg-admin-danger-border"
+        className="flex h-[42px] items-center gap-2.5 rounded-control bg-admin-danger-bg px-3 text-sm font-normal text-admin-danger-text transition-colors hover:bg-admin-danger-border"
       >
         <LogoutIcon className="size-[18px]" />
         <span className="leading-[17px]">로그아웃</span>
