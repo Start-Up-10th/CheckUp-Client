@@ -26,7 +26,7 @@ export function FloorTabs({ selected, onSelect, className }: FloorTabsProps) {
             type="button"
             aria-pressed={active}
             onClick={() => onSelect(floor)}
-            className={`rounded-lg px-3 py-[7px] text-xs leading-[14px] md:rounded-[10px] md:border md:px-[15px] md:py-2 md:text-sm md:font-medium md:leading-[17px] xl:rounded-control xl:border-transparent xl:px-[22px] xl:py-2.5 ${
+            className={`rounded-lg px-3 py-[7px] text-xs leading-[14px] md:rounded-[10px] md:border md:px-[15px] md:py-2 md:text-sm md:font-medium md:leading-[17px] xl:rounded-control xl:border-0 xl:px-[22px] xl:py-2.5 ${
               active
                 ? "bg-admin-attendance-bg font-bold text-admin-attendance-text md:border-admin-attendance-border xl:font-bold"
                 : "bg-admin-surface font-normal text-admin-ghost-text transition hover:brightness-95 md:border-transparent xl:font-normal xl:text-[#3a3a3c]"
