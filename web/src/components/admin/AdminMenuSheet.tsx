@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { ADMIN_NAV_ITEMS, isAdminNavActive } from "@/lib/admin/nav-items";
-import { AdminThemeToggle } from "./AdminThemeToggle";
 
 type MenuIconProps = {
   src: string;
@@ -47,7 +46,7 @@ type AdminMenuSheetProps = {
 
 /**
  * Figma 관리자-핸드폰 `공통 · 메뉴 시트`: 하단 바의 메뉴 탭을 누르면 하단 바 위로 올라오는 시트다. QR 코드 생성 /
- * 얼굴 인식 생성 / 봉사자 관리 / 학생 관리와 구분선 아래 화면 모드 전환(REQ-UI-008)과 로그아웃이 있다. 지금 화면의 메뉴는 연두색이다.
+ * 얼굴 인식 생성 / 봉사자 관리 / 학생 관리 / 마이페이지와 구분선 아래 로그아웃이 있다. 지금 화면의 메뉴는 연두색이다.
  */
 export function AdminMenuSheet({
   pathname,
@@ -107,9 +106,6 @@ export function AdminMenuSheet({
         })}
 
         <div className="h-px w-full bg-admin-divider" />
-
-        <AdminThemeToggle placement="sheet" />
-
         <button
           type="button"
           onClick={() => {

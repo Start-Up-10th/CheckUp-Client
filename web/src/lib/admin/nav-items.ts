@@ -2,8 +2,9 @@ import type { ComponentType, SVGProps } from "react";
 import {
   FaceScanIcon,
   HomeIcon,
-  PeopleIcon,
   QrCodeIcon,
+  UserIcon,
+  UsersIcon,
   VolunteerIcon,
 } from "@/components/icons/AdminNavIcons";
 
@@ -21,7 +22,7 @@ export type AdminNavItem = {
 };
 
 /**
- * REQ-UI-005: 메뉴는 홈/QR 코드 생성/얼굴 인식 생성/봉사자 관리/학생 관리이며, 반응형 3단계에서 메뉴 구성은 동일하다.
+ * REQ-UI-005: 메뉴는 홈/QR 코드 생성/얼굴 인식 생성/봉사자 관리/학생 관리/마이페이지이며, 반응형 3단계에서 메뉴 구성은 동일하다.
  * 핸드폰은 홈과 메뉴 시트로 나눠 보여 준다.
  */
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
@@ -56,8 +57,15 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     href: "/admin/students",
     label: "학생 관리",
     shortLabel: "학생",
-    icon: PeopleIcon,
+    icon: UsersIcon,
     sheetIcon: { src: "/icons/menu/students.svg", size: 20 },
+  },
+  {
+    href: "/admin/mypage",
+    label: "마이페이지",
+    shortLabel: "마이",
+    icon: UserIcon,
+    sheetIcon: { src: "/icons/menu/mypage.svg", size: 20 },
   },
 ];
 
