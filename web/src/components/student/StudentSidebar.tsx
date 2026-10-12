@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import type { CurrentStudentProfile } from "@/lib/student/current-student";
 import { useLogout } from "@/lib/student/use-logout";
 import { MaskIcon } from "./MaskIcon";
+import { ThemedImg } from "./ThemedImg";
 import { StudentSidebarLink, type SidebarTone } from "./StudentSidebarLink";
 
 // subPaths: 그 메뉴 안에서 들어가는 하위 화면. 거기 있을 때도 메뉴를 초록으로 강조한다
@@ -54,7 +55,7 @@ export function StudentSidebar({
   return (
     <aside
       className={`hidden h-dvh w-60 shrink-0 flex-col gap-1 px-5 pb-6 pt-7 md:sticky md:top-0 md:flex ${
-        dark ? "bg-admin-text" : "border-r border-admin-border bg-admin-surface"
+        dark ? "bg-admin-ink" : "border-r border-admin-border bg-admin-surface"
       }`}
     >
       <div
@@ -111,18 +112,15 @@ export function StudentSidebar({
           tone={tone}
           icon={
             hasUnreadNotification ? (
-              // eslint-disable-next-line @next/next/no-img-element -- 빨간 점 색을 유지해야 해서 mask 대신 원본 SVG를 그대로 쓴다
-              <img
-                src={
+              // 빨간 점 색을 유지해야 해서 mask 대신 원본 SVG를 그대로 쓴다. 다크 모드에서는 회색 선 종을 쓴다.
+              <ThemedImg
+                lightSrc={
                   dark
                     ? "/icons/student-nav/bell-unread-dark.svg"
                     : "/icons/student-nav/bell-unread.svg"
                 }
-                alt=""
-                aria-hidden="true"
-                width={19}
-                height={19}
-                className="size-[19px] shrink-0"
+                darkSrc="/icons/student-nav/bell-unread-dark.svg"
+                size={19}
               />
             ) : (
               <MaskIcon

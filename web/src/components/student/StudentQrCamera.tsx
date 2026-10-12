@@ -170,7 +170,7 @@ export function StudentQrCamera() {
 
   return (
     <StudentShell showTabBar={false} sidebarTone="dark">
-      <main className="flex flex-1 flex-col bg-admin-text">
+      <main className="flex flex-1 flex-col bg-admin-ink">
         <QrCameraHeader />
         <div className="flex flex-1 flex-col items-center justify-center gap-[30px] px-[18px] pb-10 md:gap-6">
           <h1 className="hidden text-[22px] font-bold leading-normal tracking-[-0.44px] text-white md:block">

@@ -20,7 +20,7 @@ export function StudentBottomTabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between border-t border-[#dfdfe1] bg-[#ededee] px-20 pb-[max(22px,env(safe-area-inset-bottom))] pt-[18px] md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-between border-t border-[#dfdfe1] bg-[#ededee] dark:border-admin-border dark:bg-admin-surface px-20 pb-[max(22px,env(safe-area-inset-bottom))] pt-[18px] md:hidden">
       {TABS.map(({ href, label, iconSrc }) => {
         const active = pathname === href;
         return (

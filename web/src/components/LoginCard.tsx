@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
  */
 export function LoginCard({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-[268px] w-[350px] max-w-full flex-col items-center gap-[15px] rounded-[14px] bg-white pb-[49px] pt-[74px]">
+    <div className="flex h-[268px] w-[350px] max-w-full flex-col items-center gap-[15px] rounded-[14px] bg-admin-surface pb-[49px] pt-[74px]">
       <h1 className="shrink-0">
         <Image
           src="/icons/login/checkup-logo.png"
@@ -20,7 +20,7 @@ export function LoginCard({ children }: { children: ReactNode }) {
           priority
         />
       </h1>
-      <p className="shrink-0 text-center text-base font-semibold leading-[normal] text-[#656b80]">
+      <p className="shrink-0 text-center text-base font-semibold leading-[normal] text-[#656b80] dark:text-admin-textMuted">
         기숙사 입소를 편리하게
       </p>
       {children}
@@ -30,7 +30,7 @@ export function LoginCard({ children }: { children: ReactNode }) {
 
 /** `DataGSM으로 계속하기` 버튼의 모양: 230×44, 검은 배경, 반지름 6px(Figma DG로그인버튼 252:495). */
 export const DATAGSM_BUTTON_CLASS =
-  "relative block h-11 w-[230px] shrink-0 rounded-[6px] border border-[#e2e8f0] bg-black transition-colors hover:bg-[#1c1c1e]";
+  "relative block h-11 w-[230px] shrink-0 rounded-[6px] border border-[#e2e8f0] bg-black dark:border-admin-border transition-colors hover:bg-[#1c1c1e]";
 
 /**
  * 버튼 안쪽: 흰색 D 아이콘(10.7×12.8)은 왼쪽 6.67%, 글자(Pretendard Medium 14px 흰색)는 왼쪽 33%~오른쪽 21.33% 칸의 가운데다.

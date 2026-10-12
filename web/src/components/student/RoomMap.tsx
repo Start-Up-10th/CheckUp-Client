@@ -16,7 +16,7 @@ export function RoomMap({ students }: { students: RoomMate[] }) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col rounded-card border border-admin-border bg-[#fafafb] p-2.5 md:rounded-2xl md:p-4">
+    <div className="flex min-h-0 flex-1 flex-col rounded-card border border-admin-border bg-[#fafafb] dark:bg-admin-rowSurface p-2.5 md:rounded-2xl md:p-4">
       <ul className="flex min-h-0 flex-1 flex-col gap-2 md:gap-2.5">
         {rows.map((row, rowIndex) => (
           <li key={rowIndex} className="flex min-h-0 flex-1 gap-2 md:gap-2.5">
