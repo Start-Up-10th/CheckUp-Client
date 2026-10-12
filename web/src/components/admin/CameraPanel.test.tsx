@@ -28,6 +28,22 @@ describe("CameraPanel", () => {
     expect(screen.queryByText("LIVE")).not.toBeInTheDocument();
   });
 
+  it("거울처럼 보이게 하면 화면 표시만 좌우 반전한다", () => {
+    const { container } = render(
+      <CameraPanel videoRef={{ current: null }} status="granted" mirrored />,
+    );
+
+    expect(container.querySelector("video")).toHaveClass("-scale-x-100");
+  });
+
+  it("거울 표시가 아니면 반전하지 않는다", () => {
+    const { container } = render(
+      <CameraPanel videoRef={{ current: null }} status="granted" />,
+    );
+
+    expect(container.querySelector("video")).not.toHaveClass("-scale-x-100");
+  });
+
   it("카메라를 실행하지 못했으면 LIVE 없이 실행 실패 문구를 보인다", () => {
     renderPanel({ status: "error" });
 

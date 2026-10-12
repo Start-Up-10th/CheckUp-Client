@@ -202,6 +202,26 @@ describe("AdminFaceRecognition", () => {
     );
   });
 
+  it("이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 `이미 처리됐어요 · 학번 이름`을 보인다", async () => {
+    const gateway = createMockFaceGateway([[]]);
+    vi.spyOn(gateway, "sendFrame")
+      .mockResolvedValueOnce({
+        frameId: "f",
+        faces: [{ ...known(), trackId: "again", attendance: "DUPLICATE" }],
+      })
+      .mockResolvedValue({ frameId: "f", faces: [] });
+    renderWith(gateway);
+    await tick();
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "이미 처리됐어요 · 2405 김도현",
+    );
+    expect(screen.queryByText(/성공 ·/)).not.toBeInTheDocument();
+    // 성공(녹색)이 아니라 안내(info) 토스트다.
+    expect(document.querySelector(".Toastify__toast--info")).not.toBeNull();
+    expect(document.querySelector(".Toastify__toast--success")).toBeNull();
+  });
+
   it("카메라 허용 전에는 서버에 세션을 만들지 않는다", async () => {
     camera.status = "requesting";
     const gateway = createMockFaceGateway([[]]);

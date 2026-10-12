@@ -3,6 +3,10 @@ import { useCameraStream } from "./use-camera-stream";
 
 class FakeTrack extends EventTarget {
   muted = false;
+  facingMode: string | undefined = undefined;
+  getSettings() {
+    return { facingMode: this.facingMode };
+  }
   readyState: "live" | "ended" = "live";
   stop = vi.fn();
 }
@@ -30,6 +34,27 @@ describe("useCameraStream", () => {
     await act(async () => {});
 
     expect(result.current.status).toBe("granted");
+  });
+
+  it("전면·웹캠(facingMode 없음 또는 user)은 거울처럼 보인다", async () => {
+    const track = new FakeTrack();
+    stubCamera(track);
+    const { result } = renderHook(() => useCameraStream());
+
+    await act(async () => {});
+
+    expect(result.current.mirrored).toBe(true);
+  });
+
+  it("후면 카메라(environment)는 거울처럼 뒤집지 않는다", async () => {
+    const track = new FakeTrack();
+    track.facingMode = "environment";
+    stubCamera(track);
+    const { result } = renderHook(() => useCameraStream());
+
+    await act(async () => {});
+
+    expect(result.current.mirrored).toBe(false);
   });
 
   it("허용됐지만 영상이 멈춰 있으면 실행 실패로 본다", async () => {

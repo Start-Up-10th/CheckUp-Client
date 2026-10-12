@@ -455,15 +455,48 @@ describe("useFaceRecognition 결과", () => {
     expect(result.current.success).toBeNull();
   });
 
-  it("같은 학생이 계속 비치는 동안 성공 표시는 유지한다", async () => {
+  it("같은 학생이 계속 비치면 성공은 한 번만 알리고 이미 처리됨으로 바뀌지 않는다", async () => {
     const gateway = makeGateway({
-      sendFrame: vi.fn(async () => frameOf([known()])),
+      sendFrame: vi
+        .fn<FaceGateway["sendFrame"]>()
+        .mockResolvedValueOnce(frameOf([known()]))
+        .mockResolvedValue(
+          frameOf([{ ...known(), attendance: "DUPLICATE" as const }]),
+        ),
     });
     const { result } = setup(gateway);
     await tick();
-    await tick(SUCCESS_HOLD_MS);
 
     expect(result.current.success).toBe("2405 김도현");
+    expect(result.current.alreadyDone).toBe(null);
+
+    await tick(SUCCESS_HOLD_MS);
+
+    // 성공 안내는 시간이 지나 사라지고, 같은 얼굴이 이어서 비쳐도 이미 처리됨 안내를 새로 띄우지 않는다.
+    expect(result.current.success).toBe(null);
+    expect(result.current.alreadyDone).toBe(null);
+  });
+
+  it("이미 출석 처리된 학생을 인식하면 alreadyDone을 잠깐 켜고 지난 뒤 끈다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn<FaceGateway["sendFrame"]>()
+        .mockResolvedValueOnce(
+          frameOf([
+            { ...known(), trackId: "back", attendance: "DUPLICATE" as const },
+          ]),
+        )
+        .mockResolvedValue(frameOf([])),
+    });
+    const { result } = setup(gateway);
+    await tick();
+
+    expect(result.current.alreadyDone).toBe("2405 김도현");
+    expect(result.current.success).toBe(null);
+
+    await tick(SUCCESS_HOLD_MS);
+
+    expect(result.current.alreadyDone).toBe(null);
   });
 
   it("실패하면 잠깐 failure를 켜고 지난 뒤 끈다", async () => {

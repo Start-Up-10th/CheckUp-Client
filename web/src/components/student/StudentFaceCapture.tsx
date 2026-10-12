@@ -35,7 +35,8 @@ type Failure =
   | "multipleFaces"
   | "failed"
   | "notStudent"
-  | "rateLimited";
+  | "rateLimited"
+  | "resetUnavailable";
 
 // rejected·lowLight·failed 문구는 REQ-FACE-001. 여러 명 문구는 명세·Figma에 없어 같은 말투로 정했다.
 const FAILURE_MESSAGES: Record<Failure, string> = {
@@ -45,6 +46,9 @@ const FAILURE_MESSAGES: Record<Failure, string> = {
   failed: "얼굴 등록에 실패했습니다. 다시 시도해 주세요.",
   notStudent: "학생 계정만 이용할 수 있어요.",
   rateLimited: RATE_LIMIT_MESSAGE,
+  // 다시 등록이 409(동시 요청 경합 같은 예외)로 거절됐을 때. 서버는 재등록을 허용하므로 일시 오류로 안내한다(DEC-072).
+  resetUnavailable:
+    "얼굴을 다시 등록하지 못했어요. 잠시 후 다시 시도해 주세요.",
 };
 
 const COUNTDOWN_FROM = 3;
@@ -72,7 +76,12 @@ const CAPTURE_MS = 3000;
  * 흰 띠는 Figma의 가짜 상태바 자리라 사용자 결정(2026-10-08)으로 없애고 그 자리까지 카메라로 채운다. 실패 문구 위치·등록 중 안내·녹화를 지원하지 않는
  * 브라우저 안내는 Figma에 없어 기존 오류 배너·오류 화면을 썼다.
  */
-export function StudentFaceCapture() {
+export function StudentFaceCapture({
+  mode = "enroll",
+}: {
+  /** `reset`: 마이페이지 `얼굴 재설정`으로 들어온 다시 등록. 이미 등록돼 있어도 홈으로 돌려보내지 않는다. */
+  mode?: "enroll" | "reset";
+}) {
   const router = useRouter();
   const [entry, setEntry] = useState<Entry>("checking");
   const { videoRef, status, stream } = useFaceCamera({
@@ -91,7 +100,7 @@ export function StudentFaceCapture() {
     fetchFaceStatus()
       .then(({ consented, eligible, enrolled }) => {
         if (cancelled) return;
-        if (enrolled) router.replace("/main");
+        if (enrolled && mode !== "reset") router.replace("/main");
         else if (!consented) router.replace("/consent");
         else setEntry(eligible ? "allowed" : "notEligible");
       })
@@ -104,7 +113,7 @@ export function StudentFaceCapture() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [router, mode]);
 
   useEffect(() => {
     if (status !== "ready" || phase !== "countdown") return;
@@ -169,7 +178,10 @@ export function StudentFaceCapture() {
     setFailure(null);
     enrollFace(video)
       .then((result) => {
-        if (result === "registered" || result === "alreadyRegistered") {
+        if (result === "alreadyRegistered" && mode === "reset") {
+          // 다시 등록이 409로 거절됐다(경합 등). 홈으로 보내지 않고 안내한다.
+          setFailure("resetUnavailable");
+        } else if (result === "registered" || result === "alreadyRegistered") {
           router.push("/main");
         } else if (result === "consentRequired") {
           router.replace("/consent");

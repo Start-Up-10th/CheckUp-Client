@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { CameraPanel } from "@/components/admin/CameraPanel";
-import { successMessage } from "@/lib/admin/face-results";
+import { alreadyDoneMessage, successMessage } from "@/lib/admin/face-results";
 import { useFaceRecognition } from "@/lib/admin/use-face-recognition";
 import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { useCameraStream } from "@/lib/admin/use-camera-stream";
@@ -26,7 +26,7 @@ const QR_NOTICE_MESSAGE = "인식 실패 · 3회 초과 시 QR로 출석";
  * 화면은 카메라 패널 하나다. 용도 탭·전체화면·최근 인식 목록은 없다(DEC-036).
  */
 export function AdminFaceRecognition() {
-  const { videoRef, status } = useCameraStream();
+  const { videoRef, status, mirrored } = useCameraStream();
   const recognition = useFaceRecognition({
     videoRef,
     cameraReady: status === "granted",
@@ -41,6 +41,16 @@ export function AdminFaceRecognition() {
       showToast({ variant: "success", message: successMessage(success) });
     }
   }, [success, showToast]);
+  // 이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 이미 처리됐다고 안내한다(DEC-073).
+  const alreadyDone = recognition.alreadyDone;
+  useEffect(() => {
+    if (alreadyDone) {
+      showToast({
+        variant: "neutral",
+        message: alreadyDoneMessage(alreadyDone),
+      });
+    }
+  }, [alreadyDone, showToast]);
   const serverFailed = recognition.status === "error" && status !== "error";
 
   return (
@@ -79,7 +89,7 @@ export function AdminFaceRecognition() {
       />
 
       <div className="flex min-h-0 w-full flex-1">
-        <CameraPanel videoRef={videoRef} status={status} />
+        <CameraPanel videoRef={videoRef} status={status} mirrored={mirrored} />
       </div>
     </div>
   );
