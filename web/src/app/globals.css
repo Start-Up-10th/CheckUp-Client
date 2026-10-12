@@ -81,3 +81,12 @@
 body {
   background-color: #f2f2f3;
 }
+
+/*
+ * react-toastify 바깥 컨테이너(`.Toastify`)는 높이가 0이지만 flex 부모의 자식이면 gap을 한 칸 만들어
+ * 화면 내용이 gap만큼 아래로 밀린다(Figma 위치와 어긋남). 흐름에서 빼 자리를 차지하지 않게 한다.
+ * 토스트 자체는 라이브러리가 fixed로 그리므로 영향이 없다.
+ */
+.Toastify {
+  position: absolute;
+}
