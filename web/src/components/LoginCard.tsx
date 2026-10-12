@@ -28,12 +28,15 @@ export function LoginCard({ children }: { children: ReactNode }) {
   );
 }
 
-/** `DataGSM으로 계속하기` 버튼의 모양: 230×44, 검은 배경, 반지름 6px(Figma DG로그인버튼 252:495). */
+/**
+ * `DataGSM으로 계속하기` 버튼의 모양: 230×44, 반지름 6px. 라이트 모드는 검은 배경(Figma DG로그인버튼 252:495),
+ * 다크 모드는 흰색 배경(`#F8FAFC`, 테두리 `#E2E8F0`, 글자·아이콘 `#0F172A`, Figma 1314:117)이다.
+ */
 export const DATAGSM_BUTTON_CLASS =
-  "relative block h-11 w-[230px] shrink-0 rounded-[6px] border border-[#e2e8f0] bg-black dark:border-admin-border transition-colors hover:bg-[#1c1c1e]";
+  "relative block h-11 w-[230px] shrink-0 rounded-[6px] border border-[#e2e8f0] bg-black transition-colors hover:bg-[#1c1c1e] dark:bg-[#f8fafc] dark:hover:bg-[#f1f5f9]";
 
 /**
- * 버튼 안쪽: 흰색 D 아이콘(10.7×12.8)은 왼쪽 6.67%, 글자(Pretendard Medium 14px 흰색)는 왼쪽 33%~오른쪽 21.33% 칸의 가운데다.
+ * 버튼 안쪽: D 아이콘(10.7×12.8, 라이트 흰색·다크 `#0F172A`)은 왼쪽 6.67%, 글자(Pretendard Medium 14px, 라이트 흰색·다크 `#0F172A`)는 왼쪽 33%~오른쪽 21.33% 칸의 가운데다.
  */
 export function DataGsmButtonContent() {
   return (
@@ -44,9 +47,17 @@ export function DataGsmButtonContent() {
         aria-hidden="true"
         width={11}
         height={13}
-        className="absolute left-[6.67%] top-1/2 -translate-y-1/2"
+        className="absolute left-[6.67%] top-1/2 -translate-y-1/2 dark:hidden"
       />
-      <span className="absolute inset-y-0 left-[33%] right-[21.33%] flex items-center justify-center whitespace-nowrap text-center text-[14px] font-medium leading-none text-white">
+      <Image
+        src="/icons/login/datagsm-dark.svg"
+        alt=""
+        aria-hidden="true"
+        width={11}
+        height={13}
+        className="absolute left-[6.67%] top-1/2 hidden -translate-y-1/2 dark:block"
+      />
+      <span className="absolute inset-y-0 left-[33%] right-[21.33%] flex items-center justify-center whitespace-nowrap text-center text-[14px] font-medium leading-none text-white dark:text-[#0f172a]">
         DataGSM으로 계속하기
       </span>
     </>
