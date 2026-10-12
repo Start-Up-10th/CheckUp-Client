@@ -6,9 +6,13 @@ import { LogoutIcon } from "@/components/icons/AdminNavIcons";
 import { ADMIN_NAV_ITEMS, isAdminNavActive } from "@/lib/admin/nav-items";
 import { useAdminLogout } from "@/lib/admin/use-admin-logout";
 
-/** 반응형 기준: 1280px 이상(관리자-컴퓨터) — 라벨 있는 좌측 고정 사이드바 300px. */
-export function AdminSidebar() {
-  const pathname = usePathname();
+/**
+ * 반응형 기준: 1280px 이상(관리자-컴퓨터) — 라벨 있는 좌측 고정 사이드바 300px.
+ * `activePath`는 로그인 없이 보는 확인용 페이지에서 활성 항목을 지정할 때만 쓴다(기본은 현재 주소).
+ */
+export function AdminSidebar({ activePath }: { activePath?: string }) {
+  const currentPath = usePathname();
+  const pathname = activePath ?? currentPath;
   const logout = useAdminLogout();
 
   return (
