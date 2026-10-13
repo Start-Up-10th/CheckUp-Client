@@ -12,7 +12,7 @@ export function AdminSidebar() {
   const logout = useAdminLogout();
 
   return (
-    <aside className="hidden h-full w-[300px] shrink-0 flex-col bg-admin-surface px-4 py-6 shadow-[inset_-1px_0_0_#e3e3e5] xl:flex">
+    <aside className="hidden h-full w-[300px] shrink-0 flex-col bg-admin-surface px-4 py-6 shadow-[inset_-1px_0_0_rgb(var(--admin-border))] xl:flex">
       <div className="flex flex-col gap-0.5 overflow-hidden px-2 pb-6">
         <p className="font-mono text-[10px] leading-[13px] tracking-[2px] text-admin-textFaint">
           ADMIN

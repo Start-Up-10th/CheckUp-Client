@@ -54,7 +54,7 @@ export function AdminBottomTabBar({ activePath }: { activePath?: string }) {
           onLogout={logout}
         />
       ) : null}
-      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-[60px] items-stretch bg-admin-surface shadow-[inset_0_1px_0_0_#e3e3e5] md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex h-[60px] items-stretch bg-admin-surface shadow-[inset_0_1px_0_0_rgb(var(--admin-border))] md:hidden">
         <Link
           href="/admin"
           aria-label="홈"

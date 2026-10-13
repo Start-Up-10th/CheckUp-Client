@@ -43,7 +43,7 @@ export function AdminMyPage() {
         >
           <Link
             href="/consent"
-            className={`${ROW} transition-colors hover:bg-admin-rowSurface`}
+            className={`${ROW} hover:bg-admin-divider active:bg-admin-divider`}
           >
             <span>얼굴 등록</span>
             <span
