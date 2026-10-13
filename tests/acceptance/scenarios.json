@@ -325,6 +325,38 @@
       ]
     },
     {
+      "id": "ACC-FACE-008",
+      "requirements": [
+        "REQ-FACE-001",
+        "REQ-AUTH-004"
+      ],
+      "title": "관리자 마이페이지에서 얼굴 등록과 다시 등록",
+      "given": "관리자 권한 계정(학생 정보가 있는 기숙사 자치위원)이 관리자 마이페이지에 있다",
+      "when": "`얼굴 등록`을 누른다",
+      "then": [
+        "얼굴이 아직 등록되지 않았으면 확인 창 없이 개인정보 동의로 가고, 동의와 촬영을 마치면 관리자 마이페이지로 돌아온다",
+        "이미 등록돼 있으면 `이미 얼굴이 등록되어 있어요`와 `다시 등록하시겠습니까?` 확인 창이 뜬다",
+        "확인 창의 `뒤로가기`는 창만 닫고 `얼굴 등록`을 누르기 전 화면에 머문다",
+        "`다음`은 개인정보 동의로 가고, 동의 뒤 학생 홈으로 가지 않고 다시 등록 촬영으로 가며, 끝나면 관리자 마이페이지로 돌아온다",
+        "학생 정보가 없는 계정(사감)은 이동하지 않고 얼굴을 등록할 수 없다는 안내를 보인다"
+      ],
+      "status": "implemented",
+      "implementation": [
+        "web/src/components/admin/AdminMyPage.tsx",
+        "web/src/components/admin/FaceReRegisterDialog.tsx",
+        "web/src/lib/student/face-flow.ts",
+        "web/src/components/student/StudentConsent.tsx",
+        "web/src/components/student/StudentFaceCapture.tsx"
+      ],
+      "evidence": [
+        "web/src/components/admin/AdminMyPage.test.tsx",
+        "web/src/components/admin/FaceReRegisterDialog.test.tsx",
+        "web/src/lib/student/face-flow.test.ts",
+        "web/src/components/student/StudentConsent.test.tsx",
+        "web/src/components/student/StudentFaceCapture.test.tsx"
+      ]
+    },
+    {
       "id": "ACC-ATT-001",
       "requirements": [
         "REQ-ATT-001"

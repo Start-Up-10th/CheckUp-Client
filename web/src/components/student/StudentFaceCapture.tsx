@@ -19,6 +19,11 @@ import { FaceCaptureActions } from "./FaceCaptureActions";
 import { FaceCaptureStatus } from "./FaceCaptureStatus";
 import { StudentErrorState } from "./StudentErrorState";
 import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
+import {
+  faceFlowDonePath,
+  faceFlowQuery,
+  type FaceFlow,
+} from "@/lib/student/face-flow";
 
 // 카운트다운 숫자는 Figma대로 Roboto Mono SemiBold(600). 루트는 400만 불러와 여기서 600을 더 불러온다.
 const countdownFont = Roboto_Mono({ subsets: ["latin"], weight: ["600"] });
@@ -78,10 +83,14 @@ const CAPTURE_MS = 3000;
  */
 export function StudentFaceCapture({
   mode = "enroll",
+  fromAdmin = false,
 }: {
   /** `reset`: 마이페이지 `얼굴 재설정`으로 들어온 다시 등록. 이미 등록돼 있어도 홈으로 돌려보내지 않는다. */
   mode?: "enroll" | "reset";
+  /** 관리자 마이페이지에서 시작했다. 끝나면 학생 홈 대신 관리자 마이페이지로 돌아간다. */
+  fromAdmin?: boolean;
 }) {
+  const flow: FaceFlow = { reset: mode === "reset", fromAdmin };
   const router = useRouter();
   const [entry, setEntry] = useState<Entry>("checking");
   const { videoRef, status, stream } = useFaceCamera({
@@ -100,9 +109,13 @@ export function StudentFaceCapture({
     fetchFaceStatus()
       .then(({ consented, eligible, enrolled }) => {
         if (cancelled) return;
-        if (enrolled && mode !== "reset") router.replace("/main");
-        else if (!consented) router.replace("/consent");
-        else setEntry(eligible ? "allowed" : "notEligible");
+        if (enrolled && mode !== "reset") {
+          router.replace(faceFlowDonePath({ reset: false, fromAdmin }));
+        } else if (!consented) {
+          router.replace(
+            `/consent${faceFlowQuery({ reset: mode === "reset", fromAdmin })}`,
+          );
+        } else setEntry(eligible ? "allowed" : "notEligible");
       })
       .catch((reason: unknown) => {
         if (cancelled) return;
@@ -113,7 +126,7 @@ export function StudentFaceCapture({
     return () => {
       cancelled = true;
     };
-  }, [router, mode]);
+  }, [router, mode, fromAdmin]);
 
   useEffect(() => {
     if (status !== "ready" || phase !== "countdown") return;
@@ -182,9 +195,9 @@ export function StudentFaceCapture({
           // 다시 등록이 409로 거절됐다(경합 등). 홈으로 보내지 않고 안내한다.
           setFailure("resetUnavailable");
         } else if (result === "registered" || result === "alreadyRegistered") {
-          router.push("/main");
+          router.push(faceFlowDonePath(flow));
         } else if (result === "consentRequired") {
-          router.replace("/consent");
+          router.replace(`/consent${faceFlowQuery(flow)}`);
         } else if (result === "notEligible") {
           setEntry("notEligible");
         } else {

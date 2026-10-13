@@ -12,6 +12,11 @@ import { ConsentAllRow } from "./ConsentAllRow";
 import { ConsentItem } from "./ConsentItem";
 import { PrimaryButton } from "./PrimaryButton";
 import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
+import {
+  FACE_FLOW_DEFAULT,
+  faceFlowQuery,
+  type FaceFlow,
+} from "@/lib/student/face-flow";
 
 type ConsentKey = "privacy" | "face" | "notice";
 
@@ -64,7 +69,12 @@ const ERROR_MESSAGES: Record<ConsentError, string> = {
  * 학생이 아닌 계정(403, 교사 등)은 다시 눌러도 결과가 같으므로 `학생 계정만 이용할 수 있어요.`를 보여 주고
  * 버튼을 막는다(Figma에 없어 QR 화면의 학생 아님 문구와 같은 말투로 정함).
  */
-export function StudentConsent() {
+export function StudentConsent({
+  flow = FACE_FLOW_DEFAULT,
+}: {
+  /** 얼굴 등록 흐름(관리자 마이페이지에서 시작했는지, 다시 등록인지). 동의 뒤 촬영 화면에 그대로 넘긴다. */
+  flow?: FaceFlow;
+}) {
   const router = useRouter();
   const [checked, setChecked] = useState<Record<ConsentKey, boolean>>({
     privacy: false,
@@ -96,7 +106,7 @@ export function StudentConsent() {
       face: checked.face,
       noticeAlarm: checked.notice,
     })
-      .then(() => router.push("/face"))
+      .then(() => router.push(`/face${faceFlowQuery(flow)}`))
       .catch((reason: unknown) => {
         if (reason instanceof ConsentLoginRequiredError) {
           router.push("/login");
