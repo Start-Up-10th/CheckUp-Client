@@ -68,7 +68,7 @@ export function VolunteerStudentDialog({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-[#1c1c1e]/45"
+      className="fixed inset-0 z-40 flex items-center justify-center bg-[#1c1c1e]/45 dark:bg-black/60"
       role="presentation"
       onClick={onClose}
     >

@@ -9,7 +9,7 @@ describe("관리자 로그인 화면", () => {
   it("로고·한 줄 소개·DataGSM 버튼이 한 카드에 있다", () => {
     const { container } = render(<AdminLoginPage />);
 
-    expect(container.querySelector(".bg-white")).toHaveClass(
+    expect(container.querySelector(".bg-admin-surface")).toHaveClass(
       "w-[350px]",
       "h-[268px]",
     );

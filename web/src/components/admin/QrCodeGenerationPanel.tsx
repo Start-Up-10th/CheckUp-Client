@@ -13,7 +13,7 @@ export function QrCodeGenerationPanel({
   return (
     <div className="flex h-full w-full flex-1 items-center justify-center rounded-[18px] bg-admin-surface xl:rounded-panel">
       <div className="flex flex-col items-center gap-[18px] xl:gap-4">
-        <div className="flex size-[180px] items-center justify-center overflow-hidden md:size-[250px] xl:size-[300px]">
+        <div className="flex size-[180px] items-center justify-center overflow-hidden md:size-[250px] md:rounded-2xl xl:size-[300px] xl:rounded-[18px]">
           <QRCodeSVG value={qrValue} size={298} className="size-full" />
         </div>
         <div className="flex flex-col items-center gap-1">

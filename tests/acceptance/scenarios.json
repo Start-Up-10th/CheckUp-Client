@@ -635,6 +635,39 @@
       ]
     },
     {
+      "id": "ACC-UI-008",
+      "requirements": [
+        "REQ-UI-008"
+      ],
+      "title": "화면 모드 전환",
+      "given": "학생 마이페이지(핸드폰·노트북), 기기 설정은 밝게",
+      "when": "`화면 모드` 토글을 눌러 다크로 바꾸고 새로 고친 뒤 다시 누른다",
+      "then": [
+        "토글을 누르면 화면이 다크 모드로 바뀌고 다시 누르면 라이트 모드로 돌아온다",
+        "학생 마이페이지에는 얼굴 재설정 아래에 화면 모드 줄이 있고 토글 모양은 Figma ModeToggle과 같다",
+        "다크를 골라 둔 채 관리자 화면(/admin)으로 가도 같은 다크 모드로 보이고, 관리자 마이페이지의 `화면 모드` 줄로도 바꿀 수 있다",
+        "로그인 화면의 DataGSM 버튼은 라이트에서 검은색, 다크에서 흰색이다",
+        "새로 고쳐도 고른 모드가 유지되고 처음부터 그 모드로 그린다",
+        "고른 적이 없으면 기기 설정을 따른다",
+        "고른 모드는 브라우저에만 저장되고 서버로 보내지 않는다"
+      ],
+      "status": "implemented",
+      "implementation": [
+        "web/src/lib/theme.ts",
+        "web/src/app/globals.css",
+        "web/tailwind.config.ts",
+        "web/src/app/layout.tsx",
+        "web/src/components/ModeToggle.tsx",
+        "web/src/components/student/ThemeMenuRow.tsx",
+        "web/src/components/admin/AdminMyPage.tsx",
+        "web/src/components/LoginCard.tsx"
+      ],
+      "evidence": [
+        "web/src/lib/theme.test.ts",
+        "web/src/components/ThemeToggles.test.tsx"
+      ]
+    },
+    {
       "id": "ACC-COM-001",
       "requirements": [
         "REQ-COM-001"

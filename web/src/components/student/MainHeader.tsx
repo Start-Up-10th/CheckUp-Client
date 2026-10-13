@@ -6,6 +6,7 @@ import {
   type CurrentStudentProfile,
 } from "@/lib/student/current-student";
 import { useUnreadNotification } from "@/lib/student/unread-notification";
+import { ThemedImg } from "./ThemedImg";
 
 type MainHeaderProps = {
   /** 본인 정보. 받기 전이거나 받지 못했으면 null이고, 글자 자리는 비워 둔다(높이는 유지). */
@@ -40,13 +41,11 @@ export function MainHeader({ profile }: MainHeaderProps) {
         }
         className="-m-2 p-2 md:hidden"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- 빨간 점 색을 유지해야 해서 원본 SVG를 그대로 쓴다 */}
-        <img
-          src={`/icons/student-main/bell${suffix}.svg`}
-          alt=""
-          width={22}
-          height={22}
-          className="size-[22px]"
+        {/* 빨간 점 색을 유지해야 해서 원본 SVG를 그대로 쓴다. 다크 모드용은 선만 밝게 바꾼 사본이다. */}
+        <ThemedImg
+          lightSrc={`/icons/student-main/bell${suffix}.svg`}
+          darkSrc={`/icons/student-main/bell${suffix}-dark.svg`}
+          size={22}
         />
       </Link>
     </header>

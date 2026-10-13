@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Roboto_Mono } from "next/font/google";
 import { ServiceWorkerRegistrar } from "@/components/ServiceWorkerRegistrar";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const robotoMono = Roboto_Mono({
@@ -32,7 +33,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ko">
+    // data-theme은 아래 스크립트가 브라우저에서 붙여 서버가 그린 것과 다르다. 그 차이만 경고에서 뺀다.
+    <html lang="ko" suppressHydrationWarning>
+      <head>
+        {/* 첫 화면을 그리기 전에 화면 모드를 정해 밝은 화면이 깜빡이지 않게 한다(REQ-UI-008). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className={`${robotoMono.variable} font-sans`}>
         {children}
         <ServiceWorkerRegistrar />

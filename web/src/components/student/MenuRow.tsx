@@ -16,7 +16,10 @@ export function MenuRow({ href, label }: MenuRowProps) {
       className="flex w-full items-center justify-between rounded-2xl bg-admin-surface transition-colors hover:bg-admin-divider px-[18px] py-[17px] text-[15px] leading-normal md:px-5 md:py-[18px]"
     >
       <span className="text-admin-text">{label}</span>
-      <span aria-hidden="true" className="text-[#b9b9be]">
+      <span
+        aria-hidden="true"
+        className="text-[#b9b9be] dark:text-admin-textFaint"
+      >
         ›
       </span>
     </Link>

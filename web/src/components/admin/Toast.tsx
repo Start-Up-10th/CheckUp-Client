@@ -16,6 +16,7 @@ import {
   type TypeOptions,
 } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useTheme } from "@/lib/theme";
 
 /**
  * 토스트는 `react-toastify`를 쓴다(사용자 결정 2026-10-07, DEC-048). Figma 상태 메시지 모양 대신 라이브러리 기본 모양이다.
@@ -132,7 +133,7 @@ export function ToastLayer({ toast = null }: { toast?: StickyToast | null }) {
         <button
           type="button"
           onClick={() => actionRef.current?.()}
-          className="shrink-0 rounded-md bg-black/10 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-black/20"
+          className="shrink-0 rounded-md bg-black/10 px-2.5 py-1 text-xs font-medium transition-colors hover:bg-black/20 dark:bg-white/15 dark:hover:bg-white/25"
         >
           {actionLabel}
         </button>
@@ -157,12 +158,15 @@ export function ToastLayer({ toast = null }: { toast?: StickyToast | null }) {
   useEffect(() => () => notify.dismiss(), []);
 
   const [instant] = useState(prefersInstant);
+  // 토스트 바탕도 화면 모드를 따른다(REQ-UI-008).
+  const { theme } = useTheme();
 
   return (
     <ToastContainer
       position="top-center"
       stacked
       limit={5}
+      theme={theme}
       transition={instant ? InstantTransition : Bounce}
     />
   );

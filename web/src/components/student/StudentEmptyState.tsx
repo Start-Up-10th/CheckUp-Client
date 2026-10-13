@@ -23,7 +23,7 @@ export function StudentEmptyState({
           aria-hidden="true"
           width={32}
           height={32}
-          className="size-8"
+          className="size-8 dark:invert"
         />
       </span>
       <div className="flex flex-col items-center gap-1.5">

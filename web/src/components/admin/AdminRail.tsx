@@ -35,7 +35,11 @@ export function AdminRail({ activePath }: { activePath?: string }) {
                 }`}
               >
                 <Icon className="size-[22px] shrink-0" />
-                <span className="text-[10px] leading-3">{shortLabel}</span>
+                <span
+                  className={`text-[10px] leading-3 ${active ? "font-bold" : ""}`}
+                >
+                  {shortLabel}
+                </span>
               </Link>
             );
           })}
@@ -50,7 +54,7 @@ export function AdminRail({ activePath }: { activePath?: string }) {
           className="flex w-full flex-col items-center gap-1.5 rounded-[14px] bg-admin-danger-bg py-3 text-admin-danger-text transition-colors hover:bg-admin-danger-border"
         >
           <LogoutIcon className="size-[22px]" />
-          <span className="text-[10px] font-medium leading-3">로그아웃</span>
+          <span className="text-[10px] font-bold leading-3">로그아웃</span>
         </button>
       </div>
     </aside>
