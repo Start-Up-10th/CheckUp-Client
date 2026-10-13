@@ -29,11 +29,11 @@ describe("face-flow", () => {
     );
   });
 
-  it("끝난 뒤 돌아갈 화면은 관리자에서 시작했을 때만 관리자 마이페이지다", () => {
+  it("끝난 뒤 돌아갈 화면은 관리자에서 시작했을 때만 완료 표시를 단 관리자 마이페이지다", () => {
     expect(faceFlowDonePath(FACE_FLOW_DEFAULT)).toBe("/main");
     expect(faceFlowDonePath({ reset: true, fromAdmin: false })).toBe("/main");
     expect(faceFlowDonePath({ reset: false, fromAdmin: true })).toBe(
-      "/admin/mypage",
+      "/admin/mypage?face=done",
     );
   });
 });

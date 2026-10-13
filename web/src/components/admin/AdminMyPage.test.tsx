@@ -168,6 +168,32 @@ describe("AdminMyPage", () => {
     });
   });
 
+  describe("얼굴 등록을 마치고 돌아왔을 때", () => {
+    it("성공 토스트를 한 번 보이고 주소에서 표시를 지운다", async () => {
+      const replaceState = vi.spyOn(window.history, "replaceState");
+      render(<AdminMyPage faceDone />);
+
+      await waitFor(() =>
+        expect(mocks.showToast).toHaveBeenCalledWith({
+          variant: "success",
+          message: "얼굴 등록을 마쳤어요.",
+        }),
+      );
+      expect(mocks.showToast).toHaveBeenCalledTimes(1);
+      // 페이지를 다시 만드는 router.replace가 아니라 주소만 바꾼다(토스트가 닫히지 않게).
+      expect(replaceState).toHaveBeenCalledWith(null, "", "/admin/mypage");
+      expect(mocks.router.replace).not.toHaveBeenCalled();
+      replaceState.mockRestore();
+    });
+
+    it("표시가 없으면 토스트도 이동도 없다", () => {
+      render(<AdminMyPage />);
+
+      expect(mocks.showToast).not.toHaveBeenCalled();
+      expect(mocks.router.replace).not.toHaveBeenCalled();
+    });
+  });
+
   it("화면 모드를 바꾸면 저장하고 html에 알린다", () => {
     render(<AdminMyPage />);
 

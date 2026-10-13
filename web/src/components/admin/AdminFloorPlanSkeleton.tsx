@@ -2,7 +2,7 @@
 // AdminHomeFloorPlan · AttendanceStatCards · FloorTabs · RoomGrid 수치에 맞춘다.
 export function AdminFloorPlanSkeleton() {
   return (
-    <div className="flex min-h-full w-full animate-pulse flex-col gap-3.5 px-4 py-3.5 md:h-full md:min-h-0 md:gap-4 md:px-[22px] md:py-6 xl:p-[22px]">
+    <div className="flex min-h-full w-full animate-pulse motion-reduce:animate-none flex-col gap-3.5 px-4 py-3.5 md:h-full md:min-h-0 md:gap-4 md:px-[22px] md:py-6 xl:p-[22px]">
       {/* 헤더 — xl에서 숨김 */}
       <div className="flex w-full items-center justify-between md:items-end xl:hidden">
         {/* 타이틀: flex-col gap-0.5 md:gap-1 */}
@@ -56,7 +56,7 @@ export function RoomGridSkeleton({ pulse = true }: { pulse?: boolean }) {
   return (
     <div
       aria-busy="true"
-      className={`${pulse ? "animate-pulse " : ""}flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-[14px] md:rounded-[18px] md:px-[20px] md:pb-[46px] md:pt-[20px] xl:flex-1 xl:min-h-0 xl:overflow-visible xl:rounded-panel xl:pb-0`}
+      className={`${pulse ? "animate-pulse motion-reduce:animate-none " : ""}flex w-full flex-1 flex-col gap-2.5 rounded-[16px] bg-admin-surface px-3.5 py-4 md:flex-none md:gap-[14px] md:rounded-[18px] md:px-[20px] md:pb-[46px] md:pt-[20px] xl:flex-1 xl:min-h-0 xl:overflow-visible xl:rounded-panel xl:pb-0`}
     >
       {/* 범례: 실제 dot+text 높이 = 12px(mobile) / 14px(md) */}
       <div className="flex items-center gap-2.5 md:gap-[10px]">

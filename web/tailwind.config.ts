@@ -22,9 +22,25 @@ const config: Config = {
           from: { opacity: "0", transform: "translateY(12px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        // 다이얼로그·메뉴 시트 등장(REQ-UI-006). 딤은 서서히, 패널은 살짝 올라오고, 시트는 아래에서 올라온다.
+        "dim-in": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "dialog-in": {
+          from: { opacity: "0", transform: "translateY(8px) scale(0.98)" },
+          to: { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        "sheet-rise": {
+          from: { transform: "translateY(100%)" },
+          to: { transform: "translateY(0)" },
+        },
       },
       animation: {
         "bar-rise": "bar-rise 240ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "dim-in": "dim-in 160ms ease-out",
+        "dialog-in": "dialog-in 200ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "sheet-rise": "sheet-rise 240ms cubic-bezier(0.16, 1, 0.3, 1)",
       },
       fontFamily: {
         sans: [

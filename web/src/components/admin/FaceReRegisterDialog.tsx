@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId } from "react";
+import { useId } from "react";
+import { useModalDialog } from "@/lib/admin/use-modal-dialog";
 
 type FaceReRegisterDialogProps = {
   /** `뒤로가기`: 창을 닫고 `얼굴 등록`을 누르기 전 화면에 머문다. */
@@ -20,25 +21,21 @@ export function FaceReRegisterDialog({
 }: FaceReRegisterDialogProps) {
   const titleId = useId();
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onBack();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onBack]);
+  const panelRef = useModalDialog<HTMLDivElement>(onBack);
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-[#1c1c1e]/45 dark:bg-black/60"
+      className="fixed inset-0 z-40 flex items-center justify-center bg-[#1c1c1e]/45 dark:bg-black/60 animate-dim-in motion-reduce:animate-none"
       role="presentation"
       onClick={onBack}
     >
       <div
         role="dialog"
         aria-modal="true"
+        ref={panelRef}
+        tabIndex={-1}
         aria-labelledby={titleId}
-        className="flex max-h-[calc(100dvh-32px)] w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-2xl bg-admin-surface p-[18px] md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px]"
+        className="flex max-h-[calc(100dvh-32px)] w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-2xl bg-admin-surface p-[18px] md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px] outline-none animate-dialog-in motion-reduce:animate-none"
         onClick={(event) => event.stopPropagation()}
       >
         <h2
