@@ -39,7 +39,10 @@ function StudentMyPageContent() {
 
   return (
     <>
-      <main className="flex flex-1 flex-col md:items-center md:px-6 md:pt-[90px]">
+      <main
+        data-surface-top
+        className="flex flex-1 flex-col md:items-center md:px-6 md:pt-[90px]"
+      >
         <div className="flex flex-1 flex-col md:w-full md:max-w-[640px] md:flex-none md:gap-5">
           <MyProfile
             profile={current.status === "ready" ? current.profile : null}
