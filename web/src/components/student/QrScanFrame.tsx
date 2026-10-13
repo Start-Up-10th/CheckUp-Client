@@ -11,9 +11,16 @@ const CORNERS = [
  * REQ-ATT-005 QR 스캔 영역 — 반투명 흰 사각형(white 6%, 모서리 26px) 안에 카메라 영상,
  * 네 귀퉁이에 초록 코너 가이드. 핸드폰(Figma 4:56) 280px·가이드 44px, 노트북(228:41)
  * 300px·가이드 48px. 두 크기의 가이드는 곡선 모양이 달라 Figma SVG를 각각 쓴다.
- * 영상은 거울처럼 뒤집지 않는다(뒤 카메라로 QR을 보는 화면이라 좌우가 실제와 같아야 한다).
+ * 뒤 카메라 영상은 거울처럼 뒤집지 않는다(QR을 보는 화면이라 좌우가 실제와 같아야 한다).
+ * 앞 카메라로 바꿨을 때(`mirrored`)만 셀카처럼 뒤집어 보인다(DEC-081).
  */
-export function QrScanFrame({ videoRef }: { videoRef: Ref<HTMLVideoElement> }) {
+export function QrScanFrame({
+  videoRef,
+  mirrored = false,
+}: {
+  videoRef: Ref<HTMLVideoElement>;
+  mirrored?: boolean;
+}) {
   return (
     <div className="relative size-[280px] shrink-0 md:size-[300px]">
       <div className="absolute inset-0 overflow-hidden rounded-[26px] bg-white/[0.06]">
@@ -23,7 +30,7 @@ export function QrScanFrame({ videoRef }: { videoRef: Ref<HTMLVideoElement> }) {
           muted
           playsInline
           aria-label="QR 카메라 화면"
-          className="size-full object-cover"
+          className={`size-full object-cover ${mirrored ? "-scale-x-100" : ""}`}
         />
       </div>
       {CORNERS.map(({ key, className }) => (
