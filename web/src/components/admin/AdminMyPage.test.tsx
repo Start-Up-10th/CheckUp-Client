@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   router: { push: vi.fn(), replace: vi.fn() },
   fetchFaceStatus: vi.fn(),
   showToast: vi.fn(),
+  logout: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => mocks.router }));
@@ -17,6 +18,7 @@ vi.mock("@/lib/student/face-enroll-api", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/student/face-enroll-api")>()),
   fetchFaceStatus: mocks.fetchFaceStatus,
 }));
+vi.mock("@/lib/auth/auth-api", () => ({ logout: mocks.logout }));
 vi.mock("@/components/admin/Toast", () => ({
   ToastLayer: () => null,
   useToast: () => ({ showToast: mocks.showToast }),
@@ -35,6 +37,7 @@ describe("AdminMyPage", () => {
     mocks.router.replace.mockReset();
     mocks.fetchFaceStatus.mockReset();
     mocks.showToast.mockReset();
+    mocks.logout.mockReset();
   });
 
   afterEach(() => {
@@ -52,6 +55,18 @@ describe("AdminMyPage", () => {
       "aria-checked",
       "false",
     );
+  });
+
+  it("핸드폰 맨 아래 로그아웃은 세션을 끊고 관리자 로그인으로 보낸다", async () => {
+    mocks.logout.mockResolvedValue(undefined);
+    render(<AdminMyPage />);
+
+    fireEvent.click(screen.getByRole("button", { name: "로그아웃" }));
+
+    await waitFor(() =>
+      expect(mocks.router.replace).toHaveBeenCalledWith("/admin/login"),
+    );
+    expect(mocks.logout).toHaveBeenCalledTimes(1);
   });
 
   describe("얼굴 등록", () => {
