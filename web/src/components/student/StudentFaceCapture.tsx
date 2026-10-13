@@ -17,6 +17,7 @@ import {
 import { useFaceCamera } from "@/lib/student/use-face-camera";
 import { FaceCaptureActions } from "./FaceCaptureActions";
 import { FaceCaptureStatus } from "./FaceCaptureStatus";
+import { FaceTurnGuide } from "./FaceTurnGuide";
 import { StudentErrorState } from "./StudentErrorState";
 import { RATE_LIMIT_MESSAGE, RateLimitedError } from "@/lib/rate-limit";
 import {
@@ -76,8 +77,8 @@ const CAPTURE_MS = 3000;
  * 새로 촬영한다. 프레임 추출·품질 평가는 서버(AI)가 한다.
  *
  * 노트북 폭(md 이상)은 Figma가 없어 같은 화면을 키워 보여 준다: 카메라 화면은 가운데 최대 816px 4:3 둥근 상자, 카운트다운 숫자
- * 160px, 단계 안내·버튼도 크게(DEC-061). 화면은 Figma 그대로다(카운트다운 숫자와 아래 단계 안내만, 코너 가이드·"얼굴을 화면 안에 맞춰 주세요"
- * 없음 — 사용자 결정 2026-09-25). 영상은 셀카처럼 좌우 반전한다(보내는 영상은 반전하지 않은 원본). 위 56px
+ * 160px, 단계 안내·버튼도 크게(DEC-061). 화면은 Figma 그대로다(카운트다운 숫자와 아래 단계 안내, 코너 가이드·"얼굴을 화면 안에 맞춰 주세요"
+ * 없음 — 사용자 결정 2026-09-25). 단, 카운트다운·촬영 중에는 단계 안내 위에 `고개를 상하좌우로 천천히 돌려 주세요`를 더한다(사용자 요청 2026-10-13, DEC-083). 영상은 셀카처럼 좌우 반전한다(보내는 영상은 반전하지 않은 원본). 위 56px
  * 흰 띠는 Figma의 가짜 상태바 자리라 사용자 결정(2026-10-08)으로 없애고 그 자리까지 카메라로 채운다. 실패 문구 위치·등록 중 안내·녹화를 지원하지 않는
  * 브라우저 안내는 Figma에 없어 기존 오류 배너·오류 화면을 썼다.
  */
@@ -302,12 +303,13 @@ export function StudentFaceCapture({
                 </span>
               )}
               <div
-                className={`absolute inset-x-0 flex justify-center ${
+                className={`absolute inset-x-0 flex flex-col items-center gap-2 md:gap-3 ${
                   done
                     ? "bottom-[34px] md:bottom-8"
                     : "bottom-[116px] md:bottom-24"
                 }`}
               >
+                {!done && status === "ready" && <FaceTurnGuide />}
                 <FaceCaptureStatus
                   message={statusMessage}
                   done={done && hasVideo && !submitting}
