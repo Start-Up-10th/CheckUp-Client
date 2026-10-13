@@ -210,6 +210,25 @@ describe("StudentFaceCapture 들어올 때", () => {
 });
 
 describe("StudentFaceCapture 촬영", () => {
+  it("카운트다운과 촬영 중에는 고개를 돌려 달라는 안내를 보이고 완료 단계에서는 숨긴다", async () => {
+    mockApi(READY);
+    render(<StudentFaceCapture />);
+    await advance();
+
+    const guide = "고개를 상하좌우로 천천히 돌려 주세요";
+    expect(screen.getByText(guide)).toBeInTheDocument();
+
+    await advance(1000);
+    await advance(1000);
+    await advance(1000);
+    expect(screen.getByText("촬영 중이에요")).toBeInTheDocument();
+    expect(screen.getByText(guide)).toBeInTheDocument();
+
+    await advance(3000);
+    expect(screen.getByText("촬영이 완료되었어요")).toBeInTheDocument();
+    expect(screen.queryByText(guide)).not.toBeInTheDocument();
+  });
+
   it("카운트다운이 끝난 뒤 촬영 중 단계에만 녹화한다", async () => {
     mockApi(READY);
     render(<StudentFaceCapture />);
