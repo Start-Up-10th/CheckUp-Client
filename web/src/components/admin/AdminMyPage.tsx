@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaceReRegisterDialog } from "@/components/admin/FaceReRegisterDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { ModeToggle } from "@/components/ModeToggle";
@@ -14,6 +14,7 @@ import {
 import { useTheme } from "@/lib/theme";
 
 const NOT_STUDENT_MESSAGE = "학생 정보가 없는 계정은 얼굴을 등록할 수 없어요.";
+const FACE_DONE_MESSAGE = "얼굴 등록을 마쳤어요.";
 const STATUS_FAILED_MESSAGE =
   "얼굴 등록 상태를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.";
 
@@ -30,7 +31,12 @@ const ROW =
  *   `from=admin`을 붙여 끝난 뒤 학생 홈이 아니라 이 화면으로 돌아온다(DEC-079).
  * - `화면 모드`는 공용 해/달 토글이다(`lib/theme`, REQ-UI-008). 관리자 화면은 항상 라이트라 학생 화면의 모드를 바꾼다.
  */
-export function AdminMyPage() {
+export function AdminMyPage({
+  faceDone = false,
+}: {
+  /** 얼굴 등록 흐름을 마치고 돌아왔다(`?face=done`). 성공 토스트를 한 번 보이고 주소에서 표시를 지운다(페이지를 다시 만들지 않고). */
+  faceDone?: boolean;
+}) {
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const { showToast } = useToast();
@@ -38,6 +44,16 @@ export function AdminMyPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   // 상태 확인이 끝나기 전의 중복 누름을 막는다.
   const inFlight = useRef(false);
+
+  // Strict Mode(개발)가 효과를 두 번 돌리면 토스트 컨테이너 정리가 첫 토스트를 지우고 두 번째가 다시 띄운다. 같은 문구는
+  // 토스트가 하나로 합치므로 여러 번 불러도 한 번만 보인다.
+  useEffect(() => {
+    if (!faceDone) return;
+    showToast({ variant: "success", message: FACE_DONE_MESSAGE });
+    // `router.replace`는 검색어가 바뀌어 페이지를 다시 만들고, 그러면 토스트 컨테이너가 정리되며 방금 띄운 토스트가
+    // 닫힌다. 페이지를 다시 만들지 않는 `history.replaceState`로 주소의 표시만 지운다(새로고침해도 다시 안 뜬다).
+    window.history.replaceState(null, "", "/admin/mypage");
+  }, [faceDone, showToast]);
 
   async function startFaceRegistration() {
     if (inFlight.current) return;
