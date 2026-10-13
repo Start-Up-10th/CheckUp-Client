@@ -148,6 +148,18 @@ body {
 }
 
 /*
+ * 설치한 앱(iOS PWA)의 맨 위 상태바 띠(시간·배터리)는 앱 화면 밖이라 <body> 배경색이 그대로 비친다. 마이페이지(핸드폰)는
+ * 머리 카드가 맨 위부터 시작하는 디자인(Figma 학생 6:2·관리자 1292:33)이라 띠가 머리와 같은 색이어야 한다.
+ * `data-surface-top`을 단 화면이 떠 있는 동안에만 <body> 배경을 머리 카드 색(surface)으로 바꾼다(핸드폰 폭만 —
+ * 패드·컴퓨터는 카드형이라 그대로, DEC-084).
+ */
+@media (max-width: 767px) {
+  body:has([data-surface-top]) {
+    background-color: rgb(var(--admin-surface));
+  }
+}
+
+/*
  * react-toastify 바깥 컨테이너(`.Toastify`)는 높이가 0이지만 flex 부모의 자식이면 gap을 한 칸 만들어
  * 화면 내용이 gap만큼 아래로 밀린다(Figma 위치와 어긋남). 흐름에서 빼 자리를 차지하지 않게 한다.
  * 토스트 자체는 라이브러리가 fixed로 그리므로 영향이 없다.
