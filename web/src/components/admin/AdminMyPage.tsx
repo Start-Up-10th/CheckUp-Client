@@ -1,8 +1,22 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { FaceReRegisterDialog } from "@/components/admin/FaceReRegisterDialog";
+import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { ModeToggle } from "@/components/ModeToggle";
+import { failureNotice } from "@/lib/rate-limit";
+import {
+  FaceLoginRequiredError,
+  FaceNotStudentError,
+  fetchFaceStatus,
+} from "@/lib/student/face-enroll-api";
 import { useTheme } from "@/lib/theme";
+
+const NOT_STUDENT_MESSAGE = "학생 정보가 없는 계정은 얼굴을 등록할 수 없어요.";
+const FACE_DONE_MESSAGE = "얼굴 등록을 마쳤어요.";
+const STATUS_FAILED_MESSAGE =
+  "얼굴 등록 상태를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.";
 
 const ROW =
   "flex min-h-[62px] w-full items-center justify-between rounded-2xl bg-admin-surface p-[18px] text-[15px] leading-[18px] text-admin-text xl:min-h-[77px] xl:rounded-[20px] xl:px-[23px] xl:py-[21px] xl:text-[19px] xl:leading-[23px]";
@@ -12,13 +26,60 @@ const ROW =
  * - 핸드폰: 흰 머리(`마이페이지` 제목 + 프로필)와 그 아래 메뉴 줄이 화면 폭을 채운다.
  * - 패드: 위 여백 102에 폭 500의 프로필 카드와 메뉴. 컴퓨터: 위 여백 113에 폭 800.
  * - `얼굴 등록`은 학생과 같은 순서로 개인정보 동의(`/consent`)를 거쳐 얼굴 등록으로 간다(사용자 결정 2026-10-12).
+ *   누르면 먼저 서버에서 얼굴 등록 상태를 확인한다(`GET /api/v1/face/me`). 이미 등록했으면 `다시 등록하시겠습니까?`
+ *   확인 창을 보이고(`뒤로가기`는 이 화면에 머묾, `다음`은 동의 → 다시 등록), 아직이면 바로 동의로 간다. 어느 쪽이든
+ *   `from=admin`을 붙여 끝난 뒤 학생 홈이 아니라 이 화면으로 돌아온다(DEC-079).
  * - `화면 모드`는 공용 해/달 토글이다(`lib/theme`, REQ-UI-008). 관리자 화면은 항상 라이트라 학생 화면의 모드를 바꾼다.
  */
-export function AdminMyPage() {
+export function AdminMyPage({
+  faceDone = false,
+}: {
+  /** 얼굴 등록 흐름을 마치고 돌아왔다(`?face=done`). 성공 토스트를 한 번 보이고 주소에서 표시를 지운다(페이지를 다시 만들지 않고). */
+  faceDone?: boolean;
+}) {
   const { theme, toggleTheme } = useTheme();
+  const router = useRouter();
+  const { showToast } = useToast();
+  const [checking, setChecking] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  // 상태 확인이 끝나기 전의 중복 누름을 막는다.
+  const inFlight = useRef(false);
+
+  // Strict Mode(개발)가 효과를 두 번 돌리면 토스트 컨테이너 정리가 첫 토스트를 지우고 두 번째가 다시 띄운다. 같은 문구는
+  // 토스트가 하나로 합치므로 여러 번 불러도 한 번만 보인다.
+  useEffect(() => {
+    if (!faceDone) return;
+    showToast({ variant: "success", message: FACE_DONE_MESSAGE });
+    // `router.replace`는 검색어가 바뀌어 페이지를 다시 만들고, 그러면 토스트 컨테이너가 정리되며 방금 띄운 토스트가
+    // 닫힌다. 페이지를 다시 만들지 않는 `history.replaceState`로 주소의 표시만 지운다(새로고침해도 다시 안 뜬다).
+    window.history.replaceState(null, "", "/admin/mypage");
+  }, [faceDone, showToast]);
+
+  async function startFaceRegistration() {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setChecking(true);
+    try {
+      const { enrolled } = await fetchFaceStatus();
+      if (enrolled) setConfirmOpen(true);
+      else router.push("/consent?from=admin");
+    } catch (error) {
+      if (error instanceof FaceLoginRequiredError) {
+        router.replace("/admin/login");
+      } else if (error instanceof FaceNotStudentError) {
+        showToast({ variant: "error", message: NOT_STUDENT_MESSAGE });
+      } else {
+        showToast(failureNotice(error, STATUS_FAILED_MESSAGE));
+      }
+    } finally {
+      inFlight.current = false;
+      setChecking(false);
+    }
+  }
 
   return (
     <div className="flex w-full flex-col md:items-center md:px-[22px] md:pb-6 md:pt-[102px] xl:px-8 xl:pb-7 xl:pt-[113px]">
+      <ToastLayer />
       <div className="flex w-full flex-col md:max-w-[500px] md:gap-5 xl:max-w-[800px] xl:gap-[25px]">
         <section
           aria-label="프로필"
@@ -41,9 +102,13 @@ export function AdminMyPage() {
           aria-label="마이페이지 메뉴"
           className="flex flex-col gap-2.5 px-[18px] py-4 md:p-0 xl:gap-[13px]"
         >
-          <Link
-            href="/consent"
-            className={`${ROW} transition-colors hover:bg-admin-rowSurface`}
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            aria-busy={checking}
+            disabled={checking}
+            onClick={startFaceRegistration}
+            className={`${ROW} text-left hover:bg-admin-divider active:bg-admin-divider disabled:opacity-60`}
           >
             <span>얼굴 등록</span>
             <span
@@ -52,7 +117,7 @@ export function AdminMyPage() {
             >
               ›
             </span>
-          </Link>
+          </button>
           <div className={`${ROW} py-[17px] xl:py-[21px]`}>
             <span>화면 모드</span>
             <button
@@ -68,6 +133,12 @@ export function AdminMyPage() {
           </div>
         </nav>
       </div>
+      {confirmOpen ? (
+        <FaceReRegisterDialog
+          onBack={() => setConfirmOpen(false)}
+          onNext={() => router.push("/consent?reset=1&from=admin")}
+        />
+      ) : null}
     </div>
   );
 }

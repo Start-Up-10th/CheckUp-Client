@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
 import { ADMIN_NAV_ITEMS, isAdminNavActive } from "@/lib/admin/nav-items";
+import { useModalDialog } from "@/lib/admin/use-modal-dialog";
 
 type MenuIconProps = {
   src: string;
@@ -53,25 +53,21 @@ export function AdminMenuSheet({
   onClose,
   onLogout,
 }: AdminMenuSheetProps) {
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  const panelRef = useModalDialog<HTMLDivElement>(onClose);
 
   return (
     <div
-      className="fixed inset-x-0 bottom-[60px] top-0 z-30 flex flex-col justify-end bg-[#1c1c1e]/45 dark:bg-black/60 md:hidden"
+      className="fixed inset-x-0 bottom-[60px] top-0 z-30 flex flex-col justify-end bg-[#1c1c1e]/45 dark:bg-black/60 md:hidden animate-dim-in motion-reduce:animate-none"
       role="presentation"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
+        ref={panelRef}
+        tabIndex={-1}
         aria-label="메뉴"
-        className="flex w-full flex-col gap-1 rounded-t-[22px] bg-admin-surface px-4 pb-4 pt-2.5"
+        className="flex w-full flex-col gap-1 rounded-t-[22px] bg-admin-surface px-4 pb-4 pt-2.5 outline-none animate-sheet-rise motion-reduce:animate-none"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-center pb-2">

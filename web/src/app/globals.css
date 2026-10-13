@@ -155,3 +155,14 @@ body {
 .Toastify {
   position: absolute;
 }
+
+/*
+ * 화면 모드를 바꾸는 순간(`lib/theme`의 apply)에만 붙는 클래스다. 요소마다 다른 색 전환(`transition`)이 따로 돌아
+ * 일부만 늦게 바뀌어 화면이 튀어 보이는 것을 막는다. 동작·토스트 같은 `animation`은 건드리지 않는다.
+ */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
+}

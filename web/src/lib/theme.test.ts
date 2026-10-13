@@ -101,3 +101,26 @@ describe("useTheme", () => {
     expect(result.current.theme).toBe("dark");
   });
 });
+
+describe("모드를 바꾸는 순간의 색 전환", () => {
+  it("바꾸는 동안만 전환을 끄는 클래스가 붙고 두 프레임 뒤 사라진다", () => {
+    mockSystemDark(false);
+    const callbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      callbacks.push(cb);
+      return callbacks.length;
+    });
+    const root = document.documentElement;
+
+    act(() => setTheme("dark"));
+    expect(root.classList.contains("theme-switching")).toBe(true);
+    expect(root.dataset.theme).toBe("dark");
+
+    // 첫 프레임에서는 아직 붙어 있다(새 색을 먼저 그린다)
+    callbacks.shift()?.(0);
+    expect(root.classList.contains("theme-switching")).toBe(true);
+    // 다음 프레임에 사라진다
+    callbacks.shift()?.(16);
+    expect(root.classList.contains("theme-switching")).toBe(false);
+  });
+});
