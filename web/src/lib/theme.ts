@@ -40,9 +40,25 @@ function systemTheme(): Theme {
     : "light";
 }
 
+/** 모드를 바꾸는 순간 `<html>`에 붙여 모든 색 전환을 잠깐 끄는 클래스(globals.css). */
+const NO_TRANSITION_CLASS = "theme-switching";
+
 function apply(theme: Theme) {
-  document.documentElement.dataset.theme = theme;
+  const root = document.documentElement;
+  // 배경은 한 번에 바뀌는데 `transition`이 있는 버튼·카드·행은 0.15초에 걸쳐 따라와, 바뀌는 동안 어두운 바탕 위에
+  // 밝은 요소가 남아 화면이 튀어 보인다. 바뀌는 그 순간만 전환을 끄고 새 색을 먼저 그린 뒤 다시 켠다.
+  root.classList.add(NO_TRANSITION_CLASS);
+  root.dataset.theme = theme;
   window.dispatchEvent(new Event(CHANGE_EVENT));
+  if (typeof window.requestAnimationFrame !== "function") {
+    root.classList.remove(NO_TRANSITION_CLASS);
+    return;
+  }
+  window.requestAnimationFrame(() =>
+    window.requestAnimationFrame(() =>
+      root.classList.remove(NO_TRANSITION_CLASS),
+    ),
+  );
 }
 
 /** 저장된 모드(없으면 기기 설정)를 다시 붙인다. 다른 탭에서 바뀌었거나 기기 설정이 바뀌었을 때 부른다. */
