@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { CountStepper } from "@/components/admin/student-management/CountStepper";
 import { roomLabel } from "@/lib/admin/volunteer-roster";
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
+import { useModalDialog } from "@/lib/admin/use-modal-dialog";
 
 type StudentDetailDialogProps = {
   student: RosterStudent;
@@ -25,25 +26,21 @@ export function StudentDetailDialog({
   const titleId = useId();
   const reasonId = useId();
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  const panelRef = useModalDialog<HTMLDivElement>(onClose);
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-[#1c1c1e]/45 dark:bg-black/60"
+      className="fixed inset-0 z-40 flex items-center justify-center bg-[#1c1c1e]/45 dark:bg-black/60 animate-dim-in motion-reduce:animate-none"
       role="presentation"
       onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
+        ref={panelRef}
+        tabIndex={-1}
         aria-labelledby={titleId}
-        className="flex max-h-[calc(100dvh-32px)] w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 overflow-y-auto rounded-2xl bg-admin-surface p-[18px] md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px]"
+        className="flex max-h-[calc(100dvh-32px)] w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 overflow-y-auto rounded-2xl bg-admin-surface p-[18px] md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px] outline-none animate-dialog-in motion-reduce:animate-none"
         onClick={(event) => event.stopPropagation()}
       >
         <h2
