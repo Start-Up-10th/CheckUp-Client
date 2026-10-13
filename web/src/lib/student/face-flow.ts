@@ -9,6 +9,9 @@ export type FaceFlow = {
   fromAdmin: boolean;
 };
 
+/** 관리자 출발 흐름이 끝났을 때 돌아가는 주소. */
+export const ADMIN_MYPAGE_FACE_DONE = "/admin/mypage?face=done";
+
 export const FACE_FLOW_DEFAULT: FaceFlow = { reset: false, fromAdmin: false };
 
 /** 서버 컴포넌트의 `searchParams`에서 흐름을 읽는다. 모르는 값은 무시한다. */
@@ -27,7 +30,10 @@ export function faceFlowQuery(flow: FaceFlow): string {
   return parts.length > 0 ? `?${parts.join("&")}` : "";
 }
 
-/** 얼굴 등록을 마치거나 이미 등록돼 있을 때 돌아갈 화면. */
+/**
+ * 얼굴 등록을 마치거나 이미 등록돼 있을 때 돌아갈 화면. 관리자 마이페이지에는 `?face=done`을 달아 마친 것을
+ * 한 번 알리게 한다(마이페이지가 보인 뒤 주소에서 지운다).
+ */
 export function faceFlowDonePath(flow: FaceFlow): string {
-  return flow.fromAdmin ? "/admin/mypage" : "/main";
+  return flow.fromAdmin ? ADMIN_MYPAGE_FACE_DONE : "/main";
 }

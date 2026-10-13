@@ -131,7 +131,9 @@ describe("StudentFaceCapture 들어올 때", () => {
     render(<StudentFaceCapture fromAdmin />);
     await advance();
 
-    expect(mocks.router.replace).toHaveBeenCalledWith("/admin/mypage");
+    expect(mocks.router.replace).toHaveBeenCalledWith(
+      "/admin/mypage?face=done",
+    );
     expect(mocks.router.replace).not.toHaveBeenCalledWith("/main");
   });
 
@@ -340,7 +342,7 @@ describe("StudentFaceCapture 완료", () => {
       fireEvent.click(completeButton());
       await advance();
 
-      expect(mocks.router.push).toHaveBeenCalledWith("/admin/mypage");
+      expect(mocks.router.push).toHaveBeenCalledWith("/admin/mypage?face=done");
       expect(mocks.router.push).not.toHaveBeenCalledWith("/main");
     });
 
