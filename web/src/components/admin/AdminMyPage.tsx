@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { FaceReRegisterDialog } from "@/components/admin/FaceReRegisterDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { ModeToggle } from "@/components/ModeToggle";
+import { MaskIcon } from "@/components/student/MaskIcon";
+import { useAdminLogout } from "@/lib/admin/use-admin-logout";
 import { failureNotice } from "@/lib/rate-limit";
 import {
   FaceLoginRequiredError,
@@ -23,7 +25,8 @@ const ROW =
 
 /**
  * 관리자 마이페이지(Figma 09: 컴퓨터 1289:25, 패드 1289:233, 핸드폰 1292:33). 프로필, `얼굴 등록`, `화면 모드`다.
- * - 핸드폰: 흰 머리(`마이페이지` 제목 + 프로필)와 그 아래 메뉴 줄이 화면 폭을 채운다.
+ * - 핸드폰: 학생 마이페이지(Figma 6:2)와 같다. 흰 머리(위 여백 60 = 상태바 56 + 4, `마이페이지` 제목 + 프로필)와
+ *   그 아래 메뉴 줄이 화면 폭을 채우고, 맨 아래에 `로그아웃`이 있다(패드·컴퓨터는 레일·사이드바에 있어 숨긴다).
  * - 패드: 위 여백 102에 폭 500의 프로필 카드와 메뉴. 컴퓨터: 위 여백 113에 폭 800.
  * - `얼굴 등록`은 학생과 같은 순서로 개인정보 동의(`/consent`)를 거쳐 얼굴 등록으로 간다(사용자 결정 2026-10-12).
  *   누르면 먼저 서버에서 얼굴 등록 상태를 확인한다(`GET /api/v1/face/me`). 이미 등록했으면 `다시 등록하시겠습니까?`
@@ -38,6 +41,7 @@ export function AdminMyPage({
   faceDone?: boolean;
 }) {
   const { theme, toggleTheme } = useTheme();
+  const logout = useAdminLogout();
   const router = useRouter();
   const { showToast } = useToast();
   const [checking, setChecking] = useState(false);
@@ -78,12 +82,12 @@ export function AdminMyPage({
   }
 
   return (
-    <div className="flex w-full flex-col md:items-center md:px-[22px] md:pb-6 md:pt-[102px] xl:px-8 xl:pb-7 xl:pt-[113px]">
+    <div className="flex min-h-full w-full flex-col md:items-center md:px-[22px] md:pb-6 md:pt-[102px] xl:px-8 xl:pb-7 xl:pt-[113px]">
       <ToastLayer />
-      <div className="flex w-full flex-col md:max-w-[500px] md:gap-5 xl:max-w-[800px] xl:gap-[25px]">
+      <div className="flex w-full flex-1 flex-col md:max-w-[500px] md:flex-none md:gap-5 xl:max-w-[800px] xl:gap-[25px]">
         <section
           aria-label="프로필"
-          className="bg-admin-surface px-[22px] pb-[22px] pt-1 md:rounded-[20px] md:p-7 xl:rounded-[25px] xl:p-[35px]"
+          className="bg-admin-surface px-[22px] pb-[22px] pt-[60px] md:rounded-[20px] md:p-7 xl:rounded-[25px] xl:p-[35px]"
         >
           <h1 className="pb-5 text-[27px] font-bold leading-8 tracking-[-0.81px] text-admin-text md:sr-only">
             마이페이지
@@ -100,7 +104,7 @@ export function AdminMyPage({
 
         <nav
           aria-label="마이페이지 메뉴"
-          className="flex flex-col gap-2.5 px-[18px] py-4 md:p-0 xl:gap-[13px]"
+          className="flex flex-1 flex-col gap-2.5 px-[18px] py-4 md:flex-none md:p-0 xl:gap-[13px]"
         >
           <button
             type="button"
@@ -131,6 +135,18 @@ export function AdminMyPage({
               <ModeToggle />
             </button>
           </div>
+          <div className="flex-1 md:hidden" />
+          <button
+            type="button"
+            onClick={logout}
+            className="flex h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-admin-danger-border bg-admin-danger-bg px-[18px] text-[15px] font-medium leading-normal text-admin-danger-text transition-colors hover:bg-admin-danger-border md:hidden"
+          >
+            <MaskIcon
+              src="/icons/student-nav/logout.svg"
+              className="size-[18px]"
+            />
+            로그아웃
+          </button>
         </nav>
       </div>
       {confirmOpen ? (
