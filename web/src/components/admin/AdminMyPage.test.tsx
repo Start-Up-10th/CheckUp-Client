@@ -57,6 +57,12 @@ describe("AdminMyPage", () => {
     );
   });
 
+  it("상태바 띠를 머리 색으로 채우도록 표시를 단다", () => {
+    const { container } = render(<AdminMyPage />);
+
+    expect(container.querySelector("[data-surface-top]")).not.toBeNull();
+  });
+
   it("핸드폰 맨 아래 로그아웃은 세션을 끊고 관리자 로그인으로 보낸다", async () => {
     mocks.logout.mockResolvedValue(undefined);
     render(<AdminMyPage />);
