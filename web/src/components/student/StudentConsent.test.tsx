@@ -29,6 +29,17 @@ describe("StudentConsent", () => {
     ).toBeDisabled();
   });
 
+  it("다시 등록·관리자 출발 흐름이면 촬영 화면에 그대로 넘긴다", async () => {
+    mockFetch(204);
+    render(<StudentConsent flow={{ reset: true, fromAdmin: true }} />);
+
+    agreeAll();
+
+    await waitFor(() =>
+      expect(push).toHaveBeenCalledWith("/face?reset=1&from=admin"),
+    );
+  });
+
   it("저장에 성공하면 선택한 항목을 보내고 얼굴 등록으로 간다", async () => {
     const fetchMock = mockFetch(204);
     render(<StudentConsent />);
