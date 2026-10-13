@@ -146,3 +146,11 @@
 body {
   background-color: rgb(var(--admin-bg));
 }
+
+/* 화면 모드를 바꾸는 순간에는 색 전환 효과를 꺼서 화면 전체가 한 번에 바뀌게 한다(lib/theme.ts). */
+[data-theme-switching],
+[data-theme-switching] *,
+[data-theme-switching] *::before,
+[data-theme-switching] *::after {
+  transition: none !important;
+}

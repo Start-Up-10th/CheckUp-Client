@@ -48,7 +48,16 @@ function isLightOnlyPath(): boolean {
 }
 
 function apply(theme: Theme) {
-  document.documentElement.dataset.theme = isLightOnlyPath() ? "light" : theme;
+  const root = document.documentElement;
+  const next = isLightOnlyPath() ? "light" : theme;
+  if (root.dataset.theme !== next) {
+    // 호버용 `transition-colors`가 걸린 줄·버튼은 모드를 바꿀 때 색이 천천히 번지며 바뀐다. 바꾸는 순간에만
+    // 전환 효과를 끄고(globals.css), 새 색을 한 번 계산시킨 뒤 되돌려 화면 전체가 한 번에 바뀌게 한다.
+    root.dataset.themeSwitching = "";
+    root.dataset.theme = next;
+    void window.getComputedStyle(root).color;
+    window.setTimeout(() => delete root.dataset.themeSwitching, 1);
+  }
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
