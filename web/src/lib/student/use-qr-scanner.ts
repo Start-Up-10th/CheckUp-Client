@@ -1,9 +1,11 @@
 "use client";
 
 import jsQR from "jsqr";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type QrScannerStatus = "requesting" | "scanning" | "error";
+/** 켤 카메라 방향. environment는 뒤 카메라, user는 앞 카메라다. */
+type QrCameraFacing = "environment" | "user";
 
 /** 영상에서 QR을 찾는 간격. 너무 짧으면 폰 배터리·발열이 늘고, 길면 인식이 느리게 느껴진다. */
 const SCAN_INTERVAL_MS = 200;
@@ -19,6 +21,10 @@ const MAX_SCAN_WIDTH = 640;
  * `paused`가 true인 동안(결과 처리 중)에는 같은 QR을 반복해서 넘기지 않는다.
  * `enabled`가 false면 카메라를 켜지 않는다 — `/qr#t=<토큰>` 링크로 들어와 카메라 없이 바로
  * 제출하는 경우에 쓴다(하네스 DEC-018). 나중에 true가 되면 그때 카메라를 켠다.
+ * `switchCamera`는 앞·뒤 카메라를 바꾼다(DEC-080). 켜져 있던 카메라를 끄고 반대 방향으로 다시 켠다.
+ * 카메라가 둘 이상일 때만 `canSwitch`가 true다 — 카메라 수는 권한을 받은 뒤에야 알 수 있어 켠 다음에 센다.
+ * 앞 카메라일 때는 `mirrored`가 true라 화면을 거울처럼 뒤집어 보인다(판독은 뒤집지 않은 원본 영상으로 한다).
+ * 고른 방향은 저장하지 않아, 화면에 다시 들어오면 뒤 카메라부터 켠다.
  */
 export function useQrScanner({
   onDetect,
@@ -31,6 +37,9 @@ export function useQrScanner({
 }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [status, setStatus] = useState<QrScannerStatus>("requesting");
+  const [facing, setFacing] = useState<QrCameraFacing>("environment");
+  const [canSwitch, setCanSwitch] = useState(false);
+  const [mirrored, setMirrored] = useState(false);
 
   // 반복 작업 안에서 항상 최신 값을 쓰도록 ref에 담는다(바뀔 때마다 카메라를 다시 켜지 않기 위해).
   const onDetectRef = useRef(onDetect);
@@ -74,7 +83,7 @@ export function useQrScanner({
 
     navigator.mediaDevices
       .getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
+        video: { facingMode: { ideal: facing } },
         audio: false,
       })
       .then((nextStream) => {
@@ -85,7 +94,21 @@ export function useQrScanner({
         stream = nextStream;
         if (videoRef.current) videoRef.current.srcObject = nextStream;
         setStatus("scanning");
+        // 실제로 켜진 카메라가 앞 카메라일 때만 뒤집는다(노트북 웹캠은 방향 값이 없어 그대로 둔다).
+        setMirrored(
+          nextStream.getVideoTracks()[0]?.getSettings?.().facingMode === "user",
+        );
         timer = setInterval(scanOnce, SCAN_INTERVAL_MS);
+        navigator.mediaDevices
+          .enumerateDevices?.()
+          .then((devices) => {
+            if (cancelled) return;
+            const cameras = devices.filter(
+              (device) => device.kind === "videoinput",
+            );
+            setCanSwitch(cameras.length > 1);
+          })
+          .catch(() => {});
       })
       .catch(() => {
         if (!cancelled) setStatus("error");
@@ -96,7 +119,13 @@ export function useQrScanner({
       if (timer) clearInterval(timer);
       stream?.getTracks().forEach((track) => track.stop());
     };
-  }, [enabled]);
+  }, [enabled, facing]);
 
-  return { videoRef, status };
+  const switchCamera = useCallback(() => {
+    setFacing((current) =>
+      current === "environment" ? "user" : "environment",
+    );
+  }, []);
+
+  return { videoRef, status, canSwitch, mirrored, switchCamera };
 }
