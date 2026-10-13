@@ -53,7 +53,7 @@ export function AdminContentState(props: AdminContentStateProps) {
           aria-hidden="true"
           width={32}
           height={32}
-          className="size-8"
+          className="size-8 dark:invert"
         />
       </span>
 
