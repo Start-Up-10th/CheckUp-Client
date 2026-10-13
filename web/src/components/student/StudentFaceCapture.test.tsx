@@ -126,6 +126,15 @@ describe("StudentFaceCapture 들어올 때", () => {
     expect(mocks.cameraEnabled).not.toContain(true);
   });
 
+  it("관리자 마이페이지에서 시작했고 이미 등록했으면 관리자 마이페이지로 돌아간다", async () => {
+    mockApi({ status: 200, body: { consented: true, enrolled: true } });
+    render(<StudentFaceCapture fromAdmin />);
+    await advance();
+
+    expect(mocks.router.replace).toHaveBeenCalledWith("/admin/mypage");
+    expect(mocks.router.replace).not.toHaveBeenCalledWith("/main");
+  });
+
   it("얼굴 동의가 없으면 동의 화면으로 간다", async () => {
     mockApi({ status: 200, body: { consented: false, enrolled: false } });
     render(<StudentFaceCapture />);
@@ -319,6 +328,30 @@ describe("StudentFaceCapture 완료", () => {
       expect(
         screen.getByText("3초 후 자동으로 촬영합니다"),
       ).toBeInTheDocument();
+    });
+
+    it("관리자 마이페이지에서 시작했으면 등록되고 나서 관리자 마이페이지로 돌아간다", async () => {
+      mockApi(ENROLLED, [{ status: 201 }]);
+      render(<StudentFaceCapture mode="reset" fromAdmin />);
+      await advance();
+      await countdown();
+      await advance(3000);
+
+      fireEvent.click(completeButton());
+      await advance();
+
+      expect(mocks.router.push).toHaveBeenCalledWith("/admin/mypage");
+      expect(mocks.router.push).not.toHaveBeenCalledWith("/main");
+    });
+
+    it("동의가 없으면 다시 등록·관리자 출발을 동의 화면에 그대로 넘긴다", async () => {
+      mockApi({ status: 200, body: { consented: false, enrolled: true } });
+      render(<StudentFaceCapture mode="reset" fromAdmin />);
+      await advance();
+
+      expect(mocks.router.replace).toHaveBeenCalledWith(
+        "/consent?reset=1&from=admin",
+      );
     });
 
     it("처음 등록과 같은 흐름으로 촬영하고 등록되면 학생 홈으로 간다", async () => {
