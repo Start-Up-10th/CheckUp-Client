@@ -1,28 +1,65 @@
 /**
  * 화면 모드 토글 그림(Figma ModeToggle 1278:46, 48×28). 라이트는 왼쪽 흰 손잡이에 해, 다크는 오른쪽 라임 손잡이에 달이다.
- * Figma 원본 SVG를 그대로 쓴다: 라이트는 마이페이지 줄에 놓인 것(1278:70, 회색 바탕), 다크는 컴포넌트의 Dark(1278:52).
- * 두 장을 다 넣고 CSS로 지금 모드의 것만 보여 첫 화면부터 맞는 쪽이 나온다. 누르는 동작과 역할(`switch`)은 감싸는 버튼이 맡는다.
+ * 도형·색·좌표는 Figma 원본 SVG 그대로다: 라이트는 마이페이지 줄에 놓인 것(1278:70, 회색 바탕), 다크는 컴포넌트의 Dark(1278:52).
+ * 이미지 파일로 두면 처음 바꿀 때 반대쪽 그림을 받아 오느라 토글이 늦게 바뀌어, 화면 안에 직접 그린다.
+ * 두 모양을 다 넣고 CSS로 지금 모드의 것만 보여 첫 화면부터 맞는 쪽이 나온다. 누르는 동작과 역할(`switch`)은 감싸는 버튼이 맡는다.
  * Figma의 Smart Animate(손잡이가 미끄러지는 전환)는 넣지 않았고 바로 바뀐다.
  */
 export function ModeToggle() {
   return (
-    <span aria-hidden="true" className="block h-7 w-12 shrink-0">
-      {/* eslint-disable-next-line @next/next/no-img-element -- 작은 정적 SVG라 next/image 최적화가 필요 없다 */}
-      <img
-        src="/icons/theme/mode-toggle-light.svg"
-        alt=""
-        width={48}
-        height={28}
-        className="size-full dark:hidden"
-      />
-      {/* eslint-disable-next-line @next/next/no-img-element -- 위와 같다 */}
-      <img
-        src="/icons/theme/mode-toggle-dark.svg"
-        alt=""
-        width={48}
-        height={28}
-        className="hidden size-full dark:block"
-      />
-    </span>
+    <svg
+      aria-hidden="true"
+      width="48"
+      height="28"
+      viewBox="0 0 48 28"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="block h-7 w-12 shrink-0"
+    >
+      <g className="dark:hidden">
+        <rect width="48" height="28" rx="14" fill="#F2F2F3" />
+        <circle
+          cx="14"
+          cy="14"
+          r="11"
+          fill="white"
+          style={{ filter: "drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.15))" }}
+        />
+        <path
+          d="M14 16.625C15.4497 16.625 16.625 15.4497 16.625 14C16.625 12.5503 15.4497 11.375 14 11.375C12.5503 11.375 11.375 12.5503 11.375 14C11.375 15.4497 12.5503 16.625 14 16.625Z"
+          stroke="#8DB51E"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+        <path
+          d="M14 8.16667V9.33333M14 18.6667V19.8333M9.85833 9.85833L10.675 10.675M17.325 17.325L18.1417 18.1417M8.16667 14H9.33333M18.6667 14H19.8333M9.85833 18.1417L10.675 17.325M17.325 10.675L18.1417 9.85833"
+          stroke="#8DB51E"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </g>
+      <g className="hidden dark:block">
+        <rect width="48" height="28" rx="14" fill="#3D3C38" />
+        <circle
+          cx="34"
+          cy="14"
+          r="11"
+          fill="#C5F23A"
+          style={{ filter: "drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.35))" }}
+        />
+        <path
+          d="M38.9583 15.4583C38.0618 15.8064 37.0833 15.8862 36.1422 15.688C35.2011 15.4898 34.3379 15.0222 33.6578 14.3422C32.9778 13.6621 32.5102 12.7989 32.312 11.8578C32.1138 10.9167 32.1936 9.93824 32.5417 9.04167C31.7728 9.34016 31.0905 9.82575 30.5566 10.4544C30.0227 11.0831 29.6541 11.8351 29.4842 12.6422C29.3142 13.4493 29.3483 14.286 29.5833 15.0767C29.8183 15.8673 30.2468 16.5868 30.83 17.17C31.4132 17.7532 32.1327 18.1817 32.9233 18.4167C33.714 18.6517 34.5507 18.6858 35.3578 18.5158C36.1649 18.3459 36.9169 17.9773 37.5456 17.4434C38.1743 16.9095 38.6598 16.2272 38.9583 15.4583Z"
+          fill="#2A2925"
+        />
+        <rect
+          x="0.5"
+          y="0.5"
+          width="47"
+          height="27"
+          rx="13.5"
+          stroke="#4A473F"
+        />
+      </g>
+    </svg>
   );
 }
