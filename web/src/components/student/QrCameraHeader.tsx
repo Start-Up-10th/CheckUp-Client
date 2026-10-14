@@ -8,7 +8,7 @@ import Link from "next/link";
  */
 export function QrCameraHeader() {
   return (
-    <header className="flex items-center gap-3 px-[22px] pb-[18px] pt-[62px] md:hidden">
+    <header className="flex items-center gap-3 px-[22px] pb-[18px] pt-[62px] xl:hidden">
       <Link
         href="/main"
         aria-label="뒤로 가기"

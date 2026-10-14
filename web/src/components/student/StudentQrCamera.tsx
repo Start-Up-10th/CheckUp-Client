@@ -197,15 +197,12 @@ export function StudentQrCamera() {
 
   return (
     <StudentShell showTabBar={false} sidebarTone="camera">
-      <main className="relative flex flex-1 flex-col bg-admin-ink md:dark:bg-admin-bg xl:bg-admin-bg">
+      <main className="relative flex flex-1 flex-col bg-admin-ink xl:bg-admin-bg">
         <QrCameraHeader />
         {canSwitch && status === "scanning" ? (
           <QrCameraSwitchButton onClick={switchCamera} />
         ) : null}
         <div className="flex flex-1 flex-col items-center justify-center gap-[30px] px-[18px] pb-10 md:gap-6">
-          <h1 className="hidden text-[22px] font-bold leading-normal tracking-[-0.44px] text-white md:block xl:hidden">
-            QR 코드를 화면에 비춰 주세요
-          </h1>
           <h1 className="hidden text-[22px] font-bold leading-normal tracking-[-0.44px] text-white xl:block xl:text-admin-text">
             핸드폰으로 QR 출석을 해주세요
           </h1>

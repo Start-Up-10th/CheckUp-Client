@@ -9,7 +9,7 @@ export function QrCameraSwitchButton({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       aria-label="카메라 전환"
-      className="absolute right-[22px] top-[58px] flex size-10 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-white/15 hover:text-white md:right-6 md:top-6"
+      className="absolute right-[22px] top-[58px] flex size-10 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-white/15 hover:text-white xl:right-6 xl:top-6"
     >
       <svg
         aria-hidden="true"

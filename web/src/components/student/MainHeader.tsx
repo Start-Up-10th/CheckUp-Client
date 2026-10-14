@@ -17,8 +17,8 @@ type MainHeaderProps = {
  * REQ-UI-003 학생 홈 머리: `학번 · 이름`, `기숙사 N층` 제목, 알림 진입점(REQ-COM-005 — 읽지 않은
  * 알림이 있으면 종에 빨간 점, 숫자 배지 없음). 읽지 않은 알림 여부는 공통 틀(StudentShell)이 서버에서 받아 내려 준다.
  * 핸드폰(Figma 5:4)은 흰 헤더, 위 여백은 상태바 56px+4px=60px(보이는 위치 그대로), 종 22px.
- * 노트북(224:41)은 배경 없이 제목 28px이고 종 버튼이 없다 — 알림은 사이드바 "알림"으로 들어간다
- * (팀원이 수정한 Figma, 2026-09-25, #29). 빨간 점 없는 종은 Figma에 없어 원본에서 점만 뺐고,
+ * 노트북(224:41, 1280px 이상)은 배경 없이 제목 28px이고 종 버튼이 없다 — 알림은 사이드바 "알림"으로 들어간다
+ * (팀원이 수정한 Figma, 2026-09-25, #29). 패드 폭(768~1279px)은 사이드바가 없어 핸드폰처럼 종으로 들어가며 종을 32px로 키운다(DEC-094). 빨간 점 없는 종은 Figma에 없어 원본에서 점만 뺐고,
  * 핸드폰 종의 clip 밖 찌꺼기 원은 사이드바 종(#16)처럼 지웠다.
  */
 export function MainHeader({ profile }: MainHeaderProps) {
@@ -39,7 +39,7 @@ export function MainHeader({ profile }: MainHeaderProps) {
         aria-label={
           hasUnreadNotification ? "알림 (읽지 않은 알림 있음)" : "알림"
         }
-        className="-m-2 p-2 md:hidden"
+        className="-m-2 p-2 xl:hidden md:[&_img]:!size-8"
       >
         {/* 빨간 점 색을 유지해야 해서 원본 SVG를 그대로 쓴다. 다크 모드용은 선만 밝게 바꾼 사본이다. */}
         <ThemedImg
