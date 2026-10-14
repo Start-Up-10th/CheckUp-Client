@@ -76,16 +76,32 @@ describe("AdminMyPage", () => {
   });
 
   describe("얼굴 등록", () => {
-    it("아직 등록하지 않았으면 바로 개인정보 동의로 간다(관리자 출발 표시)", async () => {
+    it("아직 등록하지 않았으면 이동하지 않고 등록할지 묻고, 다음이면 개인정보 동의로 간다(관리자 출발 표시)", async () => {
       mocks.fetchFaceStatus.mockResolvedValue(NOT_REGISTERED);
       render(<AdminMyPage />);
 
       fireEvent.click(faceRegisterButton());
 
-      await waitFor(() =>
-        expect(mocks.router.push).toHaveBeenCalledWith("/consent?from=admin"),
-      );
+      expect(
+        await screen.findByRole("dialog", { name: "얼굴을 등록해요" }),
+      ).toBeInTheDocument();
+      expect(mocks.router.push).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "다음" }));
+
+      expect(mocks.router.push).toHaveBeenCalledWith("/consent?from=admin");
+    });
+
+    it("아직 등록하지 않았어도 뒤로가기는 창만 닫는다", async () => {
+      mocks.fetchFaceStatus.mockResolvedValue(NOT_REGISTERED);
+      render(<AdminMyPage />);
+
+      fireEvent.click(faceRegisterButton());
+      await screen.findByRole("dialog", { name: "얼굴을 등록해요" });
+      fireEvent.click(screen.getByRole("button", { name: "뒤로가기" }));
+
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(mocks.router.push).not.toHaveBeenCalled();
     });
 
     it("이미 등록했으면 이동하지 않고 다시 등록할지 묻는다", async () => {
@@ -185,7 +201,9 @@ describe("AdminMyPage", () => {
 
       expect(mocks.fetchFaceStatus).toHaveBeenCalledTimes(1);
       resolve(NOT_REGISTERED);
-      await waitFor(() => expect(mocks.router.push).toHaveBeenCalledTimes(1));
+      expect(
+        await screen.findAllByRole("dialog", { name: "얼굴을 등록해요" }),
+      ).toHaveLength(1);
     });
   });
 

@@ -30,8 +30,8 @@ const ROW =
  *   설치한 앱은 상태바 띠(시간·배터리)를 머리와 같은 색으로 채우고(globals.css) 그만큼 줄여 4px만 둔다. 브라우저 탭은 60px다(DEC-084).
  * - 패드: 위 여백 102에 폭 500의 프로필 카드와 메뉴. 컴퓨터: 위 여백 113에 폭 800.
  * - `얼굴 등록`은 학생과 같은 순서로 개인정보 동의(`/consent`)를 거쳐 얼굴 등록으로 간다(사용자 결정 2026-10-12).
- *   누르면 먼저 서버에서 얼굴 등록 상태를 확인한다(`GET /api/v1/face/me`). 이미 등록했으면 `다시 등록하시겠습니까?`
- *   확인 창을 보이고(`뒤로가기`는 이 화면에 머묾, `다음`은 동의 → 다시 등록), 아직이면 바로 동의로 간다. 어느 쪽이든
+ *   누르면 먼저 서버에서 얼굴 등록 상태를 확인한다(`GET /api/v1/face/me`). 이미 등록했으면 `다시 등록하시겠습니까?`,
+ *   아직이면 `얼굴을 등록하시겠습니까?` 확인 창을 보인다(`뒤로가기`는 이 화면에 머묾, `다음`은 동의 → 등록). 어느 쪽이든
  *   `from=admin`을 붙여 끝난 뒤 학생 홈이 아니라 이 화면으로 돌아온다(DEC-079).
  * - `화면 모드`는 공용 해/달 토글이다(`lib/theme`, REQ-UI-008). 관리자 화면은 항상 라이트라 학생 화면의 모드를 바꾼다.
  */
@@ -46,7 +46,8 @@ export function AdminMyPage({
   const router = useRouter();
   const { showToast } = useToast();
   const [checking, setChecking] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  // 확인 창: 이미 등록한 계정은 `registered`, 아직이면 `new`.
+  const [confirm, setConfirm] = useState<"registered" | "new" | null>(null);
   // 상태 확인이 끝나기 전의 중복 누름을 막는다.
   const inFlight = useRef(false);
 
@@ -66,8 +67,7 @@ export function AdminMyPage({
     setChecking(true);
     try {
       const { enrolled } = await fetchFaceStatus();
-      if (enrolled) setConfirmOpen(true);
-      else router.push("/consent?from=admin");
+      setConfirm(enrolled ? "registered" : "new");
     } catch (error) {
       if (error instanceof FaceLoginRequiredError) {
         router.replace("/admin/login");
@@ -153,10 +153,17 @@ export function AdminMyPage({
           </button>
         </nav>
       </div>
-      {confirmOpen ? (
+      {confirm ? (
         <FaceReRegisterDialog
-          onBack={() => setConfirmOpen(false)}
-          onNext={() => router.push("/consent?reset=1&from=admin")}
+          registered={confirm === "registered"}
+          onBack={() => setConfirm(null)}
+          onNext={() =>
+            router.push(
+              confirm === "registered"
+                ? "/consent?reset=1&from=admin"
+                : "/consent?from=admin",
+            )
+          }
         />
       ) : null}
     </div>
