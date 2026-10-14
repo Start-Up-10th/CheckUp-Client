@@ -133,7 +133,21 @@ export function VolunteerStudentDialog({
                 </div>
               ))}
             </div>
-          ) : null}
+          ) : (
+            // 이력을 받는 동안에도 목록이 들어올 높이를 비워 두어, 받은 뒤 다이얼로그가 커지며 위로 움직이지 않게 한다.
+            <div
+              aria-busy="true"
+              className="flex animate-pulse flex-col gap-1.5 motion-reduce:animate-none"
+            >
+              <span className="sr-only">불러오는 중…</span>
+              {Array.from({ length: 3 }, (_, i) => (
+                <div
+                  key={i}
+                  className="h-[38px] rounded-xl bg-admin-rowSurface xl:h-[42px]"
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex w-full items-start justify-end pt-3 xl:pt-3.5">
