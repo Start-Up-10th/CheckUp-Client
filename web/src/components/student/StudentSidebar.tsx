@@ -24,7 +24,7 @@ type StudentSidebarProps = {
   /** 본인 정보. 받기 전이거나 받지 못했으면 null이고, 프로필 카드는 비워 둔다(높이는 유지). */
   profile: CurrentStudentProfile | null;
   hasUnreadNotification: boolean;
-  /** QR 카메라 화면만 어두운 사이드바(Figma 228:6)를 쓴다. */
+  /** QR 카메라 화면만 `camera`다: 다크 모드에서만 어두운 사이드바(Figma 228:6)를 쓴다(DEC-091). */
   tone?: SidebarTone;
 };
 
@@ -35,8 +35,9 @@ type StudentSidebarProps = {
  * 알리고, 알림 항목의 초록 강조는 알림 화면에 있을 때만 쓴다(REQ-COM-005, 2026-09-25 변경).
  * 알림을 읽은 상태의 종(bell.svg)은 Figma에 없어 bell-unread.svg에서 빨간 점만 뺐다.
  * 로그아웃 동작은 핸드폰 로그아웃 버튼과 같은 useLogout()을 쓴다(REQ-AUTH-005).
- * 어두운 사이드바(QR 카메라, Figma 228:6)는 Figma 그대로다: 테두리 없음, 프로필 카드 흰 6%.
- * 종은 수정된 Figma(889:5)대로 회색 선에 빨간 점이라 어두운 배경에서도 보인다(bell-unread-dark.svg).
+ * QR 카메라 화면의 사이드바는 라이트 모드에서 다른 학생 화면과 같은 흰 사이드바이고(본문 검정과 구별, #317),
+ * 다크 모드에서 어두운 사이드바(Figma 228:6: 프로필 카드 흰 6%, 오른쪽 흰 10% 선 DEC-085)다. 모드는 `dark:` 변형으로만 나눈다.
+ * 종은 수정된 Figma(889:5)대로 다크 모드에서 회색 선에 빨간 점이라 어두운 배경에서도 보인다(bell-unread-dark.svg).
  */
 /** 사이드바 프로필의 호실 문구. 호실이 배정되지 않았으면 Figma에 없어 `호실 미배정`으로 쓴다. */
 function roomLabel(roomNumber: string | null): string {
@@ -48,7 +49,7 @@ export function StudentSidebar({
   hasUnreadNotification,
   tone = "light",
 }: StudentSidebarProps) {
-  const dark = tone === "dark";
+  const camera = tone === "camera";
   const pathname = usePathname();
   const logout = useLogout();
   const onNotifications = pathname === "/notifications";
@@ -56,24 +57,26 @@ export function StudentSidebar({
   return (
     <aside
       className={`hidden h-dvh w-24 shrink-0 flex-col gap-1 px-2.5 pb-6 pt-7 md:sticky md:top-0 md:flex xl:w-[300px] xl:px-5 ${
-        dark
-          ? "border-r border-white/10 bg-admin-ink"
+        camera
+          ? "border-r border-admin-border bg-admin-surface dark:border-white/10 dark:bg-admin-ink"
           : "border-r border-admin-border bg-admin-surface"
       }`}
     >
       <div
         className={`hidden h-16 items-center rounded-card p-3 xl:flex ${
-          dark ? "bg-white/[0.06]" : "bg-admin-rowSurface"
+          camera
+            ? "bg-admin-rowSurface dark:bg-white/[0.06]"
+            : "bg-admin-rowSurface"
         }`}
       >
         <div className="flex flex-col gap-px leading-normal">
           <p
-            className={`text-sm font-bold ${dark ? "text-white" : "text-admin-text"}`}
+            className={`text-sm font-bold ${camera ? "text-admin-text dark:text-white" : "text-admin-text"}`}
           >
             {profile ? profile.name : "\u00a0"}
           </p>
           <p
-            className={`text-[11px] ${dark ? "text-white/50" : "text-admin-textMuted"}`}
+            className={`text-[11px] ${camera ? "text-admin-textMuted dark:text-white/50" : "text-admin-textMuted"}`}
           >
             {profile
               ? `${profile.studentNumber} · ${roomLabel(profile.roomNumber)}`
@@ -117,11 +120,7 @@ export function StudentSidebar({
             hasUnreadNotification ? (
               // 빨간 점 색을 유지해야 해서 mask 대신 원본 SVG를 그대로 쓴다. 다크 모드에서는 회색 선 종을 쓴다.
               <ThemedImg
-                lightSrc={
-                  dark
-                    ? "/icons/student-nav/bell-unread-dark.svg"
-                    : "/icons/student-nav/bell-unread.svg"
-                }
+                lightSrc="/icons/student-nav/bell-unread.svg"
                 darkSrc="/icons/student-nav/bell-unread-dark.svg"
                 size={19}
               />

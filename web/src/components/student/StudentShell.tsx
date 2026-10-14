@@ -17,7 +17,7 @@ type StudentShellProps = {
   children: React.ReactNode;
   /** 핸드폰 하단 탭(홈/마이)을 보일지. QR·봉사·알림 화면은 숨긴다(REQ-UI-004). */
   showTabBar?: boolean;
-  /** 노트북 사이드바 색. QR 카메라 화면만 어두운 사이드바를 쓴다. */
+  /** 노트북 사이드바 색. QR 카메라 화면만 `camera`(다크 모드에서 어두운 사이드바)를 쓴다. */
   sidebarTone?: SidebarTone;
 };
 
