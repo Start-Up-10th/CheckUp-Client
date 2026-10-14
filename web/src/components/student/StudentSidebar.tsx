@@ -55,7 +55,9 @@ export function StudentSidebar({
   return (
     <aside
       className={`hidden h-dvh w-60 shrink-0 flex-col gap-1 px-5 pb-6 pt-7 md:sticky md:top-0 md:flex ${
-        dark ? "bg-admin-ink" : "border-r border-admin-border bg-admin-surface"
+        dark
+          ? "border-r border-white/10 bg-admin-ink"
+          : "border-r border-admin-border bg-admin-surface"
       }`}
     >
       <div
