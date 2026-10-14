@@ -1,7 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import {
   QrConsentRequiredError,
   QrLoginRequiredError,
@@ -60,6 +66,24 @@ const RESULT_MESSAGES: Record<QrOutcome, ToastMessage> = {
  */
 type QrEntry = "checking" | "link" | "camera";
 
+/** 노트북 폭(Tailwind xl). 이 폭부터는 카메라를 켜지 않고 핸드폰으로 출석하게 안내한다. 패드는 뒤 카메라가 있어 쓴다. */
+const LAPTOP_QUERY = "(min-width: 1280px)";
+
+function subscribeLaptop(onChange: () => void) {
+  const query = window.matchMedia(LAPTOP_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+/** 서버·첫 렌더는 알 수 없어 null이다(노트북에서 카메라가 잠깐 켜지지 않게). */
+function useIsLaptop(): boolean | null {
+  return useSyncExternalStore(
+    subscribeLaptop,
+    () => window.matchMedia(LAPTOP_QUERY).matches,
+    () => null,
+  );
+}
+
 /** 승인 뒤 메인으로 가기까지(Figma에 없음 — 문구를 읽을 시간). */
 const APPROVED_REDIRECT_MS = 1500;
 /** 승인 외 결과 메시지를 보여 주고 다시 스캔을 시작하기까지. */
@@ -67,7 +91,7 @@ const RESULT_TOAST_MS = 2500;
 
 /**
  * 학생 웹 QR 카메라(REQ-ATT-005). 핸드폰(Figma 4:43)은 어두운 화면에 `‹ QR 카메라`, 스캔 영역,
- * 안내 문구. 노트북(228:2)은 어두운 사이드바와 가운데 제목·스캔 영역·안내 문구.
+ * 안내 문구. 패드는 핸드폰과 같이 카메라를 쓰고, 노트북(xl, 228:2)은 카메라 없이 가운데 `핸드폰으로 QR 출석을 해주세요` 안내만 보인다(DEC-092).
  * QR을 읽으면 스캔을 멈추고 `/qr#t=<토큰>` 형식에서 토큰만 꺼내 서버 스캔 API에 보낸다. 승인이면 1.5초 뒤 메인으로 가고,
  * 그 밖의 결과는 2.5초 동안 메시지를 보여 준 뒤 다시 스캔한다.
  * 카메라를 쓸 수 없으면(권한 거부·카메라 없음, Figma에 없음) 공통 오류 화면에 카메라 문구를 넣는다.
@@ -149,10 +173,11 @@ export function StudentQrCamera() {
     window.history.replaceState(window.history.state, "", pathname + search);
   }, [submitToken]);
 
+  const isLaptop = useIsLaptop();
   const { videoRef, status, canSwitch, mirrored, switchCamera } = useQrScanner({
     onDetect: handleDetect,
     paused: processing,
-    enabled: entry === "camera",
+    enabled: entry === "camera" && isLaptop === false,
   });
 
   useEffect(() => {
@@ -172,17 +197,23 @@ export function StudentQrCamera() {
 
   return (
     <StudentShell showTabBar={false} sidebarTone="camera">
-      <main className="relative flex flex-1 flex-col bg-admin-ink md:dark:bg-admin-bg">
+      <main className="relative flex flex-1 flex-col bg-admin-ink md:dark:bg-admin-bg xl:bg-admin-bg">
         <QrCameraHeader />
         {canSwitch && status === "scanning" ? (
           <QrCameraSwitchButton onClick={switchCamera} />
         ) : null}
         <div className="flex flex-1 flex-col items-center justify-center gap-[30px] px-[18px] pb-10 md:gap-6">
-          <h1 className="hidden text-[22px] font-bold leading-normal tracking-[-0.44px] text-white md:block">
+          <h1 className="hidden text-[22px] font-bold leading-normal tracking-[-0.44px] text-white md:block xl:hidden">
             QR 코드를 화면에 비춰 주세요
           </h1>
+          <h1 className="hidden text-[22px] font-bold leading-normal tracking-[-0.44px] text-white xl:block xl:text-admin-text">
+            핸드폰으로 QR 출석을 해주세요
+          </h1>
+          <p className="hidden text-sm leading-normal text-white/50 xl:block xl:text-admin-textMuted">
+            노트북 카메라로는 QR을 인식하지 않아요
+          </p>
           {status === "error" ? (
-            <div className="w-full max-w-[354px] overflow-hidden rounded-control">
+            <div className="w-full max-w-[354px] overflow-hidden rounded-control xl:hidden">
               <StudentErrorState
                 title="카메라를 사용할 수 없어요"
                 description="브라우저 설정에서 카메라 권한을 허용해 주세요."
@@ -190,13 +221,12 @@ export function StudentQrCamera() {
               />
             </div>
           ) : (
-            <QrScanFrame videoRef={videoRef} mirrored={mirrored} />
+            <div className="xl:hidden">
+              <QrScanFrame videoRef={videoRef} mirrored={mirrored} />
+            </div>
           )}
-          <p className="text-sm leading-normal text-white/55 md:hidden">
+          <p className="text-sm leading-normal text-white/55 xl:hidden">
             QR 코드를 사각형 안에 맞춰 주세요
-          </p>
-          <p className="hidden text-sm leading-normal text-white/50 md:block">
-            노트북 카메라로 QR을 인식합니다
           </p>
         </div>
       </main>
