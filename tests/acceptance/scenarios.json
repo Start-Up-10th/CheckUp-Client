@@ -609,7 +609,7 @@
       "given": "컴퓨터·패드·휴대폰",
       "when": "각 메뉴와 로그아웃 접근을 확인한다",
       "then": [
-        "사이드바·레일·모바일 5탭(홈·QR·얼굴·봉사·로그아웃)이 표시된다",
+        "컴퓨터는 사이드바, 패드·휴대폰은 하단 홈·메뉴 2칸과 메뉴 시트가 표시된다",
         "모바일 로그아웃은 맨 오른쪽 경고색 탭이다",
         "모바일 탭은 라벨 없이 아이콘만 표시된다",
         "카메라·QR 전체화면은 없다",
@@ -618,7 +618,6 @@
       "status": "implemented",
       "implementation": [
         "web/src/components/admin/AdminSidebar.tsx",
-        "web/src/components/admin/AdminRail.tsx",
         "web/src/components/admin/AdminBottomTabBar.tsx",
         "web/src/components/admin/AdminMenuSheet.tsx",
         "web/src/lib/admin/nav-items.ts"

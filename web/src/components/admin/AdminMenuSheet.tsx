@@ -57,7 +57,7 @@ export function AdminMenuSheet({
 
   return (
     <div
-      className="fixed inset-x-0 bottom-[60px] top-0 z-30 flex flex-col justify-end bg-[#1c1c1e]/45 dark:bg-black/60 md:hidden animate-dim-in motion-reduce:animate-none"
+      className="fixed inset-x-0 bottom-[60px] top-0 z-30 flex flex-col justify-end bg-[#1c1c1e]/45 dark:bg-black/60 xl:hidden animate-dim-in motion-reduce:animate-none"
       role="presentation"
       onClick={onClose}
     >
