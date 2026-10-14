@@ -49,7 +49,7 @@ export function StudentSidebarLink({
     <Link
       href={href}
       aria-current={current ? "page" : undefined}
-      className={`flex flex-col items-center justify-center gap-1.5 rounded-control px-1 py-[11px] text-[11px] leading-normal transition-colors xl:flex-row xl:justify-start xl:gap-2.5 xl:px-3 xl:text-sm ${highlighted ? TONE_STYLES[tone].on : TONE_STYLES[tone].off}`}
+      className={`flex items-center justify-start gap-2.5 rounded-control px-3 py-[11px] text-sm leading-normal transition-colors ${highlighted ? TONE_STYLES[tone].on : TONE_STYLES[tone].off}`}
     >
       {icon}
       {label}
