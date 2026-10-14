@@ -440,7 +440,8 @@
         "로그인 후 원래 QR을 재검사하고 성공 시 홈으로 간다",
         "성공·중복·만료·미운영의 지정 문구를 구분한다",
         "GPS 제한이나 필수 등록 우회가 없다",
-        "웹 QR 카메라는 뒤 카메라부터 켜고, 카메라가 둘 이상이면 전환 버튼으로 앞·뒤 카메라를 바꾼다. 하나뿐이면 버튼이 없다"
+        "웹 QR 카메라는 뒤 카메라부터 켜고, 카메라가 둘 이상이면 전환 버튼으로 앞·뒤 카메라를 바꾼다. 하나뿐이면 버튼이 없다",
+        "노트북 폭(1280px 이상)에서는 카메라를 켜지 않고 `핸드폰으로 QR 출석을 해주세요` 안내만 보이고, 패드 폭은 홈의 QR 버튼으로 들어간다(사이드바에 QR 출석 없음)"
       ],
       "status": "implemented",
       "implementation": [
@@ -457,7 +458,8 @@
         "web/src/lib/student/parse-qr-token.test.ts",
         "web/src/lib/student/qr-attendance-api.test.ts",
         "web/src/lib/student/qr-attendance-result.test.ts",
-        "web/src/lib/student/qr-return-url.test.ts"
+        "web/src/lib/student/qr-return-url.test.ts",
+        "web/src/components/student/StudentQrCamera.test.tsx"
       ]
     },
     {
