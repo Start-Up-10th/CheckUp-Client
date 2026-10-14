@@ -30,7 +30,8 @@ type StudentSidebarProps = {
 
 /**
  * REQ-UI-004: 학생 노트북(md 이상) 좌측 사이드바 — 프로필·홈·QR 출석·마이페이지·알림·하단 로그아웃.
- * Figma 사용자-노트북 227:6(폭 240px). 읽지 않은 알림은 종 안의 빨간 점(수정된 Figma 889:11)으로만
+ * Figma 사용자-노트북 227:6(폭 240px). 너비는 관리자와 같은 구간을 쓴다: 1280px 이상은 300px 사이드바,
+ * 768~1279px은 96px 레일(프로필 카드 없음, 아이콘 위·글씨 아래; 사용자 요청 2026-10-14, DEC-086). 읽지 않은 알림은 종 안의 빨간 점(수정된 Figma 889:11)으로만
  * 알리고, 알림 항목의 초록 강조는 알림 화면에 있을 때만 쓴다(REQ-COM-005, 2026-09-25 변경).
  * 알림을 읽은 상태의 종(bell.svg)은 Figma에 없어 bell-unread.svg에서 빨간 점만 뺐다.
  * 로그아웃 동작은 핸드폰 로그아웃 버튼과 같은 useLogout()을 쓴다(REQ-AUTH-005).
@@ -54,14 +55,14 @@ export function StudentSidebar({
 
   return (
     <aside
-      className={`hidden h-dvh w-60 shrink-0 flex-col gap-1 px-5 pb-6 pt-7 md:sticky md:top-0 md:flex ${
+      className={`hidden h-dvh w-24 shrink-0 flex-col gap-1 px-2.5 pb-6 pt-7 md:sticky md:top-0 md:flex xl:w-[300px] xl:px-5 ${
         dark
           ? "border-r border-white/10 bg-admin-ink"
           : "border-r border-admin-border bg-admin-surface"
       }`}
     >
       <div
-        className={`flex h-16 items-center rounded-card p-3 ${
+        className={`hidden h-16 items-center rounded-card p-3 xl:flex ${
           dark ? "bg-white/[0.06]" : "bg-admin-rowSurface"
         }`}
       >
@@ -137,7 +138,7 @@ export function StudentSidebar({
       <button
         type="button"
         onClick={logout}
-        className="flex items-center gap-2.5 rounded-control bg-admin-danger-bg px-3 py-[11px] text-sm leading-normal text-admin-danger-text transition-colors hover:bg-admin-danger-border"
+        className="flex flex-col items-center justify-center gap-1.5 rounded-control bg-admin-danger-bg px-1 py-[11px] text-[11px] leading-normal text-admin-danger-text transition-colors hover:bg-admin-danger-border xl:flex-row xl:justify-start xl:gap-2.5 xl:px-3 xl:text-sm"
       >
         <MaskIcon src="/icons/student-nav/logout.svg" className="size-[18px]" />
         로그아웃
