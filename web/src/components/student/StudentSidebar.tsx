@@ -11,7 +11,12 @@ import { StudentSidebarLink, type SidebarTone } from "./StudentSidebarLink";
 // (Figma 노트북 봉사 활동 322:341에서 마이페이지가 강조됨).
 const NAV_ITEMS = [
   { href: "/main", label: "홈", iconSrc: "/icons/student-nav/home.svg" },
-  { href: "/qr", label: "QR 출석", iconSrc: "/icons/student-nav/qr.svg" },
+  {
+    href: "/qr",
+    label: "QR 출석",
+    iconSrc: "/icons/student-nav/qr.svg",
+    hiddenBelowXl: true,
+  },
   {
     href: "/my",
     label: "마이페이지",
@@ -85,12 +90,13 @@ export function StudentSidebar({
         </div>
       </div>
       <nav className="flex flex-col gap-0.5">
-        {NAV_ITEMS.map(({ href, label, iconSrc, subPaths }) => {
+        {NAV_ITEMS.map(({ href, label, iconSrc, subPaths, hiddenBelowXl }) => {
           const current = pathname === href;
           const highlighted = current || !!subPaths?.includes(pathname);
           return (
             <StudentSidebarLink
               key={href}
+              hiddenBelowXl={hiddenBelowXl}
               href={href}
               label={label}
               current={current}

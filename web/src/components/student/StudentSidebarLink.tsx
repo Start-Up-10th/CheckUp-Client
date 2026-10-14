@@ -29,6 +29,8 @@ type StudentSidebarLinkProps = {
   tone: SidebarTone;
   /** 화면에는 안 보이고 화면 낭독기만 읽는 덧붙임 설명 */
   srHint?: string;
+  /** 패드 폭(md~xl)에서는 숨긴다. 그 폭의 QR 진입은 홈의 QR 버튼이다(DEC-092). */
+  hiddenBelowXl?: boolean;
 };
 
 /**
@@ -44,14 +46,15 @@ export function StudentSidebarLink({
   highlighted,
   tone,
   srHint,
+  hiddenBelowXl,
 }: StudentSidebarLinkProps) {
   return (
     <Link
       href={href}
       aria-current={current ? "page" : undefined}
       className={`flex flex-col items-center justify-center gap-1.5 rounded-control px-1 py-[11px] text-[11px] leading-normal transition-colors xl:flex-row xl:justify-start xl:gap-2.5 xl:px-3 xl:text-sm ${
-        highlighted ? TONE_STYLES[tone].on : TONE_STYLES[tone].off
-      }`}
+        hiddenBelowXl ? "max-xl:hidden " : ""
+      }${highlighted ? TONE_STYLES[tone].on : TONE_STYLES[tone].off}`}
     >
       {icon}
       {label}
