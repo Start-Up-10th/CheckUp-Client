@@ -171,7 +171,7 @@ export function StudentQrCamera() {
   }, [result, router]);
 
   return (
-    <StudentShell showTabBar={false} sidebarTone="dark">
+    <StudentShell showTabBar={false} sidebarTone="camera">
       <main className="relative flex flex-1 flex-col bg-admin-ink md:dark:bg-admin-bg">
         <QrCameraHeader />
         {canSwitch && status === "scanning" ? (

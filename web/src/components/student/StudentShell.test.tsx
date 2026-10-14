@@ -167,3 +167,22 @@ describe("StudentShell 본인 정보", () => {
     expect(within(sidebar()).queryByText("김도현")).not.toBeInTheDocument();
   });
 });
+
+describe("StudentShell 사이드바 색", () => {
+  it("QR 카메라 틀은 라이트 모드에서 흰 사이드바, 다크 모드에서만 어두운 사이드바다(#317)", () => {
+    mockMe(401);
+    render(<StudentShell sidebarTone="camera">내용</StudentShell>);
+
+    // 모드는 첫 화면 스크립트가 html에 붙이므로 JS가 아니라 `dark:` 변형으로만 나뉘어야 한다(깜빡임 방지).
+    expect(sidebar()).toHaveClass("bg-admin-surface", "dark:bg-admin-ink");
+    expect(sidebar()).not.toHaveClass("bg-admin-ink");
+  });
+
+  it("다른 학생 화면은 흰 사이드바다", () => {
+    mockMe(401);
+    render(<StudentShell>내용</StudentShell>);
+
+    expect(sidebar()).toHaveClass("bg-admin-surface");
+    expect(sidebar()).not.toHaveClass("dark:bg-admin-ink");
+  });
+});
