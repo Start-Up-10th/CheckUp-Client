@@ -85,4 +85,33 @@ describe("useModalDialog", () => {
     fireEvent.keyDown(window, { key: "Escape" });
     expect(scroller.style.overflowY).toBe("");
   });
+
+  it("스크롤바가 자리를 차지하고 있을 때만 그 자리를 남겨 뒤 화면이 밀리지 않게 한다", () => {
+    render(<Host />);
+    const scroller = screen.getByTestId("scroller");
+    // 스크롤바가 15px 자리를 차지하는 상태(offsetWidth가 clientWidth보다 큼)
+    Object.defineProperty(scroller, "offsetWidth", {
+      configurable: true,
+      value: 1000,
+    });
+    Object.defineProperty(scroller, "clientWidth", {
+      configurable: true,
+      value: 985,
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "열기" }));
+    expect(scroller.style.scrollbarGutter).toBe("stable");
+
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(scroller.style.scrollbarGutter).toBe("");
+  });
+
+  it("스크롤바가 없던 화면에서는 자리를 새로 만들지 않는다", () => {
+    render(<Host />);
+    const scroller = screen.getByTestId("scroller");
+
+    fireEvent.click(screen.getByRole("button", { name: "열기" }));
+    expect(scroller.style.overflowY).toBe("hidden");
+    expect(scroller.style.scrollbarGutter).toBe("");
+  });
 });
