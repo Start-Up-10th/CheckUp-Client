@@ -71,7 +71,7 @@ export function DeviceFramePreview({
       <p className="max-w-[640px] text-center text-xs text-admin-textMuted">
         폭 {frame.width}px 프레임이라 창 크기와 상관없이 {frame.label}{" "}
         레이아웃으로 보입니다. 프레임 안에서 06 ↔ 07 이동과 지정·완료를 해 볼 수
-        있고, 하단 메뉴·레일의 다른 항목은 로그인이 필요한 실제 화면으로 갑니다.
+        있고, 하단 메뉴의 다른 항목은 로그인이 필요한 실제 화면으로 갑니다.
       </p>
     </div>
   );
