@@ -16,6 +16,25 @@ describe("FaceReRegisterDialog", () => {
     expect(screen.getByRole("button", { name: "다음" })).toBeInTheDocument();
   });
 
+  it("처음 등록하는 계정에는 등록 여부를 묻는다", () => {
+    render(
+      <FaceReRegisterDialog
+        registered={false}
+        onBack={() => {}}
+        onNext={() => {}}
+      />,
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: "얼굴을 등록해요" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("얼굴을 등록하시겠습니까?")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "뒤로가기" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "다음" })).toBeInTheDocument();
+  });
+
   it("뒤로가기·Esc·바깥 누르기는 창만 닫고 다음은 부르지 않는다", () => {
     const onBack = vi.fn();
     const onNext = vi.fn();
