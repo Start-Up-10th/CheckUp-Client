@@ -47,7 +47,7 @@ export function StudentShell({
   );
 
   return (
-    <div data-student-shell className="flex min-h-dvh bg-admin-bg">
+    <div className="flex min-h-dvh bg-admin-bg">
       <StudentSidebar
         profile={profile}
         hasUnreadNotification={hasUnreadNotification}
