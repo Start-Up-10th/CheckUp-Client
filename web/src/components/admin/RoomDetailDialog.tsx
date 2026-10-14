@@ -28,7 +28,7 @@ export function RoomDetailDialog({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-[#1c1c1e]/45 dark:bg-black/60 animate-dim-in motion-reduce:animate-none"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#1c1c1e]/45 dark:bg-black/60 animate-dim-in motion-reduce:animate-none"
       role="presentation"
       onClick={onClose}
     >

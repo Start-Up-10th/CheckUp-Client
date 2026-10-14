@@ -15,7 +15,6 @@ const NAV_ITEMS = [
     href: "/qr",
     label: "QR 출석",
     iconSrc: "/icons/student-nav/qr.svg",
-    hiddenBelowXl: true,
   },
   {
     href: "/my",
@@ -34,9 +33,8 @@ type StudentSidebarProps = {
 };
 
 /**
- * REQ-UI-004: 학생 노트북(md 이상) 좌측 사이드바 — 프로필·홈·QR 출석·마이페이지·알림·하단 로그아웃.
- * Figma 사용자-노트북 227:6(폭 240px). 너비는 관리자와 같은 구간을 쓴다: 1280px 이상은 300px 사이드바,
- * 768~1279px은 96px 레일(프로필 카드 없음, 아이콘 위·글씨 아래; 사용자 요청 2026-10-14, DEC-086). 읽지 않은 알림은 종 안의 빨간 점(수정된 Figma 889:11)으로만
+ * REQ-UI-004: 학생 노트북(xl, 1280px 이상) 좌측 사이드바 — 프로필·홈·QR 출석·마이페이지·알림·하단 로그아웃.
+ * Figma 사용자-노트북 227:6(폭 240px). 너비는 300px이다. 1280px 미만은 하단 탭바를 쓰고 사이드바(96px 레일, DEC-086)는 없앴다(DEC-094). 읽지 않은 알림은 종 안의 빨간 점(수정된 Figma 889:11)으로만
  * 알리고, 알림 항목의 초록 강조는 알림 화면에 있을 때만 쓴다(REQ-COM-005, 2026-09-25 변경).
  * 알림을 읽은 상태의 종(bell.svg)은 Figma에 없어 bell-unread.svg에서 빨간 점만 뺐다.
  * 로그아웃 동작은 핸드폰 로그아웃 버튼과 같은 useLogout()을 쓴다(REQ-AUTH-005).
@@ -61,14 +59,14 @@ export function StudentSidebar({
 
   return (
     <aside
-      className={`hidden h-dvh w-24 shrink-0 flex-col gap-1 px-2.5 pb-6 pt-7 md:sticky md:top-0 md:flex xl:w-[300px] xl:px-5 ${
+      className={`hidden h-dvh w-[300px] shrink-0 flex-col gap-1 px-5 pb-6 pt-7 xl:sticky xl:top-0 xl:flex ${
         camera
           ? "border-r border-admin-border bg-admin-surface dark:border-white/10 dark:bg-admin-ink"
           : "border-r border-admin-border bg-admin-surface"
       }`}
     >
       <div
-        className={`hidden h-16 items-center rounded-card p-3 xl:flex ${
+        className={`flex h-16 items-center rounded-card p-3 ${
           camera
             ? "bg-admin-rowSurface dark:bg-white/[0.06]"
             : "bg-admin-rowSurface"
@@ -90,13 +88,12 @@ export function StudentSidebar({
         </div>
       </div>
       <nav className="flex flex-col gap-0.5">
-        {NAV_ITEMS.map(({ href, label, iconSrc, subPaths, hiddenBelowXl }) => {
+        {NAV_ITEMS.map(({ href, label, iconSrc, subPaths }) => {
           const current = pathname === href;
           const highlighted = current || !!subPaths?.includes(pathname);
           return (
             <StudentSidebarLink
               key={href}
-              hiddenBelowXl={hiddenBelowXl}
               href={href}
               label={label}
               current={current}
@@ -143,7 +140,7 @@ export function StudentSidebar({
       <button
         type="button"
         onClick={logout}
-        className="flex flex-col items-center justify-center gap-1.5 rounded-control bg-admin-danger-bg px-1 py-[11px] text-[11px] leading-normal text-admin-danger-text transition-colors hover:bg-admin-danger-border xl:flex-row xl:justify-start xl:gap-2.5 xl:px-3 xl:text-sm"
+        className="flex items-center justify-start gap-2.5 rounded-control bg-admin-danger-bg px-3 py-[11px] text-sm leading-normal text-admin-danger-text transition-colors hover:bg-admin-danger-border"
       >
         <MaskIcon src="/icons/student-nav/logout.svg" className="size-[18px]" />
         로그아웃

@@ -112,7 +112,7 @@ function StudentMainContent({
 
   return (
     <>
-      <main className="flex min-h-0 flex-1 flex-col md:items-center md:p-9">
+      <main className="flex min-h-0 flex-1 flex-col md:items-center md:p-9 md:pb-[116px] xl:pb-9">
         <div className="flex min-h-0 flex-1 flex-col md:w-full md:max-w-[720px] md:gap-5">
           <MainHeader profile={profile} />
           <div className="flex min-h-0 flex-1 flex-col px-[18px] py-4 md:p-0">

@@ -26,7 +26,7 @@ function profileDetail({
 export function MyProfile({ profile }: MyProfileProps) {
   return (
     <section className="bg-admin-surface px-[22px] pb-[22px] pt-[60px] max-md:[@media(display-mode:standalone)]:pt-1 md:rounded-panel md:p-7">
-      <h1 className="pb-5 text-[27px] font-bold leading-normal tracking-[-0.81px] text-admin-text md:hidden">
+      <h1 className="pb-5 text-[27px] font-bold leading-normal tracking-[-0.81px] text-admin-text xl:hidden">
         마이페이지
       </h1>
       <div className="flex flex-col gap-[5px] leading-normal md:gap-1">
