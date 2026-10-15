@@ -8,7 +8,7 @@ import {
   designateVolunteer,
   fetchVolunteers,
 } from "@/lib/admin/volunteer-api";
-import type { RosterStudent } from "@/lib/admin/volunteer-types";
+import type { DutyRecord, RosterStudent } from "@/lib/admin/volunteer-types";
 
 /**
  * 봉사 화면이 서버와 주고받는 동작 모음이다. 기본은 실제 서버 API이고, 로그인 없이 보는 확인용 페이지와
@@ -22,6 +22,16 @@ export type VolunteerGateway = {
   designate: (id: number) => Promise<RosterStudent>;
   cancelDuty: (id: number) => Promise<RosterStudent>;
   completeDuty: (id: number) => Promise<RosterStudent>;
+  /**
+   * 지난 날짜의 당일 봉사자 기록(달력). 서버에 날짜별 기록 조회 API가 없어 실제 게이트웨이는 비워 두고, 확인용
+   * 페이지와 테스트의 목업만 채운다(#334). 비어 있으면 달력은 지난 날짜를 "서버 지원 전"으로 안내한다.
+   */
+  history?: {
+    /** 그 달에서 미이행이 있는 날(`YYYY-MM-DD`)과 그날의 미이행 인원. */
+    month: (year: number, month: number) => Promise<Record<string, number>>;
+    /** 그 날(`YYYY-MM-DD`)의 기록. */
+    day: (date: string) => Promise<DutyRecord[]>;
+  };
 };
 
 export const apiVolunteerGateway: VolunteerGateway = {
