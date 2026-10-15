@@ -10,6 +10,10 @@ type StudentDetailDialogProps = {
   student: RosterStudent;
   onClose: () => void;
   onSave: (change: { count: number; reason: string }) => void;
+  /** 열 때 스테퍼에 놓을 횟수. 없으면 학생의 현재 횟수다(미이행 처리는 현재 횟수 + 1로 연다, #334). */
+  initialCount?: number;
+  /** 열 때 사유 칸에 채울 문구. 없으면 비어 있다. */
+  initialReason?: string;
 };
 
 /**
@@ -20,9 +24,11 @@ export function StudentDetailDialog({
   student,
   onClose,
   onSave,
+  initialCount,
+  initialReason = "",
 }: StudentDetailDialogProps) {
-  const [count, setCount] = useState(student.count);
-  const [reason, setReason] = useState("");
+  const [count, setCount] = useState(initialCount ?? student.count);
+  const [reason, setReason] = useState(initialReason);
   const titleId = useId();
   const reasonId = useId();
 

@@ -15,3 +15,20 @@ export type RosterStudent = {
   lastActivityDate?: string;
   duty: DutyStatus;
 };
+
+/** 지난 날짜 당일 봉사자 기록의 결과. 미이행은 봉사 없이 사라져 횟수가 추가된 지정이다(#334). */
+export type DutyRecordStatus = "completed" | "missed" | "cancelled";
+
+/** 한 운영일의 당일 봉사자 기록 한 건. `studentId`는 학번이다. */
+export type DutyRecord = {
+  studentId: string;
+  name: string;
+  roomNumber: number | null;
+  status: DutyRecordStatus;
+  /** 미이행 학생에게 봉사 횟수를 추가해 처리했는지. 아니면 아직 횟수가 처리되지 않은 미이행이다. */
+  adjusted?: boolean;
+  /** 처리하며 추가한 횟수(음수는 차감). 횟수를 처리하지 않았으면 비어 있다. */
+  addedCount?: number;
+  /** 처리하며 남긴 사유. 없으면 비어 있다. */
+  reason?: string;
+};

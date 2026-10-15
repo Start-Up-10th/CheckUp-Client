@@ -20,3 +20,18 @@ export function operatingDayLabel(now: Date): string {
   const day = parts.find((part) => part.type === "day")?.value ?? "";
   return `${month}/${day}`;
 }
+
+const YEAR_MONTH_DAY = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Seoul",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+/** 운영일을 `YYYY-MM-DD`로 돌려준다(달력과 날짜별 기록 조회의 키). 기준은 `operatingDayLabel`과 같다. */
+export function operatingDayKey(now: Date): string {
+  const shifted = new Date(
+    now.getTime() - OPERATING_DAY_START_HOUR * 60 * 60 * 1000,
+  );
+  return YEAR_MONTH_DAY.format(shifted);
+}
