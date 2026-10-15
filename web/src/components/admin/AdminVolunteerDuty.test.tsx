@@ -21,7 +21,8 @@ import {
 } from "@/lib/admin/volunteer-roster-store";
 import { AdminVolunteerDuty } from "./AdminVolunteerDuty";
 
-const mockGateway = createMockVolunteerGateway();
+// 지난 기록이 오늘 기준 날짜로 만들어지므로 날짜를 고정한 뒤(beforeEach) 매 테스트마다 새로 만든다.
+let mockGateway = createMockVolunteerGateway();
 
 /** 서버 대신 목업 게이트웨이를 쓰는 화면. */
 function render(ui: ReactElement) {
@@ -40,6 +41,7 @@ beforeEach(() => {
   // 2026-10-01 12:00 KST. 타이머는 그대로 두고 날짜만 고정한다.
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-10-01T03:00:00Z"));
+  mockGateway = createMockVolunteerGateway();
   setRoster(MOCK_VOLUNTEER_ROSTER);
 });
 
@@ -244,7 +246,7 @@ describe("AdminVolunteerDuty", () => {
     );
   });
 
-  it("미이행을 저장하면 지정을 제외하고 횟수를 더하며 목록에서 빠진다", async () => {
+  it("미이행을 저장하면 지정이 미이행이 되고 횟수가 더해지며 목록에서 빠진다", async () => {
     render(<AdminVolunteerDuty />);
     expect(countOf("2405")).toBe(3);
 
@@ -258,16 +260,14 @@ describe("AdminVolunteerDuty", () => {
     expect(countOf("2405")).toBe(4);
     expect(
       getRoster().find((student) => student.studentId === "2405")?.duty,
-    ).toBe("none");
+    ).toBe("missed");
   });
 
-  it("미이행 저장에서 횟수 변경만 실패하면 제외는 됐다고 알리고 횟수는 그대로다", async () => {
-    const saveCount = vi.fn().mockRejectedValue(new Error("network"));
+  it("미이행 저장이 실패하면 오류 문구를 보여 주고 목록과 횟수는 그대로다", async () => {
+    const markMissed = vi.fn().mockRejectedValue(new Error("network"));
     renderPlain(
-      <VolunteerGatewayProvider value={mockGateway}>
-        <StudentManagementGatewayProvider value={{ saveCount }}>
-          <AdminVolunteerDuty />
-        </StudentManagementGatewayProvider>
+      <VolunteerGatewayProvider value={{ ...mockGateway, markMissed }}>
+        <AdminVolunteerDuty />
       </VolunteerGatewayProvider>,
     );
 
@@ -275,103 +275,32 @@ describe("AdminVolunteerDuty", () => {
     fireEvent.click(screen.getByRole("button", { name: "저장" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "당일 봉사자에서는 제외했지만 봉사 횟수 변경에 실패했습니다. 학생 관리에서 조정해 주세요.",
+      "처리에 실패했습니다. 다시 시도해 주세요.",
     );
+    expect(markMissed).toHaveBeenCalled();
+    expect(screen.getAllByText("김도현").length).toBeGreaterThan(0);
+    expect(screen.getByRole("dialog", { name: "김도현" })).toBeInTheDocument();
     expect(countOf("2405")).toBe(3);
-    expect(screen.queryByText("김도현")).not.toBeInTheDocument();
   });
 
-  it("미이행으로 횟수를 추가하면 달력의 오늘 미이행에 횟수 처리됨이 보인다", async () => {
-    render(<AdminVolunteerDuty />);
+  it("서버가 횟수를 이미 처리했다고 막으면 안내하고 목록을 다시 받는다", async () => {
+    const markMissed = vi
+      .fn()
+      .mockRejectedValue(new VolunteerApiError(409, "DUTY_ALREADY_ADJUSTED"));
+    const list = vi.fn().mockResolvedValue(MOCK_VOLUNTEER_ROSTER);
+    renderPlain(
+      <VolunteerGatewayProvider value={{ ...mockGateway, markMissed, list }}>
+        <AdminVolunteerDuty />
+      </VolunteerGatewayProvider>,
+    );
 
     fireEvent.click(screen.getByRole("button", { name: "김도현 봉사 미이행" }));
     fireEvent.click(screen.getByRole("button", { name: "저장" }));
-    await screen.findByRole("status");
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "날짜 선택, 지금 2026.10.01" }),
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "이미 횟수를 처리한 미이행입니다. 학생 관리에서 조정해 주세요.",
     );
-    const calendar = screen.getByRole("dialog", { name: "날짜 선택" });
-    expect(within(calendar).getByText("오늘 미이행")).toBeInTheDocument();
-    expect(within(calendar).getByText("김도현")).toBeInTheDocument();
-    expect(within(calendar).getByText("횟수 처리됨")).toBeInTheDocument();
-  });
-
-  it("오늘 미이행을 처리하면 달력의 오늘 칸에 미이행 점(aria-label)이 생긴다", async () => {
-    render(<AdminVolunteerDuty />);
-
-    fireEvent.click(screen.getByRole("button", { name: "김도현 봉사 미이행" }));
-    fireEvent.click(screen.getByRole("button", { name: "저장" }));
-    await screen.findByRole("status");
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "날짜 선택, 지금 2026.10.01" }),
-    );
-    expect(
-      screen.getByRole("button", { name: "2026년 10월 1일, 미이행 1명" }),
-    ).toBeInTheDocument();
-  });
-
-  it("지난 날짜 기록이 빨리 오면 스켈레톤 없이 바로 보여 준다", async () => {
-    render(<AdminVolunteerDuty />);
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "날짜 선택, 지금 2026.10.01" }),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "이전 달" }));
-    fireEvent.click(
-      await screen.findByRole("button", {
-        name: "2026년 9월 30일, 미이행 2명",
-      }),
-    );
-
-    expect(
-      await screen.findByText("09/30 봉사자 기록 · 3명"),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("불러오는 중…")).not.toBeInTheDocument();
-  });
-
-  it("횟수 처리됨을 누르면 추가된 횟수와 사유만 읽기 전용으로 보인다", async () => {
-    render(<AdminVolunteerDuty />);
-
-    fireEvent.click(screen.getByRole("button", { name: "김도현 봉사 미이행" }));
-    fireEvent.change(screen.getByPlaceholderText("사유를 입력해 주세요"), {
-      target: { value: "청소 시간에 자리를 비움" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "저장" }));
-    await screen.findByRole("status");
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "날짜 선택, 지금 2026.10.01" }),
-    );
-    const calendar = screen.getByRole("dialog", { name: "날짜 선택" });
-    fireEvent.click(within(calendar).getByRole("button", { name: /김도현/ }));
-
-    const detail = await screen.findByRole("dialog", { name: "김도현" });
-    expect(detail).toHaveTextContent("+1회");
-    expect(detail).toHaveTextContent("청소 시간에 자리를 비움");
-    expect(
-      within(detail).queryByRole("button", { name: "봉사 횟수 늘리기" }),
-    ).not.toBeInTheDocument();
-    expect(
-      within(detail).queryByRole("button", { name: "저장" }),
-    ).not.toBeInTheDocument();
-  });
-
-  it("미이행으로 처리하되 횟수를 바꾸지 않으면 달력에는 미이행으로 남는다", async () => {
-    render(<AdminVolunteerDuty />);
-
-    fireEvent.click(screen.getByRole("button", { name: "김도현 봉사 미이행" }));
-    fireEvent.click(screen.getByRole("button", { name: "봉사 횟수 줄이기" }));
-    fireEvent.click(screen.getByRole("button", { name: "저장" }));
-    await screen.findByRole("status");
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "날짜 선택, 지금 2026.10.01" }),
-    );
-    const calendar = screen.getByRole("dialog", { name: "날짜 선택" });
-    expect(within(calendar).getByText("미이행")).toBeInTheDocument();
-    expect(within(calendar).queryByText("횟수 처리됨")).not.toBeInTheDocument();
+    await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
   });
 
   it("달력 버튼에는 오늘 운영일의 연월일이 보인다", () => {
@@ -407,7 +336,7 @@ describe("AdminVolunteerDuty", () => {
     expect(adjust).toHaveTextContent("1회");
   });
 
-  it("서버가 지난 기록을 주지 않으면 지난 날짜를 서버 지원 전으로 안내한다", () => {
+  it("지난 기록을 받을 수 없는 연결이면 지난 날짜를 안내 문구로 보여 준다", () => {
     const { history: _history, ...withoutHistory } = mockGateway;
     void _history;
     renderPlain(
@@ -424,7 +353,7 @@ describe("AdminVolunteerDuty", () => {
 
     expect(
       screen.getAllByText(
-        "지난 날짜의 봉사자 기록은 서버 지원이 준비되면 볼 수 있어요.",
+        "지난 날짜의 봉사자 기록을 불러올 수 없는 연결입니다.",
       ).length,
     ).toBeGreaterThan(0);
   });

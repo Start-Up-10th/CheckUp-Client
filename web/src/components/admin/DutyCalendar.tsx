@@ -16,8 +16,6 @@ type DutyCalendarProps = {
   missed: DutyRecord[] | null;
   /** 미이행 학생을 눌렀을 때. 호출한 쪽이 조정 다이얼로그를 연다. */
   onPickMissed: (record: DutyRecord) => void;
-  /** 서버 요약에 아직 없는, 이 화면에서 처리한 날짜별 미이행 인원(오늘 처리분). 서버 점과 합쳐 보인다. */
-  extraMarks?: Record<string, number>;
 };
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -43,28 +41,23 @@ export function DutyCalendar({
   loadMonth,
   missed,
   onPickMissed,
-  extraMarks,
 }: DutyCalendarProps) {
   const today = parseKey(todayKey);
   const selected = parseKey(selectedKey);
   const [open, setOpen] = useState(false);
   const [view, setView] = useState({ y: selected.y, m: selected.m });
   const [picking, setPicking] = useState(false);
-  const [serverMarks, setServerMarks] = useState<Record<string, number>>({});
-  const marks: Record<string, number> = { ...serverMarks };
-  for (const [key, count] of Object.entries(extraMarks ?? {})) {
-    marks[key] = Math.max(marks[key] ?? 0, count);
-  }
+  const [marks, setMarks] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!open || !loadMonth) return;
     let cancelled = false;
     loadMonth(view.y, view.m)
       .then((next) => {
-        if (!cancelled) setServerMarks(next);
+        if (!cancelled) setMarks(next);
       })
       .catch(() => {
-        if (!cancelled) setServerMarks({});
+        if (!cancelled) setMarks({});
       });
     return () => {
       cancelled = true;

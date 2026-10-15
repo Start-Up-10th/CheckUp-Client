@@ -2,11 +2,15 @@
 
 import { createContext, useContext } from "react";
 import {
+  adjustMissedDuty,
   adjustVolunteerCount,
   cancelVolunteerDuty,
   completeVolunteerDuty,
   designateVolunteer,
+  fetchDutyRecords,
+  fetchMissedSummary,
   fetchVolunteers,
+  markVolunteerMissed,
 } from "@/lib/admin/volunteer-api";
 import type { DutyRecord, RosterStudent } from "@/lib/admin/volunteer-types";
 
@@ -23,8 +27,24 @@ export type VolunteerGateway = {
   cancelDuty: (id: number) => Promise<RosterStudent>;
   completeDuty: (id: number) => Promise<RosterStudent>;
   /**
-   * 지난 날짜의 당일 봉사자 기록(달력). 서버에 날짜별 기록 조회 API가 없어 실제 게이트웨이는 비워 두고, 확인용
-   * 페이지와 테스트의 목업만 채운다(#334). 비어 있으면 달력은 지난 날짜를 "서버 지원 전"으로 안내한다.
+   * 오늘 지정을 미이행으로 바꾸고 횟수 변화(`delta`, 0이면 그대로)와 사유를 한 번에 저장한다. 지정은 삭제하지 않고
+   * `미이행`으로 남는다(서버 `POST /duty/missed`, #336).
+   */
+  markMissed: (
+    id: number,
+    delta: number,
+    reason: string,
+  ) => Promise<RosterStudent>;
+  /** 지난 날짜(`YYYY-MM-DD`)의 지정을 미이행으로 처리하거나 횟수·사유를 저장한다(서버 `PATCH /duties/{date}/{id}/missed`). */
+  adjustMissed: (
+    date: string,
+    id: number,
+    delta: number,
+    reason: string,
+  ) => Promise<DutyRecord>;
+  /**
+   * 날짜별 당일 봉사자 기록(달력). 서버 `GET /duties`·`/duties/summary`에 연결한다. 이 값이 없는 게이트웨이(일부
+   * 테스트)에서는 달력이 지난 날짜를 "서버 지원 전"으로 안내한다.
    */
   history?: {
     /** 그 달에서 미이행이 있는 날(`YYYY-MM-DD`)과 그날의 미이행 인원. */
@@ -40,6 +60,9 @@ export const apiVolunteerGateway: VolunteerGateway = {
   designate: designateVolunteer,
   cancelDuty: cancelVolunteerDuty,
   completeDuty: completeVolunteerDuty,
+  markMissed: markVolunteerMissed,
+  adjustMissed: adjustMissedDuty,
+  history: { month: fetchMissedSummary, day: fetchDutyRecords },
 };
 
 const VolunteerGatewayContext =

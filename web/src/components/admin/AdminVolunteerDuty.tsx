@@ -14,7 +14,6 @@ import { MissedAdjustmentDialog } from "@/components/admin/MissedAdjustmentDialo
 import { StudentDetailDialog } from "@/components/admin/student-management/StudentDetailDialog";
 import { VolunteerDutyRow } from "@/components/admin/VolunteerDutyRow";
 import { operatingDayKey, operatingDayLabel } from "@/lib/admin/operating-day";
-import { useStudentManagementGateway } from "@/lib/admin/student-management-gateway";
 import {
   failureToast,
   listFailureToast,
@@ -32,17 +31,15 @@ import type {
 /** 서버가 이유를 알려 주지 않은 실패(Figma 06 state messages). */
 const FAILURE_MESSAGE = "처리에 실패했습니다. 다시 시도해 주세요.";
 
-/** 미이행 처리 문구. 서버에 미이행 상태가 없어 지정 제외 + 횟수 추가로 처리한다(#334). */
+/** 미이행 처리 문구. 서버가 지정을 미이행으로 바꾸고 횟수·사유를 한 번에 저장한다(#336). */
 const MISSED_DEFAULT_REASON = "당일 봉사 미이행";
 const MISSED_SUCCESS_MESSAGE = "미이행으로 처리하고 봉사 횟수를 변경했습니다.";
 const MISSED_NO_CHANGE_MESSAGE = "미이행으로 처리했습니다.";
-const MISSED_COUNT_FAILURE_MESSAGE =
-  "당일 봉사자에서는 제외했지만 봉사 횟수 변경에 실패했습니다. 학생 관리에서 조정해 주세요.";
 const COUNT_SUCCESS_MESSAGE = "봉사 횟수를 변경했습니다.";
 const COUNT_FAILURE_MESSAGE =
   "봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.";
 const HISTORY_UNSUPPORTED_MESSAGE =
-  "지난 날짜의 봉사자 기록은 서버 지원이 준비되면 볼 수 있어요.";
+  "지난 날짜의 봉사자 기록을 불러올 수 없는 연결입니다.";
 
 const RECORD_CHIP: Record<DutyRecordStatus, { label: string; style: string }> =
   {
@@ -54,8 +51,8 @@ const RECORD_CHIP: Record<DutyRecordStatus, { label: string; style: string }> =
       label: "미이행",
       style: "bg-admin-danger-bg text-admin-danger-text",
     },
-    cancelled: {
-      label: "제외",
+    assigned: {
+      label: "지정됨",
       style: "bg-admin-absence-bg text-admin-textMuted",
     },
   };
@@ -91,7 +88,6 @@ export function AdminVolunteerDuty({
   const { roster, status, rateLimited, updateStudent, reload } =
     useVolunteerRoster();
   const gateway = useVolunteerGateway();
-  const studentGateway = useStudentManagementGateway();
   const singleFlight = useSingleFlight();
   const { showToast } = useToast();
   const today = designatedToday(roster);
@@ -103,13 +99,6 @@ export function AdminVolunteerDuty({
   const [historyAttempt, setHistoryAttempt] = useState(0);
   // 기록이 `SKELETON_DELAY_MS`를 넘겨도 오지 않아 스켈레톤을 보여야 하는 날.
   const [slowKey, setSlowKey] = useState<string | null>(null);
-  // 이 화면에서 처리한 미이행(서버에 날짜별 기록 API가 없어 화면이 들고 있다, #334).
-  const [sessionMissed, setSessionMissed] = useState<
-    Record<string, DutyRecord[]>
-  >({});
-  const [handled, setHandled] = useState<
-    Record<string, { added: number; reason: string }>
-  >({});
   const [viewRecord, setViewRecord] = useState<DutyRecord | null>(null);
   const [dialog, setDialog] = useState<{
     student: RosterStudent;
@@ -144,68 +133,14 @@ export function AdminVolunteerDuty({
   // 고른 날의 기록이 아직 오지 않았으면 null(받는 중)이다.
   const records: DayRecords | null =
     dayRecords && dayRecords.key === selectedKey ? dayRecords : null;
-  // 서버가 준 기록에 이 화면에서 처리한 미이행을 합치고, 횟수를 추가한 학생은 처리됨으로 표시한다.
-  const dayItems: DutyRecord[] | null = (() => {
-    const supported = history !== undefined || selectedKey === todayKey;
-    if (!supported || (history && records === null)) return null;
-    const server = records?.status === "ready" ? records.items : [];
-    const local = sessionMissed[selectedKey] ?? [];
-    const merged = [
-      ...server.filter(
-        (item) => !local.some((mine) => mine.studentId === item.studentId),
-      ),
-      ...local,
-    ];
-    return merged.map((item) => {
-      const done = handled[`${selectedKey}:${item.studentId}`];
-      if (item.status !== "missed") return item;
-      if (done) {
-        return {
-          ...item,
-          adjusted: true,
-          addedCount: done.added,
-          reason: done.reason,
-        };
-      }
-      return item;
-    });
-  })();
-  const todayMissedMarks = (sessionMissed[todayKey] ?? []).length
-    ? { [todayKey]: (sessionMissed[todayKey] ?? []).length }
-    : undefined;
+  // 서버 기록 그대로다. 오늘 처리한 미이행도 서버가 `MISSED`로 돌려준다.
+  const dayItems: DutyRecord[] | null =
+    history && records?.status === "ready" ? records.items : null;
   const missedRecords = dayItems
     ? dayItems.filter((item) => item.status === "missed")
     : null;
-
-  function markHandled(
-    dateKey: string,
-    studentId: string,
-    detail: { added: number; reason: string },
-  ) {
-    setHandled((current) => ({
-      ...current,
-      [`${dateKey}:${studentId}`]: detail,
-    }));
-  }
-
-  function rememberMissed(student: RosterStudent, adjusted: boolean) {
-    const record: DutyRecord = {
-      studentId: student.studentId,
-      name: student.name,
-      roomNumber: student.roomNumber,
-      status: "missed",
-      adjusted,
-    };
-    setSessionMissed((current) => ({
-      ...current,
-      [todayKey]: [
-        ...(current[todayKey] ?? []).filter(
-          (item) => item.studentId !== student.studentId,
-        ),
-        record,
-      ],
-    }));
-  }
+  /** 처리한 뒤 오늘·고른 날의 기록과 달력 요약을 다시 받는다. */
+  const refreshRecords = () => setHistoryAttempt((count) => count + 1);
 
   useEffect(() => {
     if (status === "error") {
@@ -248,51 +183,35 @@ export function AdminVolunteerDuty({
     if (student) setDialog({ student, kind: "adjust" });
   }
 
-  /** 지정을 제외한 뒤 횟수와 사유를 저장한다. 이 순서라야 중간에 실패해도 횟수가 두 번 더해지지 않는다. */
+  /** 오늘 지정을 미이행으로 바꾸며 횟수와 사유를 서버에 한 번에 저장한다(`POST /duty/missed`). */
   function handleMissed(change: { count: number; reason: string }) {
     if (!dialog) return;
     const { student } = dialog;
     return singleFlight(student.id, async () => {
-      let released: RosterStudent;
       try {
-        released = await gateway.cancelDuty(student.id);
+        const updated = await gateway.markMissed(
+          student.id,
+          change.count - student.count,
+          change.reason,
+        );
+        updateStudent(updated);
+        setDialog(null);
+        refreshRecords();
+        showToast({
+          variant: "success",
+          message:
+            change.count === student.count
+              ? MISSED_NO_CHANGE_MESSAGE
+              : MISSED_SUCCESS_MESSAGE,
+        });
       } catch (error) {
         const failure = failureToast(error, FAILURE_MESSAGE, reload);
         if (failure) showToast(failure);
-        return;
-      }
-      updateStudent(released);
-      setDialog(null);
-      rememberMissed(student, false);
-      if (change.count === student.count) {
-        showToast({ variant: "success", message: MISSED_NO_CHANGE_MESSAGE });
-        return;
-      }
-      try {
-        updateStudent(await studentGateway.saveCount(released, change));
-        markHandled(todayKey, student.studentId, {
-          added: change.count - student.count,
-          reason: change.reason,
-        });
-        showToast({ variant: "success", message: MISSED_SUCCESS_MESSAGE });
-      } catch (error) {
-        const failure = failureToast(
-          error,
-          MISSED_COUNT_FAILURE_MESSAGE,
-          reload,
-        );
-        if (failure) {
-          showToast(
-            failure.variant === "error"
-              ? { variant: "error", message: MISSED_COUNT_FAILURE_MESSAGE }
-              : failure,
-          );
-        }
       }
     });
   }
 
-  /** 지난 미이행 학생의 횟수·사유만 고친다(학생 관리와 같은 저장). */
+  /** 지난 날짜의 미이행 학생에게 횟수·사유를 저장한다(`PATCH /duties/{date}/{id}/missed`). */
   function handleAdjust(change: { count: number; reason: string }) {
     if (!dialog) return;
     const { student } = dialog;
@@ -302,12 +221,18 @@ export function AdminVolunteerDuty({
     }
     return singleFlight(student.id, async () => {
       try {
-        updateStudent(await studentGateway.saveCount(student, change));
-        markHandled(selectedKey, student.studentId, {
-          added: change.count - student.count,
-          reason: change.reason,
+        const record = await gateway.adjustMissed(
+          selectedKey,
+          student.id,
+          change.count - student.count,
+          change.reason,
+        );
+        updateStudent({
+          ...student,
+          count: Math.max(0, student.count + (record.addedCount ?? 0)),
         });
         setDialog(null);
+        refreshRecords();
         showToast({ variant: "success", message: COUNT_SUCCESS_MESSAGE });
       } catch (error) {
         const failure = failureToast(error, COUNT_FAILURE_MESSAGE, reload);
@@ -351,7 +276,6 @@ export function AdminVolunteerDuty({
             selectedKey={selectedKey}
             onSelect={setSelectedKey}
             loadMonth={history?.month}
-            extraMarks={todayMissedMarks}
             missed={missedRecords}
             onPickMissed={openAdjust}
           />
