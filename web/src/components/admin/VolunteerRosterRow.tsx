@@ -69,7 +69,7 @@ export function VolunteerRosterRow({
           type="button"
           aria-label={
             designated
-              ? `${student.name} ${student.duty === "completed" ? "봉사 완료" : "당일 봉사자로 지정됨"}`
+              ? `${student.name} ${student.duty === "completed" ? "봉사 완료" : student.duty === "missed" ? "봉사 미이행" : "당일 봉사자로 지정됨"}`
               : `${student.name} 당일 봉사자로 지정`
           }
           disabled={noCount}
@@ -86,7 +86,9 @@ export function VolunteerRosterRow({
             ? "봉사자 지정"
             : student.duty === "designated"
               ? "지정됨"
-              : "완료됨"}
+              : student.duty === "missed"
+                ? "미이행"
+                : "완료됨"}
         </button>
       </div>
     </div>

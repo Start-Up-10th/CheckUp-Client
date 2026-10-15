@@ -1,5 +1,6 @@
 /** 오늘 지정 상태. 없음 → 지정됨 → 완료됨 순으로만 간다(REQ-COM-006). */
-export type DutyStatus = "none" | "designated" | "completed";
+/** 오늘 지정 상태. 없음 → 지정됨 → 완료됨 또는 미이행으로만 간다(REQ-COM-006). */
+export type DutyStatus = "none" | "designated" | "completed" | "missed";
 
 export type RosterStudent = {
   /** 서버 봉사 API 경로에 쓰는 학생 ID(`studentId`). 화면에 보이는 학번과 다르다. */
@@ -17,10 +18,12 @@ export type RosterStudent = {
 };
 
 /** 지난 날짜 당일 봉사자 기록의 결과. 미이행은 봉사 없이 사라져 횟수가 추가된 지정이다(#334). */
-export type DutyRecordStatus = "completed" | "missed" | "cancelled";
+export type DutyRecordStatus = "assigned" | "completed" | "missed";
 
 /** 한 운영일의 당일 봉사자 기록 한 건. `studentId`는 학번이다. */
 export type DutyRecord = {
+  /** 서버 봉사 API 경로에 쓰는 학생 ID(`RosterStudent.id`와 같다). */
+  id: number;
   studentId: string;
   name: string;
   roomNumber: number | null;

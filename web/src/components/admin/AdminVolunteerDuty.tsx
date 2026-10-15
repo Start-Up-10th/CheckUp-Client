@@ -54,8 +54,8 @@ const RECORD_CHIP: Record<DutyRecordStatus, { label: string; style: string }> =
       label: "미이행",
       style: "bg-admin-danger-bg text-admin-danger-text",
     },
-    cancelled: {
-      label: "제외",
+    assigned: {
+      label: "지정됨",
       style: "bg-admin-absence-bg text-admin-textMuted",
     },
   };
@@ -190,6 +190,7 @@ export function AdminVolunteerDuty({
 
   function rememberMissed(student: RosterStudent, adjusted: boolean) {
     const record: DutyRecord = {
+      id: student.id,
       studentId: student.studentId,
       name: student.name,
       roomNumber: student.roomNumber,

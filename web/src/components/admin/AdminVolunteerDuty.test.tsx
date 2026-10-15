@@ -21,7 +21,8 @@ import {
 } from "@/lib/admin/volunteer-roster-store";
 import { AdminVolunteerDuty } from "./AdminVolunteerDuty";
 
-const mockGateway = createMockVolunteerGateway();
+// 지난 기록이 오늘 기준 날짜로 만들어지므로 날짜를 고정한 뒤(beforeEach) 매 테스트마다 새로 만든다.
+let mockGateway = createMockVolunteerGateway();
 
 /** 서버 대신 목업 게이트웨이를 쓰는 화면. */
 function render(ui: ReactElement) {
@@ -40,6 +41,7 @@ beforeEach(() => {
   // 2026-10-01 12:00 KST. 타이머는 그대로 두고 날짜만 고정한다.
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-10-01T03:00:00Z"));
+  mockGateway = createMockVolunteerGateway();
   setRoster(MOCK_VOLUNTEER_ROSTER);
 });
 

@@ -1,6 +1,11 @@
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import { throwIfRateLimited } from "@/lib/rate-limit";
-import type { DutyStatus, RosterStudent } from "@/lib/admin/volunteer-types";
+import type {
+  DutyRecord,
+  DutyRecordStatus,
+  DutyStatus,
+  RosterStudent,
+} from "@/lib/admin/volunteer-types";
 
 /** 서버 봉사 API 응답 한 건(`VolunteerResponse`). 시각은 ISO-8601 문자열이다. */
 export type VolunteerApiResponse = {
@@ -11,7 +16,7 @@ export type VolunteerApiResponse = {
   dormitoryRoom: number | null;
   volunteerCount: number;
   lastActivityAt?: string | null;
-  todayDuty?: "ASSIGNED" | "COMPLETED" | null;
+  todayDuty?: "ASSIGNED" | "COMPLETED" | "MISSED" | null;
 };
 
 /** 서버가 준 오류. `code`는 서버 ErrorCode 이름(예: `NO_VOLUNTEER_LEFT`)이고 본문이 없으면 null이다. */
@@ -24,10 +29,49 @@ export class VolunteerApiError extends Error {
   }
 }
 
-const DUTY_FROM_API: Record<"ASSIGNED" | "COMPLETED", DutyStatus> = {
+const DUTY_FROM_API: Record<"ASSIGNED" | "COMPLETED" | "MISSED", DutyStatus> = {
   ASSIGNED: "designated",
   COMPLETED: "completed",
+  MISSED: "missed",
 };
+
+const RECORD_FROM_API: Record<
+  "ASSIGNED" | "COMPLETED" | "MISSED",
+  DutyRecordStatus
+> = {
+  ASSIGNED: "assigned",
+  COMPLETED: "completed",
+  MISSED: "missed",
+};
+
+/** 서버 날짜별 당일 봉사자 기록 한 건(`VolunteerDutyRecordResponse`). */
+export type VolunteerDutyRecordApiResponse = {
+  studentId: number;
+  studentNumber: number;
+  name: string;
+  dormitoryRoom: number | null;
+  status: "ASSIGNED" | "COMPLETED" | "MISSED";
+  /** 미이행으로 횟수를 처리했는지. */
+  adjusted: boolean;
+  /** 미이행으로 실제 바꾼 횟수. 처리 전이면 null이고 음수일 수 있다. */
+  addedCount?: number | null;
+  reason?: string | null;
+};
+
+export function toDutyRecord(body: VolunteerDutyRecordApiResponse): DutyRecord {
+  const status = RECORD_FROM_API[body.status];
+  if (!status) throw new Error("dutyRecord: unexpected status");
+  return {
+    id: body.studentId,
+    studentId: String(body.studentNumber),
+    name: body.name,
+    roomNumber: body.dormitoryRoom ?? null,
+    status,
+    adjusted: body.adjusted === true,
+    addedCount: body.addedCount ?? undefined,
+    reason: body.reason?.trim() || undefined,
+  };
+}
 
 const MONTH_DAY = new Intl.DateTimeFormat("ko-KR", {
   timeZone: "Asia/Seoul",
@@ -67,7 +111,7 @@ type VolunteerAdjustmentApiResponse = {
   /** 실제로 바뀐 횟수. 양수는 추가, 음수는 차감(당일 봉사 완료 포함). */
   delta: number;
   reason?: string | null;
-  kind?: "ADMIN" | "DUTY_COMPLETION" | null;
+  kind?: "ADMIN" | "DUTY_COMPLETION" | "DUTY_MISSED" | null;
 };
 
 /** 봉사 이력 한 줄. 날짜는 `MM/DD`, 변화는 실제로 바뀐 횟수(1이 아닐 수 있다)다. */
@@ -83,6 +127,7 @@ function adjustmentTitle(item: VolunteerAdjustmentApiResponse): string {
   const reason = item.reason?.trim();
   if (reason) return reason;
   if (item.kind === "DUTY_COMPLETION") return "당일 봉사 완료";
+  if (item.kind === "DUTY_MISSED") return "당일 봉사 미이행";
   return item.delta > 0 ? "봉사 횟수 추가" : "봉사 횟수 감면";
 }
 
@@ -165,6 +210,88 @@ export function cancelVolunteerDuty(id: number): Promise<RosterStudent> {
 
 export function completeVolunteerDuty(id: number): Promise<RosterStudent> {
   return requestStudent(`/${id}/duty/complete`, { method: "POST" });
+}
+
+/** 미이행 처리에서 서버가 받는 횟수 변화의 크기(`VolunteerMissedRequest.delta`는 -99~99). */
+export const MAX_MISSED_DELTA = 99;
+
+/**
+ * 오늘 지정을 미이행으로 바꾸고 횟수 변화(`delta`, -99~99, 0이면 횟수는 그대로)와 사유를 한 번에 저장한다
+ * (`POST /api/v1/volunteer/{id}/duty/missed`). 지정을 삭제하지 않고 `MISSED`로 남긴다. 같은 키로 재시도하면 서버가
+ * 한 번만 반영한다. 지정이 없으면 404 `NOT_ON_DUTY`, 완료했으면 409 `DUTY_ALREADY_COMPLETED`, 횟수를 이미 처리했으면
+ * 409 `DUTY_ALREADY_ADJUSTED`다. 학생 알림은 만들거나 지우지 않는다.
+ */
+export function markVolunteerMissed(
+  id: number,
+  delta: number,
+  reason: string,
+  idempotencyKey: string = crypto.randomUUID(),
+): Promise<RosterStudent> {
+  return requestStudent(`/${id}/duty/missed`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify(missedBody(delta, reason)),
+  });
+}
+
+/**
+ * 지난 날짜(`date`, `YYYY-MM-DD`)의 지정을 미이행으로 바꾸고 횟수·사유를 저장한다
+ * (`PATCH /api/v1/volunteer/duties/{date}/{id}/missed`). 지정됨이거나 횟수를 처리하지 않은 미이행만 된다.
+ * 지정이 없으면 404 `DUTY_NOT_FOUND`, 횟수를 이미 처리했으면 409 `DUTY_ALREADY_ADJUSTED`다.
+ */
+export async function adjustMissedDuty(
+  date: string,
+  id: number,
+  delta: number,
+  reason: string,
+  idempotencyKey: string = crypto.randomUUID(),
+): Promise<DutyRecord> {
+  const res = await request(`/duties/${date}/${id}/missed`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify(missedBody(delta, reason)),
+  });
+  return toDutyRecord((await res.json()) as VolunteerDutyRecordApiResponse);
+}
+
+function missedBody(delta: number, reason: string) {
+  const trimmed = reason.trim().slice(0, MAX_REASON_LENGTH);
+  return trimmed ? { delta, reason: trimmed } : { delta };
+}
+
+/** 한 운영일(`YYYY-MM-DD`)의 당일 봉사자 기록을 호실순으로 받는다(`GET /api/v1/volunteer/duties?date=`, 관리자 전용). */
+export async function fetchDutyRecords(date: string): Promise<DutyRecord[]> {
+  const res = await request(`/duties?date=${encodeURIComponent(date)}`);
+  const body = (await res.json()) as VolunteerDutyRecordApiResponse[];
+  if (!Array.isArray(body)) throw new Error("dutyRecords: unexpected response");
+  return body.map(toDutyRecord);
+}
+
+/**
+ * 그 달에서 미이행이 있는 운영일과 인원을 받는다(`GET /api/v1/volunteer/duties/summary?month=YYYY-MM`).
+ * 횟수를 처리한 미이행과 처리하지 않은 미이행을 함께 센다.
+ */
+export async function fetchMissedSummary(
+  year: number,
+  month: number,
+): Promise<Record<string, number>> {
+  const key = `${year}-${String(month).padStart(2, "0")}`;
+  const res = await request(`/duties/summary?month=${key}`);
+  const body = (await res.json()) as Record<string, unknown>;
+  const summary: Record<string, number> = {};
+  for (const [date, count] of Object.entries(body ?? {})) {
+    if (typeof count !== "number" || !Number.isFinite(count)) {
+      throw new Error("missedSummary: unexpected response");
+    }
+    summary[date] = count;
+  }
+  return summary;
 }
 
 /**
