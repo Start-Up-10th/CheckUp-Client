@@ -167,7 +167,9 @@ export function designate(
 ): RosterChange {
   return update(students, studentId, (student) => {
     if (student.duty === "designated") return "already-designated";
-    if (student.duty === "completed") return "already-completed";
+    if (student.duty === "completed" || student.duty === "missed") {
+      return "already-completed";
+    }
     if (student.count < 1) return "no-count";
     return { ...student, duty: "designated" };
   });
@@ -179,7 +181,9 @@ export function cancelDuty(
   studentId: string,
 ): RosterChange {
   return update(students, studentId, (student) => {
-    if (student.duty === "completed") return "already-completed";
+    if (student.duty === "completed" || student.duty === "missed") {
+      return "already-completed";
+    }
     if (student.duty === "none") return "not-designated";
     return { ...student, duty: "none" };
   });
@@ -192,13 +196,39 @@ export function completeDuty(
   today: string,
 ): RosterChange {
   return update(students, studentId, (student) => {
-    if (student.duty === "completed") return "already-completed";
+    if (student.duty === "completed" || student.duty === "missed") {
+      return "already-completed";
+    }
     if (student.duty === "none") return "not-designated";
     return {
       ...student,
       duty: "completed",
       count: Math.max(0, student.count - 1),
       lastActivityDate: today,
+    };
+  });
+}
+
+/**
+ * 미이행으로 바꾼다. 지정을 `missed`로 남기고 횟수를 `delta`만큼 바꾼다(0 미만은 만들지 않는다, REQ-COM-006).
+ * 완료했거나 이미 미이행이면 바꾸지 않는다.
+ */
+export function markMissed(
+  students: RosterStudent[],
+  studentId: string,
+  delta: number,
+  today: string,
+): RosterChange {
+  return update(students, studentId, (student) => {
+    if (student.duty === "completed" || student.duty === "missed") {
+      return "already-completed";
+    }
+    if (student.duty === "none") return "not-designated";
+    return {
+      ...student,
+      duty: "missed",
+      count: Math.max(0, student.count + delta),
+      lastActivityDate: delta === 0 ? student.lastActivityDate : today,
     };
   });
 }

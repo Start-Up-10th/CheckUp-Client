@@ -5,6 +5,8 @@ type VolunteerDutyRowProps = {
   student: RosterStudent;
   onComplete: (studentId: string) => void;
   onCancel: (studentId: string) => void;
+  /** 봉사를 하지 않고 사라진 학생. 횟수 추가·사유 다이얼로그를 연다(#334). */
+  onMissed: (studentId: string) => void;
 };
 
 /**
@@ -16,6 +18,7 @@ export function VolunteerDutyRow({
   student,
   onComplete,
   onCancel,
+  onMissed,
 }: VolunteerDutyRowProps) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-[11px] bg-admin-rowSurface px-3.5 py-[11px] md:rounded-xl md:px-4 md:py-3 xl:rounded-card xl:px-5 xl:py-3.5">
@@ -38,6 +41,14 @@ export function VolunteerDutyRow({
           className="rounded-[10px] bg-admin-accent-bg transition hover:brightness-95 px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-accent-text xl:px-[18px] xl:py-[9px] xl:text-[13px] xl:leading-4"
         >
           완료
+        </button>
+        <button
+          type="button"
+          aria-label={`${student.name} 봉사 미이행`}
+          onClick={() => onMissed(student.studentId)}
+          className="rounded-[10px] bg-admin-ghost-bg transition-colors hover:bg-admin-border px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-ghost-text xl:px-[18px] xl:py-[9px] xl:text-[13px] xl:leading-4"
+        >
+          미이행
         </button>
         <button
           type="button"

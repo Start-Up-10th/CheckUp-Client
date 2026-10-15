@@ -2,13 +2,17 @@ import { RateLimitedError } from "@/lib/rate-limit";
 import { AdminUnauthorizedError } from "./qr-api";
 import {
   VolunteerApiError,
+  adjustMissedDuty,
   adjustVolunteerCount,
   adjustVolunteerCountBy,
   cancelVolunteerDuty,
   completeVolunteerDuty,
   designateVolunteer,
+  fetchDutyRecords,
+  fetchMissedSummary,
   fetchVolunteerAdjustments,
   fetchVolunteers,
+  markVolunteerMissed,
   toRosterStudent,
 } from "./volunteer-api";
 
@@ -285,5 +289,124 @@ describe("429 응답", () => {
 
     expect(error).toBeInstanceOf(RateLimitedError);
     expect((error as RateLimitedError).retryAfterMs).toBe(7000);
+  });
+});
+
+describe("미이행·날짜별 기록 API", () => {
+  const RECORD = {
+    studentId: 3203,
+    studentNumber: 3203,
+    name: "류하준",
+    dormitoryRoom: 302,
+    status: "MISSED" as const,
+    adjusted: true,
+    addedCount: 1,
+    reason: "당일 봉사 미이행",
+  };
+
+  it("todayDuty가 MISSED면 지정 상태를 미이행으로 바꾼다", () => {
+    expect(toRosterStudent({ ...BODY, todayDuty: "MISSED" }).duty).toBe(
+      "missed",
+    );
+  });
+
+  it("오늘 지정 미이행은 POST /duty/missed에 delta와 사유를 한 번에 보낸다", async () => {
+    const fetchMock = mockFetch(200, { ...BODY, todayDuty: "MISSED" });
+
+    const student = await markVolunteerMissed(
+      17,
+      1,
+      " 당일 봉사 미이행 ",
+      "k1",
+    );
+
+    expect(student.duty).toBe("missed");
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("/api/v1/volunteer/17/duty/missed");
+    expect(init.method).toBe("POST");
+    expect(init.headers).toMatchObject({ "Idempotency-Key": "k1" });
+    expect(JSON.parse(init.body as string)).toEqual({
+      delta: 1,
+      reason: "당일 봉사 미이행",
+    });
+  });
+
+  it("사유가 비어 있으면 delta만 보낸다", async () => {
+    const fetchMock = mockFetch(200, BODY);
+
+    await markVolunteerMissed(17, 0, "  ", "k2");
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(JSON.parse(init.body as string)).toEqual({ delta: 0 });
+  });
+
+  it("지난 날짜 미이행 조정은 PATCH /duties/{date}/{id}/missed이고 기록을 돌려받는다", async () => {
+    const fetchMock = mockFetch(200, RECORD);
+
+    const record = await adjustMissedDuty("2026-10-14", 3203, 1, "사유", "k3");
+
+    expect(record).toEqual({
+      id: 3203,
+      studentId: "3203",
+      name: "류하준",
+      roomNumber: 302,
+      status: "missed",
+      adjusted: true,
+      addedCount: 1,
+      reason: "당일 봉사 미이행",
+    });
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe("/api/v1/volunteer/duties/2026-10-14/3203/missed");
+    expect(init.method).toBe("PATCH");
+  });
+
+  it("날짜별 기록은 GET /duties?date=를 호실순 그대로 화면 모델로 바꾼다", async () => {
+    const fetchMock = mockFetch(200, [
+      RECORD,
+      {
+        ...RECORD,
+        studentId: 3115,
+        studentNumber: 3115,
+        status: "ASSIGNED",
+        adjusted: false,
+        addedCount: null,
+        reason: null,
+      },
+    ]);
+
+    const records = await fetchDutyRecords("2026-10-14");
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/v1/volunteer/duties?date=2026-10-14",
+    );
+    expect(records.map((record) => record.status)).toEqual([
+      "missed",
+      "assigned",
+    ]);
+    expect(records[1]).toMatchObject({
+      adjusted: false,
+      addedCount: undefined,
+      reason: undefined,
+    });
+  });
+
+  it("월 요약은 GET /duties/summary?month=YYYY-MM이고 날짜별 인원을 돌려준다", async () => {
+    const fetchMock = mockFetch(200, { "2026-10-13": 1, "2026-10-14": 2 });
+
+    const summary = await fetchMissedSummary(2026, 10);
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/api/v1/volunteer/duties/summary?month=2026-10",
+    );
+    expect(summary).toEqual({ "2026-10-13": 1, "2026-10-14": 2 });
+  });
+
+  it("횟수를 이미 처리한 미이행은 409 DUTY_ALREADY_ADJUSTED 오류로 던진다", async () => {
+    mockFetch(409, { code: "DUTY_ALREADY_ADJUSTED" });
+
+    await expect(markVolunteerMissed(17, 1, "", "k4")).rejects.toMatchObject({
+      status: 409,
+      code: "DUTY_ALREADY_ADJUSTED",
+    });
   });
 });

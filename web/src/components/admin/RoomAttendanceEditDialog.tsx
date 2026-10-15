@@ -19,6 +19,7 @@ type RoomAttendanceEditDialogProps = {
 /**
  * REQ-ATT-006: 출석/미출석을 선택하고 저장해야만 반영된다. 저장 전 닫기는 변경하지 않는다.
  * Figma node 572:150 "호실 출석 변경 다이얼로그".
+ * 호실 상세에서 `수정`을 눌러야만 열리므로 딤·패널 등장 애니메이션을 두지 않는다(두면 상세가 사라졌다 다시 나타나 깜빡인다, #332).
  */
 export function RoomAttendanceEditDialog({
   room,
@@ -44,7 +45,7 @@ export function RoomAttendanceEditDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#1c1c1e]/45 dark:bg-black/60 animate-dim-in motion-reduce:animate-none"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#1c1c1e]/45 dark:bg-black/60"
       role="presentation"
       onClick={onClose}
     >
@@ -54,7 +55,7 @@ export function RoomAttendanceEditDialog({
         ref={panelRef}
         tabIndex={-1}
         aria-labelledby={`room-edit-dialog-title-${room.number}`}
-        className="z-50 flex max-h-[calc(100dvh-32px)] w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-[16px] bg-admin-surface p-4 md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px] outline-none animate-dialog-in motion-reduce:animate-none"
+        className="z-50 flex max-h-[calc(100dvh-32px)] w-[310px] max-w-[calc(100vw-32px)] flex-col gap-1 rounded-[16px] bg-admin-surface p-4 md:w-[400px] md:p-5 xl:w-[460px] xl:p-[22px] outline-none"
         onClick={(event) => event.stopPropagation()}
       >
         <h2
