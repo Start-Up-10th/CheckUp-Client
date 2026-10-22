@@ -57,7 +57,7 @@ export function FaceFloorDialog({ onSelect, onCancel }: FaceFloorDialogProps) {
                 type="button"
                 aria-pressed={active}
                 onClick={() => setPicked(floor)}
-                className={`flex-1 rounded-[13px] py-3 text-sm font-bold leading-[17px] transition xl:text-base xl:leading-5 ${
+                className={`flex-1 rounded-xl py-2.5 text-sm font-bold leading-[17px] transition ${
                   active
                     ? "bg-admin-attendance-bg text-admin-attendance-text"
                     : "bg-admin-ghost-bg text-admin-ghost-text hover:bg-admin-border"
@@ -68,21 +68,21 @@ export function FaceFloorDialog({ onSelect, onCancel }: FaceFloorDialogProps) {
             );
           })}
         </div>
-        <div className="flex w-full items-start justify-end gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-[13px] bg-admin-ghost-bg px-5 py-3 text-[13px] font-bold leading-4 text-admin-ghost-text transition-colors hover:bg-admin-border xl:text-sm xl:leading-[17px]"
-          >
-            취소
-          </button>
+        <div className="flex w-full items-start gap-2 pt-5">
           <button
             type="button"
             disabled={picked === null}
             onClick={() => picked !== null && onSelect(picked)}
-            className="rounded-[13px] bg-admin-accent-bg px-5 py-3 text-[13px] font-bold leading-4 text-admin-accent-text transition hover:brightness-95 disabled:opacity-40 disabled:hover:brightness-100 xl:text-sm xl:leading-[17px]"
+            className="flex-1 rounded-xl bg-admin-accent-bg py-2.5 text-sm font-bold leading-[17px] text-admin-accent-text transition hover:brightness-95 disabled:opacity-40 disabled:hover:brightness-100"
           >
             확인
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 rounded-xl bg-admin-ghost-bg py-2.5 text-sm font-bold leading-[17px] text-admin-ghost-text transition-colors hover:bg-admin-border"
+          >
+            취소
           </button>
         </div>
       </div>
