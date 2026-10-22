@@ -1,9 +1,14 @@
+import type { Floor } from "@/lib/admin/floor-types";
 import type { Purpose } from "@/lib/admin/purpose";
 import { throwIfRateLimited } from "@/lib/rate-limit";
 import { AdminUnauthorizedError, PURPOSE_TO_API } from "@/lib/admin/qr-api";
 
-/** 서버 `Recognition.status`. KNOWN은 서버가 후보 학생과 확인한 경우, UNKNOWN은 못 찾은 경우다. */
-export type RecognitionStatus = "KNOWN" | "UNKNOWN" | "NOT_ATTEMPTED";
+/**
+ * 서버 `Recognition.status`. KNOWN은 서버가 후보 학생과 확인한 경우, UNKNOWN은 못 찾은 경우다. OTHER_FLOOR는 세션 층이 아닌
+ * 학생이라 이름·학번·출석이 없다(DEC-100).
+ */
+export type RecognitionStatus =
+  "KNOWN" | "UNKNOWN" | "NOT_ATTEMPTED" | "OTHER_FLOOR";
 
 /** 서버가 KNOWN 얼굴에 출석을 기록한 결과. 웹은 출석을 직접 기록하지 않는다. */
 export type RecognitionAttendance =
@@ -51,7 +56,12 @@ type FaceApiBody = {
   }>;
 };
 
-const STATUSES: readonly string[] = ["KNOWN", "UNKNOWN", "NOT_ATTEMPTED"];
+const STATUSES: readonly string[] = [
+  "KNOWN",
+  "UNKNOWN",
+  "NOT_ATTEMPTED",
+  "OTHER_FLOOR",
+];
 const ATTENDANCES: readonly string[] = [
   "RECORDED",
   "DUPLICATE",
@@ -106,13 +116,19 @@ async function failFrom(res: Response): Promise<never> {
   );
 }
 
-/** REQ-FACE-004: 카메라 페이지마다(용도 탭을 바꿀 때도) 새 세션을 만든다. */
-export async function createFaceSession(purpose: Purpose): Promise<string> {
+/**
+ * REQ-FACE-004: 카메라 페이지마다(층을 바꿀 때도) 새 세션을 만든다. 서버는 `floor` 층 학생만 비교 후보로 쓴다(DEC-100).
+ * 층이 3·4·5가 아니면 서버가 400 `INVALID_FLOOR`를 준다.
+ */
+export async function createFaceSession(
+  purpose: Purpose,
+  floor: Floor,
+): Promise<string> {
   const res = await fetch("/api/v1/face/sessions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ purpose: PURPOSE_TO_API[purpose] }),
+    body: JSON.stringify({ purpose: PURPOSE_TO_API[purpose], floor }),
   });
   if (!res.ok) return failFrom(res);
   return ((await res.json()) as { sessionId: string }).sessionId;

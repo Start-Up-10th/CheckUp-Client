@@ -45,34 +45,35 @@ describe("createFaceSession", () => {
   it("용도를 서버 값으로 바꿔 세션을 만들고 sessionId를 돌려준다", async () => {
     const fetchMock = mockFetch(201, { sessionId: "s-1", status: "ready" });
 
-    await expect(createFaceSession("dorm")).resolves.toBe("s-1");
+    await expect(createFaceSession("dorm", 4)).resolves.toBe("s-1");
 
     expect(fetchMock).toHaveBeenCalledWith("/api/v1/face/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ purpose: "DORMITORY" }),
+      body: JSON.stringify({ purpose: "DORMITORY", floor: 4 }),
     });
   });
 
   it("자습실은 STUDY_ROOM이다", async () => {
     const fetchMock = mockFetch(201, { sessionId: "s-2" });
 
-    await createFaceSession("study");
+    await createFaceSession("study", 5);
 
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
       purpose: "STUDY_ROOM",
+      floor: 5,
     });
   });
 
   it("401은 AdminUnauthorizedError, 그 밖은 서버 code를 담은 FaceApiError다", async () => {
     mockFetch(401);
-    await expect(createFaceSession("dorm")).rejects.toBeInstanceOf(
+    await expect(createFaceSession("dorm", 3)).rejects.toBeInstanceOf(
       AdminUnauthorizedError,
     );
 
     mockFetch(422, { code: "FACE_NO_CANDIDATES" });
-    await expect(createFaceSession("dorm")).rejects.toMatchObject({
+    await expect(createFaceSession("dorm", 3)).rejects.toMatchObject({
       status: 422,
       code: "FACE_NO_CANDIDATES",
     });
@@ -190,6 +191,29 @@ describe("sendFaceFrame", () => {
     const [other] = (await sendFaceFrame("s-1", frame, "f-1")).faces;
 
     expect(other.status).toBe("NOT_ATTEMPTED");
+  });
+
+  it("OTHER_FLOOR는 이름·학번·출석 없이 돌려준다", async () => {
+    mockFetch(200, {
+      frameId: "f-1",
+      faces: [
+        face({
+          recognition: {
+            status: "OTHER_FLOOR",
+            studentName: "다른층학생",
+            studentNumber: 2501,
+            attendance: "RECORDED",
+          },
+        }),
+      ],
+    });
+
+    const [other] = (await sendFaceFrame("s-1", frame, "f-1")).faces;
+
+    expect(other.status).toBe("OTHER_FLOOR");
+    expect(other.studentName).toBeUndefined();
+    expect(other.studentNumber).toBeUndefined();
+    expect(other.attendance).toBeUndefined();
   });
 
   it("여러 얼굴은 트랙별로 따로 돌려준다", async () => {
