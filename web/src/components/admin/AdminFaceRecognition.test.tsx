@@ -9,6 +9,9 @@ import { RateLimitedError } from "@/lib/rate-limit";
 import { createMockFaceGateway } from "@/lib/admin/face-mock-gateway";
 import { AdminFaceRecognition } from "./AdminFaceRecognition";
 
+const router = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
+
 const camera = vi.hoisted(() => ({
   status: "granted" as "requesting" | "granted" | "error",
   // 실제 useCameraStream처럼 렌더마다 같은 ref를 돌려준다.
@@ -50,7 +53,7 @@ function unknown(attempts: number): FaceResult {
 
 function renderWith(
   gateway: FaceGateway,
-  ui: ReactNode = <AdminFaceRecognition />,
+  ui: ReactNode = <AdminFaceRecognition initialFloor={3} />,
 ) {
   return render(
     <FaceGatewayProvider value={gateway}>{ui}</FaceGatewayProvider>,
@@ -266,5 +269,57 @@ describe("AdminFaceRecognition", () => {
     unmount();
 
     expect(closeSession).toHaveBeenCalledTimes(1);
+  });
+
+  describe("층 선택", () => {
+    it("층을 고르기 전에는 카메라 세션을 만들지 않고, 고르면 그 층이 선택된 채 들어간다", async () => {
+      const gateway = createMockFaceGateway([[]]);
+      const createSession = vi.spyOn(gateway, "createSession");
+      renderWith(gateway, <AdminFaceRecognition />);
+      await tick();
+
+      expect(
+        screen.getByRole("dialog", { name: "층을 선택해 주세요" }),
+      ).toBeInTheDocument();
+      expect(createSession).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "5층" }));
+      await tick();
+
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "5층" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(createSession).toHaveBeenCalledTimes(1);
+    });
+
+    it("들어간 뒤 층 탭으로 층을 바꿔도 세션을 새로 만들지 않는다", async () => {
+      const gateway = createMockFaceGateway([[]]);
+      const createSession = vi.spyOn(gateway, "createSession");
+      renderWith(gateway, <AdminFaceRecognition initialFloor={4} />);
+      await tick();
+
+      fireEvent.click(screen.getByRole("button", { name: "3층" }));
+      await tick();
+
+      expect(screen.getByRole("button", { name: "3층" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(screen.getByRole("button", { name: "4층" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+      expect(createSession).toHaveBeenCalledTimes(1);
+    });
+
+    it("층 선택 창에서 취소하면 홈으로 돌아간다", () => {
+      renderWith(createMockFaceGateway([[]]), <AdminFaceRecognition />);
+
+      fireEvent.click(screen.getByRole("button", { name: "취소" }));
+
+      expect(router.push).toHaveBeenCalledWith("/admin");
+    });
   });
 });
