@@ -476,6 +476,33 @@ describe("useFaceRecognition 결과", () => {
     expect(result.current.success).toBeNull();
   });
 
+  it("다른 층 학생은 실패가 아니라 잠깐 다른 층 상태로 알린다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn<FaceGateway["sendFrame"]>()
+        .mockResolvedValueOnce(
+          frameOf([
+            {
+              trackId: "o",
+              status: "OTHER_FLOOR",
+              attempts: 1,
+              qrRecommended: false,
+            },
+          ]),
+        )
+        .mockResolvedValue(frameOf([])),
+    });
+    const { result } = setup(gateway);
+    await tick();
+
+    expect(result.current.otherFloor).toBe(true);
+    expect(result.current.failure).toBe(false);
+    expect(result.current.qrNotice).toBe(false);
+
+    await tick(SUCCESS_HOLD_MS);
+    expect(result.current.otherFloor).toBe(false);
+  });
+
   it("같은 학생이 계속 비치면 성공은 한 번만 알리고 이미 처리됨으로 바뀌지 않는다", async () => {
     const gateway = makeGateway({
       sendFrame: vi
