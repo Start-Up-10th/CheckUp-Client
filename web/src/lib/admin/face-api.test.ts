@@ -192,6 +192,29 @@ describe("sendFaceFrame", () => {
     expect(other.status).toBe("NOT_ATTEMPTED");
   });
 
+  it("OTHER_FLOOR는 이름·학번·출석 없이 돌려준다", async () => {
+    mockFetch(200, {
+      frameId: "f-1",
+      faces: [
+        face({
+          recognition: {
+            status: "OTHER_FLOOR",
+            studentName: "다른층학생",
+            studentNumber: 2501,
+            attendance: "RECORDED",
+          },
+        }),
+      ],
+    });
+
+    const [other] = (await sendFaceFrame("s-1", frame, "f-1")).faces;
+
+    expect(other.status).toBe("OTHER_FLOOR");
+    expect(other.studentName).toBeUndefined();
+    expect(other.studentNumber).toBeUndefined();
+    expect(other.attendance).toBeUndefined();
+  });
+
   it("여러 얼굴은 트랙별로 따로 돌려준다", async () => {
     mockFetch(200, {
       frameId: "f-1",

@@ -2,8 +2,12 @@ import type { Purpose } from "@/lib/admin/purpose";
 import { throwIfRateLimited } from "@/lib/rate-limit";
 import { AdminUnauthorizedError, PURPOSE_TO_API } from "@/lib/admin/qr-api";
 
-/** 서버 `Recognition.status`. KNOWN은 서버가 후보 학생과 확인한 경우, UNKNOWN은 못 찾은 경우다. */
-export type RecognitionStatus = "KNOWN" | "UNKNOWN" | "NOT_ATTEMPTED";
+/**
+ * 서버 `Recognition.status`. KNOWN은 서버가 후보 학생과 확인한 경우, UNKNOWN은 못 찾은 경우다. OTHER_FLOOR는 세션 층이 아닌
+ * 학생이라 이름·학번·출석이 없다(DEC-100).
+ */
+export type RecognitionStatus =
+  "KNOWN" | "UNKNOWN" | "NOT_ATTEMPTED" | "OTHER_FLOOR";
 
 /** 서버가 KNOWN 얼굴에 출석을 기록한 결과. 웹은 출석을 직접 기록하지 않는다. */
 export type RecognitionAttendance =
@@ -51,7 +55,12 @@ type FaceApiBody = {
   }>;
 };
 
-const STATUSES: readonly string[] = ["KNOWN", "UNKNOWN", "NOT_ATTEMPTED"];
+const STATUSES: readonly string[] = [
+  "KNOWN",
+  "UNKNOWN",
+  "NOT_ATTEMPTED",
+  "OTHER_FLOOR",
+];
 const ATTENDANCES: readonly string[] = [
   "RECORDED",
   "DUPLICATE",
