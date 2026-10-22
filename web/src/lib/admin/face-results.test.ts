@@ -221,4 +221,46 @@ describe("successMessage", () => {
   it("`성공 · 학번 이름`이다", () => {
     expect(successMessage("2405 김도현")).toBe("성공 · 2405 김도현");
   });
+
+  describe("다른 층 학생", () => {
+    const otherFloor = (trackId = "o"): FaceResult => ({
+      trackId,
+      status: "OTHER_FLOOR",
+      attempts: 1,
+      qrRecommended: false,
+    });
+
+    it("실패나 QR 안내가 아니라 다른 층 학생으로 한 번만 알린다", () => {
+      const first = applyFrame(INITIAL_RECOGNITION, [otherFloor()], NOW);
+      const same = applyFrame(first.state, [otherFloor()], NOW);
+
+      expect(first).toMatchObject({
+        otherFloor: true,
+        failure: false,
+        qrRecommended: false,
+        success: null,
+      });
+      expect(same.otherFloor).toBe(false);
+    });
+
+    it("트랙 기억 시간이 지나 다시 서면 다시 알린다", () => {
+      const first = applyFrame(INITIAL_RECOGNITION, [otherFloor()], NOW);
+      const later = new Date(NOW.getTime() + TRACK_MEMORY_MS + 1);
+
+      expect(applyFrame(first.state, [otherFloor()], later).otherFloor).toBe(
+        true,
+      );
+    });
+
+    it("다른 얼굴의 성공을 막지 않는다", () => {
+      const outcome = applyFrame(
+        INITIAL_RECOGNITION,
+        [otherFloor("o"), known()],
+        NOW,
+      );
+
+      expect(outcome.otherFloor).toBe(true);
+      expect(outcome.success).toBe("2405 김도현");
+    });
+  });
 });
