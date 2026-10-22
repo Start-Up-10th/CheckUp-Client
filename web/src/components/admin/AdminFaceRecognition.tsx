@@ -70,6 +70,7 @@ function FaceRecognitionView({
     videoRef,
     cameraReady: status === "granted",
     purpose: PURPOSE,
+    floor,
   });
 
   // 성공(`성공 · 학번 이름`)은 토스트로 잠깐 보인다(REQ-FACE-006·007). 카메라가 안 켜졌으면 서버 오류 토스트는 숨긴다.

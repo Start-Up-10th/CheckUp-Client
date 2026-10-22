@@ -12,6 +12,7 @@ import { captureFrame } from "@/lib/admin/capture-frame";
 import { FaceApiError } from "@/lib/admin/face-api";
 import { useFaceGateway } from "@/lib/admin/face-gateway";
 import { applyFrame, INITIAL_RECOGNITION } from "@/lib/admin/face-results";
+import type { Floor } from "@/lib/admin/floor-types";
 import type { Purpose } from "@/lib/admin/purpose";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import { RateLimitedError } from "@/lib/rate-limit";
@@ -37,6 +38,8 @@ type Options = {
   /** 카메라 허용을 받은 뒤에만 세션을 만든다. 허용 전에는 프레임을 보내지 않는다(REQ-FACE-004). */
   cameraReady: boolean;
   purpose: Purpose;
+  /** 이 카메라가 맡은 층. 바뀌면 세션을 새로 만든다(카메라는 그대로, DEC-100). */
+  floor: Floor;
   /** 프레임을 뜨는 함수. 기본은 video를 가로 640px JPEG로 뜬다. 테스트가 바꾸며, 바뀌면 세션을 새로 만드니 안정된 함수를 넘긴다. */
   capture?: (video: HTMLVideoElement) => Promise<Blob | null>;
   intervalMs?: number;
@@ -51,6 +54,7 @@ export function useFaceRecognition({
   videoRef,
   cameraReady,
   purpose,
+  floor,
   capture,
   intervalMs = FRAME_INTERVAL_MS,
 }: Options) {
@@ -129,7 +133,7 @@ export function useFaceRecognition({
 
     async function run() {
       try {
-        const id = await gateway.createSession(purpose);
+        const id = await gateway.createSession(purpose, floor);
         if (cancelled) {
           gateway.closeSession(id);
           return;
@@ -215,7 +219,7 @@ export function useFaceRecognition({
               }
               let recreated: string;
               try {
-                recreated = await gateway.createSession(purpose);
+                recreated = await gateway.createSession(purpose, floor);
               } catch (recreateError) {
                 fail(recreateError);
                 return;
@@ -279,7 +283,16 @@ export function useFaceRecognition({
       clearTimeout(failureTimer);
       closeCurrentSession();
     };
-  }, [cameraReady, purpose, gateway, attempt, capture, intervalMs, videoRef]);
+  }, [
+    cameraReady,
+    purpose,
+    floor,
+    gateway,
+    attempt,
+    capture,
+    intervalMs,
+    videoRef,
+  ]);
 
   return {
     status,

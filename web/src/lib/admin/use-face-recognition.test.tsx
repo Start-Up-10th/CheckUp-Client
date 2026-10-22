@@ -18,6 +18,7 @@ import {
 } from "./use-face-recognition";
 import { AdminUnauthorizedError } from "./qr-api";
 import { RateLimitedError } from "@/lib/rate-limit";
+import type { Floor } from "./floor-types";
 import type { Purpose } from "./purpose";
 
 const redirectToAdminLogin = vi.hoisted(() => vi.fn());
@@ -57,19 +58,20 @@ function makeGateway(overrides: Partial<FaceGateway> = {}) {
 
 function setup(
   gateway: Mocked<FaceGateway>,
-  initial: { cameraReady?: boolean; purpose?: Purpose } = {},
+  initial: { cameraReady?: boolean; purpose?: Purpose; floor?: Floor } = {},
 ) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <FaceGatewayProvider value={gateway}>{children}</FaceGatewayProvider>
   );
   return renderHook(
-    (props: { cameraReady: boolean; purpose: Purpose }) =>
+    (props: { cameraReady: boolean; purpose: Purpose; floor: Floor }) =>
       useFaceRecognition({ videoRef: video, capture, ...props }),
     {
       wrapper,
       initialProps: {
         cameraReady: initial.cameraReady ?? true,
         purpose: initial.purpose ?? "dorm",
+        floor: initial.floor ?? 3,
       },
     },
   );
@@ -98,10 +100,28 @@ describe("useFaceRecognition 세션", () => {
 
     expect(gateway.createSession).not.toHaveBeenCalled();
 
-    rerender({ cameraReady: true, purpose: "dorm" });
+    rerender({ cameraReady: true, purpose: "dorm", floor: 3 });
     await tick();
 
-    expect(gateway.createSession).toHaveBeenCalledWith("dorm");
+    expect(gateway.createSession).toHaveBeenCalledWith("dorm", 3);
+  });
+
+  it("층을 바꾸면 이전 세션을 끝내고 새 층으로 세션을 만든다", async () => {
+    const gateway = makeGateway();
+    const { rerender } = setup(gateway, { floor: 4 });
+    await tick();
+    expect(gateway.createSession).toHaveBeenLastCalledWith("dorm", 4);
+
+    rerender({ cameraReady: true, purpose: "dorm", floor: 5 });
+    await tick();
+
+    expect(gateway.closeSession).toHaveBeenCalledWith("session-1");
+    expect(gateway.createSession).toHaveBeenLastCalledWith("dorm", 5);
+    expect(gateway.sendFrame).toHaveBeenLastCalledWith(
+      "session-2",
+      FRAME,
+      expect.any(String),
+    );
   });
 
   it("세션을 만든 뒤 running이 되고 프레임을 보낸다", async () => {
@@ -183,11 +203,11 @@ describe("useFaceRecognition 세션", () => {
     await tick();
     expect(result.current.success).toBe("2405 김도현");
 
-    rerender({ cameraReady: true, purpose: "study" });
+    rerender({ cameraReady: true, purpose: "study", floor: 3 });
     await tick();
 
     expect(gateway.closeSession).toHaveBeenCalledWith("session-1");
-    expect(gateway.createSession).toHaveBeenLastCalledWith("study");
+    expect(gateway.createSession).toHaveBeenLastCalledWith("study", 3);
     expect(result.current.success).toBe("2405 김도현");
     expect(gateway.sendFrame).toHaveBeenLastCalledWith(
       "session-2",
@@ -261,6 +281,7 @@ describe("useFaceRecognition 프레임 전송", () => {
           videoRef: video,
           cameraReady: true,
           purpose: "dorm",
+          floor: 3,
           capture: captureNothing,
         }),
       { wrapper },

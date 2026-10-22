@@ -1,3 +1,4 @@
+import type { Floor } from "@/lib/admin/floor-types";
 import type { Purpose } from "@/lib/admin/purpose";
 import { throwIfRateLimited } from "@/lib/rate-limit";
 import { AdminUnauthorizedError, PURPOSE_TO_API } from "@/lib/admin/qr-api";
@@ -115,13 +116,19 @@ async function failFrom(res: Response): Promise<never> {
   );
 }
 
-/** REQ-FACE-004: 카메라 페이지마다(용도 탭을 바꿀 때도) 새 세션을 만든다. */
-export async function createFaceSession(purpose: Purpose): Promise<string> {
+/**
+ * REQ-FACE-004: 카메라 페이지마다(층을 바꿀 때도) 새 세션을 만든다. 서버는 `floor` 층 학생만 비교 후보로 쓴다(DEC-100).
+ * 층이 3·4·5가 아니면 서버가 400 `INVALID_FLOOR`를 준다.
+ */
+export async function createFaceSession(
+  purpose: Purpose,
+  floor: Floor,
+): Promise<string> {
   const res = await fetch("/api/v1/face/sessions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ purpose: PURPOSE_TO_API[purpose] }),
+    body: JSON.stringify({ purpose: PURPOSE_TO_API[purpose], floor }),
   });
   if (!res.ok) return failFrom(res);
   return ((await res.json()) as { sessionId: string }).sessionId;
