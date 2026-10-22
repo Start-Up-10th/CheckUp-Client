@@ -1,12 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FaceFloorDialog } from "@/components/admin/FaceFloorDialog";
+import { FloorTabs } from "@/components/admin/FloorTabs";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { CameraPanel } from "@/components/admin/CameraPanel";
 import { alreadyDoneMessage, successMessage } from "@/lib/admin/face-results";
 import { useFaceRecognition } from "@/lib/admin/use-face-recognition";
 import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { useCameraStream } from "@/lib/admin/use-camera-stream";
+import type { Floor } from "@/lib/admin/floor-types";
 import type { Purpose } from "@/lib/admin/purpose";
 
 /** 용도 탭이 없어서(Figma 2026-10-06, DEC-036) 얼굴 인식은 기숙사 용도로 고정한다. */
@@ -21,11 +25,46 @@ const SERVER_FAILED_MESSAGE = "불러오지 못했어요";
 /** REQ-FACE-006 문구. 서버가 한 얼굴의 인식을 반복해 놓쳤다고(qrRecommended) 알릴 때 보인다. */
 const QR_NOTICE_MESSAGE = "인식 실패 · 3회 초과 시 QR로 출석";
 
+type AdminFaceRecognitionProps = {
+  /** 이 층으로 바로 들어간다. 없으면 층 선택 창을 먼저 보인다(DEC-100). */
+  initialFloor?: Floor;
+};
+
+/**
+ * 층 선택 창을 먼저 보이고, 층을 고르면 카메라 화면으로 들어간다(DEC-100). 창에서 취소하면 홈으로 돌아간다.
+ * 층을 고르기 전에는 카메라를 켜지 않는다.
+ */
+export function AdminFaceRecognition({
+  initialFloor,
+}: AdminFaceRecognitionProps) {
+  const router = useRouter();
+  const [floor, setFloor] = useState<Floor | null>(initialFloor ?? null);
+
+  if (floor === null) {
+    return (
+      <FaceFloorDialog
+        onSelect={setFloor}
+        onCancel={() => router.push("/admin")}
+      />
+    );
+  }
+  return <FaceRecognitionView floor={floor} onFloorChange={setFloor} />;
+}
+
+type FaceRecognitionViewProps = {
+  floor: Floor;
+  onFloorChange: (floor: Floor) => void;
+};
+
 /**
  * REQ-FACE-004: 진입하면 카메라가 자동으로 켜지고 인식 세션이 시작된다. 페이지를 벗어나면 정리된다.
- * 화면은 카메라 패널 하나다. 용도 탭·전체화면·최근 인식 목록은 없다(DEC-036).
+ * 화면은 카메라 패널 하나와 오른쪽 위 층 탭이다. 층을 바꿔도 카메라·세션은 그대로다(서버 세션에 층이 없다, DEC-100).
+ * 용도 탭·전체화면·최근 인식 목록은 없다(DEC-036).
  */
-export function AdminFaceRecognition() {
+function FaceRecognitionView({
+  floor,
+  onFloorChange,
+}: FaceRecognitionViewProps) {
   const { videoRef, status, mirrored } = useCameraStream();
   const recognition = useFaceRecognition({
     videoRef,
@@ -64,6 +103,7 @@ export function AdminFaceRecognition() {
             얼굴 인식 생성
           </h1>
         </div>
+        <FloorTabs selected={floor} onSelect={onFloorChange} />
       </div>
 
       {/*
