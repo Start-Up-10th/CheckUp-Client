@@ -2,18 +2,37 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { FaceFloorDialog } from "./FaceFloorDialog";
 
 describe("FaceFloorDialog", () => {
-  it("3·4·5층 버튼을 보이고 누른 층을 알린다", () => {
+  it("층 버튼은 처음에 선택되지 않고 `확인`도 꺼져 있다", () => {
+    render(<FaceFloorDialog onSelect={vi.fn()} onCancel={vi.fn()} />);
+
+    for (const name of ["3층", "4층", "5층"]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+    }
+    expect(screen.getByRole("button", { name: "확인" })).toBeDisabled();
+  });
+
+  it("층을 누르면 선택만 되고, `확인`을 눌러야 그 층을 알린다", () => {
     const onSelect = vi.fn();
     render(<FaceFloorDialog onSelect={onSelect} onCancel={vi.fn()} />);
 
-    expect(
-      screen.getByRole("dialog", { name: "층을 선택해 주세요" }),
-    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "4층" }));
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "4층" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
 
-    expect(onSelect).toHaveBeenCalledWith(4);
-    expect(screen.getByRole("button", { name: "3층" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "5층" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "5층" }));
+    expect(screen.getByRole("button", { name: "4층" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "확인" }));
+
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith(5);
   });
 
   it("취소·Esc·바깥 누르기는 층을 고르지 않고 취소를 알린다", () => {

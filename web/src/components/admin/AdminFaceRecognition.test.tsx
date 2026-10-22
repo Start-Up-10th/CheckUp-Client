@@ -284,6 +284,7 @@ describe("AdminFaceRecognition", () => {
       expect(createSession).not.toHaveBeenCalled();
 
       fireEvent.click(screen.getByRole("button", { name: "5층" }));
+      fireEvent.click(screen.getByRole("button", { name: "확인" }));
       await tick();
 
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
