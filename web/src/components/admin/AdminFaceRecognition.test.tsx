@@ -225,6 +225,29 @@ describe("AdminFaceRecognition", () => {
     expect(document.querySelector(".Toastify__toast--success")).toBeNull();
   });
 
+  it("다른 층 학생을 인식하면 인식 실패가 아니라 `다른 층 학생이에요`를 이름 없이 보인다", async () => {
+    const gateway = createMockFaceGateway([[]]);
+    vi.spyOn(gateway, "sendFrame")
+      .mockResolvedValueOnce({
+        frameId: "f",
+        faces: [
+          {
+            trackId: "o",
+            status: "OTHER_FLOOR",
+            attempts: 1,
+            qrRecommended: false,
+          },
+        ],
+      })
+      .mockResolvedValue({ frameId: "f", faces: [] });
+    renderWith(gateway);
+    await tick();
+
+    expect(screen.getByRole("status")).toHaveTextContent("다른 층 학생이에요");
+    expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
+    expect(document.querySelector(".Toastify__toast--info")).not.toBeNull();
+  });
+
   it("카메라 허용 전에는 서버에 세션을 만들지 않는다", async () => {
     camera.status = "requesting";
     const gateway = createMockFaceGateway([[]]);
@@ -243,7 +266,7 @@ describe("AdminFaceRecognition", () => {
     await tick();
 
     expect(createSession).toHaveBeenCalledTimes(1);
-    expect(createSession).toHaveBeenLastCalledWith("dorm");
+    expect(createSession).toHaveBeenLastCalledWith("dorm", 3);
   });
 
   it("세션을 만들지 못하면 오류 토스트와 다시 시도를 보여 준다", async () => {
@@ -295,9 +318,10 @@ describe("AdminFaceRecognition", () => {
       expect(createSession).toHaveBeenCalledTimes(1);
     });
 
-    it("들어간 뒤 층 탭으로 층을 바꿔도 세션을 새로 만들지 않는다", async () => {
+    it("들어간 뒤 층 탭으로 층을 바꾸면 이전 세션을 끝내고 그 층으로 새 세션을 만든다", async () => {
       const gateway = createMockFaceGateway([[]]);
       const createSession = vi.spyOn(gateway, "createSession");
+      const closeSession = vi.spyOn(gateway, "closeSession");
       renderWith(gateway, <AdminFaceRecognition initialFloor={4} />);
       await tick();
 
@@ -312,7 +336,10 @@ describe("AdminFaceRecognition", () => {
         "aria-pressed",
         "false",
       );
-      expect(createSession).toHaveBeenCalledTimes(1);
+      expect(createSession).toHaveBeenCalledTimes(2);
+      expect(createSession).toHaveBeenNthCalledWith(1, "dorm", 4);
+      expect(createSession).toHaveBeenNthCalledWith(2, "dorm", 3);
+      expect(closeSession).toHaveBeenCalledWith("mock-session-1");
     });
 
     it("층 선택 창에서 취소하면 홈으로 돌아간다", () => {
