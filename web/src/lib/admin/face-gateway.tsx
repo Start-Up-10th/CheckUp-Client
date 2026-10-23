@@ -7,6 +7,7 @@ import {
   sendFaceFrame,
   type FaceFrameResult,
 } from "@/lib/admin/face-api";
+import type { Floor } from "@/lib/admin/floor-types";
 import type { Purpose } from "@/lib/admin/purpose";
 
 /**
@@ -14,7 +15,7 @@ import type { Purpose } from "@/lib/admin/purpose";
  * 테스트는 Provider로 다른 구현을 넣는다.
  */
 export type FaceGateway = {
-  createSession: (purpose: Purpose) => Promise<string>;
+  createSession: (purpose: Purpose, floor: Floor) => Promise<string>;
   closeSession: (sessionId: string) => void;
   sendFrame: (
     sessionId: string,

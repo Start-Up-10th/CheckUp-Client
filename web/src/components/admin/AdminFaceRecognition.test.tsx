@@ -9,6 +9,9 @@ import { RateLimitedError } from "@/lib/rate-limit";
 import { createMockFaceGateway } from "@/lib/admin/face-mock-gateway";
 import { AdminFaceRecognition } from "./AdminFaceRecognition";
 
+const router = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => router }));
+
 const camera = vi.hoisted(() => ({
   status: "granted" as "requesting" | "granted" | "error",
   // 실제 useCameraStream처럼 렌더마다 같은 ref를 돌려준다.
@@ -50,7 +53,7 @@ function unknown(attempts: number): FaceResult {
 
 function renderWith(
   gateway: FaceGateway,
-  ui: ReactNode = <AdminFaceRecognition />,
+  ui: ReactNode = <AdminFaceRecognition initialFloor={3} />,
 ) {
   return render(
     <FaceGatewayProvider value={gateway}>{ui}</FaceGatewayProvider>,
@@ -222,6 +225,29 @@ describe("AdminFaceRecognition", () => {
     expect(document.querySelector(".Toastify__toast--success")).toBeNull();
   });
 
+  it("다른 층 학생을 인식하면 인식 실패가 아니라 `다른 층 학생이에요`를 이름 없이 보인다", async () => {
+    const gateway = createMockFaceGateway([[]]);
+    vi.spyOn(gateway, "sendFrame")
+      .mockResolvedValueOnce({
+        frameId: "f",
+        faces: [
+          {
+            trackId: "o",
+            status: "OTHER_FLOOR",
+            attempts: 1,
+            qrRecommended: false,
+          },
+        ],
+      })
+      .mockResolvedValue({ frameId: "f", faces: [] });
+    renderWith(gateway);
+    await tick();
+
+    expect(screen.getByRole("status")).toHaveTextContent("다른 층 학생이에요");
+    expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
+    expect(document.querySelector(".Toastify__toast--info")).not.toBeNull();
+  });
+
   it("카메라 허용 전에는 서버에 세션을 만들지 않는다", async () => {
     camera.status = "requesting";
     const gateway = createMockFaceGateway([[]]);
@@ -240,7 +266,7 @@ describe("AdminFaceRecognition", () => {
     await tick();
 
     expect(createSession).toHaveBeenCalledTimes(1);
-    expect(createSession).toHaveBeenLastCalledWith("dorm");
+    expect(createSession).toHaveBeenLastCalledWith("dorm", 3);
   });
 
   it("세션을 만들지 못하면 오류 토스트와 다시 시도를 보여 준다", async () => {
@@ -266,5 +292,62 @@ describe("AdminFaceRecognition", () => {
     unmount();
 
     expect(closeSession).toHaveBeenCalledTimes(1);
+  });
+
+  describe("층 선택", () => {
+    it("층을 고르기 전에는 카메라 세션을 만들지 않고, 고르면 그 층이 선택된 채 들어간다", async () => {
+      const gateway = createMockFaceGateway([[]]);
+      const createSession = vi.spyOn(gateway, "createSession");
+      renderWith(gateway, <AdminFaceRecognition />);
+      await tick();
+
+      expect(
+        screen.getByRole("dialog", { name: "층을 선택해 주세요" }),
+      ).toBeInTheDocument();
+      expect(createSession).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByRole("button", { name: "5층" }));
+      fireEvent.click(screen.getByRole("button", { name: "확인" }));
+      await tick();
+
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "5층" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(createSession).toHaveBeenCalledTimes(1);
+    });
+
+    it("들어간 뒤 층 탭으로 층을 바꾸면 이전 세션을 끝내고 그 층으로 새 세션을 만든다", async () => {
+      const gateway = createMockFaceGateway([[]]);
+      const createSession = vi.spyOn(gateway, "createSession");
+      const closeSession = vi.spyOn(gateway, "closeSession");
+      renderWith(gateway, <AdminFaceRecognition initialFloor={4} />);
+      await tick();
+
+      fireEvent.click(screen.getByRole("button", { name: "3층" }));
+      await tick();
+
+      expect(screen.getByRole("button", { name: "3층" })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      expect(screen.getByRole("button", { name: "4층" })).toHaveAttribute(
+        "aria-pressed",
+        "false",
+      );
+      expect(createSession).toHaveBeenCalledTimes(2);
+      expect(createSession).toHaveBeenNthCalledWith(1, "dorm", 4);
+      expect(createSession).toHaveBeenNthCalledWith(2, "dorm", 3);
+      expect(closeSession).toHaveBeenCalledWith("mock-session-1");
+    });
+
+    it("층 선택 창에서 취소하면 홈으로 돌아간다", () => {
+      renderWith(createMockFaceGateway([[]]), <AdminFaceRecognition />);
+
+      fireEvent.click(screen.getByRole("button", { name: "취소" }));
+
+      expect(router.push).toHaveBeenCalledWith("/admin");
+    });
   });
 });
