@@ -9,6 +9,8 @@ import {
   RoomLoginRequiredError,
   fetchMyRoomMates,
 } from "@/lib/student/room-roster-api";
+import { useAttendanceActive } from "@/lib/student/use-attendance-active";
+import { AttendanceActiveStatus } from "./AttendanceActiveStatus";
 import { MainHeader } from "./MainHeader";
 import { MyRoomCard } from "./MyRoomCard";
 import type { RoomMate } from "./RoomMap";
@@ -33,6 +35,9 @@ export type MainLoadStatus = "ready" | "error";
  * (`/api/v1/room/student`, 기숙사 입소 출석 — 사용자 결정 2026-10-04). 받기 전에는 인원 줄과 배치 그림 안을
  * 비워 두고, 받지 못하면 서버 오류 문구를 보인다. 호실이 배정되지 않았거나 학생이 아닌 계정은 Figma에 없어
  * 공통 빈 상태로 알린다.
+ *
+ * 머리 아래에는 지금 출석을 받는 중인지(`/api/v1/attendance/active`)를 보여 QR을 찍기 전에 알 수 있게 한다(#357, DEC-106).
+ * 받기 전이거나 받지 못하면 틀린 상태를 보이지 않도록 아무 것도 보이지 않는다.
  */
 export function StudentMain({
   initialStatus = "ready",
@@ -92,6 +97,7 @@ function StudentMainContent({
   // REQ-UI-003: 본인 정보를 받은 학생이 얼굴을 등록하지 않았으면 얼굴 등록으로 보낸다(`GET /api/v1/face/me`).
   // 등록 대상이 아니면(호실 미배정 등) 등록할 수 없어 보내지 않는다. 조회가 실패하면 홈을 막지 않는다.
   const isStudent = current.status === "ready" && profile !== null;
+  const attendanceActive = useAttendanceActive(isStudent);
   useEffect(() => {
     if (!isStudent) return;
     let cancelled = false;
@@ -115,7 +121,10 @@ function StudentMainContent({
       <main className="flex min-h-0 flex-1 flex-col md:items-center md:p-9 md:pb-[116px] xl:pb-9">
         <div className="flex min-h-0 flex-1 flex-col md:w-full md:max-w-[720px] md:gap-5">
           <MainHeader profile={profile} />
-          <div className="flex min-h-0 flex-1 flex-col px-[18px] py-4 md:p-0">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 px-[18px] py-4 md:gap-4 md:p-0">
+            {attendanceActive && (
+              <AttendanceActiveStatus active={attendanceActive} />
+            )}
             {current.status === "ready" && !profile ? (
               <StudentEmptyState
                 title="학생 계정만 이용할 수 있어요"
