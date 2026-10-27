@@ -62,9 +62,9 @@ export function useFaceRecognition({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [status, setStatus] = useState<FaceSessionStatus>("starting");
   const [qrNotice, setQrNotice] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string[]>([]);
   // 이미 출석 처리된 학생을 다시 인식했을 때의 `학번 이름`(DEC-073). 성공과 따로 잠깐 보인다.
-  const [alreadyDone, setAlreadyDone] = useState<string | null>(null);
+  const [alreadyDone, setAlreadyDone] = useState<string[]>([]);
   // 세션 층이 아닌 학생을 인식했을 때 잠깐 true다(DEC-100). 성공과 따로 잠깐 보인다.
   const [otherFloor, setOtherFloor] = useState(false);
   const [failure, setFailure] = useState(false);
@@ -167,19 +167,19 @@ export function useFaceRecognition({
             const outcome = applyFrame(state, result.faces, new Date());
             state = outcome.state;
             const found = outcome.success;
-            if (found) {
+            if (found.length > 0) {
               successTimer = hold(
                 () => setSuccess(found),
-                () => setSuccess(null),
+                () => setSuccess([]),
                 SUCCESS_HOLD_MS,
                 successTimer,
               );
             }
             const already = outcome.alreadyDone;
-            if (already) {
+            if (already.length > 0) {
               alreadyTimer = hold(
                 () => setAlreadyDone(already),
-                () => setAlreadyDone(null),
+                () => setAlreadyDone([]),
                 SUCCESS_HOLD_MS,
                 alreadyTimer,
               );
@@ -267,8 +267,8 @@ export function useFaceRecognition({
     /* eslint-disable react-hooks/set-state-in-effect */
     setStatus("starting");
     setQrNotice(false);
-    setSuccess(null);
-    setAlreadyDone(null);
+    setSuccess([]);
+    setAlreadyDone([]);
     setOtherFloor(false);
     setFailure(false);
     setRateLimited(false);

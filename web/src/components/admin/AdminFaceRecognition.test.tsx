@@ -205,6 +205,36 @@ describe("AdminFaceRecognition", () => {
     );
   });
 
+  it("한 프레임에 여러 명이 성공하면 학생마다 성공 토스트를 보인다", async () => {
+    const gateway = createMockFaceGateway([[]]);
+    vi.spyOn(gateway, "sendFrame")
+      .mockResolvedValueOnce({
+        frameId: "f",
+        faces: [
+          known(),
+          {
+            ...known(),
+            trackId: "k2412",
+            studentNumber: 2412,
+            studentName: "박서연",
+          },
+          {
+            ...known(),
+            trackId: "k2401",
+            studentNumber: 2401,
+            studentName: "정민수",
+          },
+        ],
+      })
+      .mockResolvedValue({ frameId: "f", faces: [] });
+    renderWith(gateway);
+    await tick();
+
+    expect(screen.getByText("성공 · 2405 김도현")).toBeInTheDocument();
+    expect(screen.getByText("성공 · 2412 박서연")).toBeInTheDocument();
+    expect(screen.getByText("성공 · 2401 정민수")).toBeInTheDocument();
+  });
+
   it("이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 `이미 처리됐어요 · 학번 이름`을 보인다", async () => {
     const gateway = createMockFaceGateway([[]]);
     vi.spyOn(gateway, "sendFrame")
