@@ -110,6 +110,7 @@ function FaceRecognitionView({
       */}
       <ToastLayer
         stacked={false}
+        position="top-right"
         toast={
           serverFailed
             ? {

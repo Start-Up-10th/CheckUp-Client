@@ -115,9 +115,11 @@ export function useToast() {
 export function ToastLayer({
   toast = null,
   stacked = true,
+  position = "top-center",
 }: {
   toast?: StickyToast | null;
   stacked?: boolean;
+  position?: "top-center" | "top-right";
 }) {
   const variant = toast?.variant;
   const message = toast?.message;
@@ -169,7 +171,7 @@ export function ToastLayer({
 
   return (
     <ToastContainer
-      position="top-center"
+      position={position}
       stacked={stacked}
       limit={5}
       theme={theme}
