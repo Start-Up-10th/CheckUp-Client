@@ -10,6 +10,9 @@ export function alreadyDoneMessage(label: string): string {
   return `이미 처리됐어요 · ${label}`;
 }
 
+/** 한 프레임에서 성공·이미 처리됨 토스트를 학생마다 띄우는 최대 인원(사용자 결정, DEC-101). 넘는 학생의 알림은 건너뛴다. */
+export const MAX_TOASTS_PER_FRAME = 5;
+
 /** 세션 층이 아닌 학생을 인식했을 때의 안내. 이름·학번 없이 상태만 알린다(REQ-FACE-005, DEC-100). */
 export const OTHER_FLOOR_MESSAGE = "다른 층 학생이에요";
 
@@ -37,10 +40,10 @@ export const INITIAL_RECOGNITION: RecognitionState = {
 
 export type FrameOutcome = {
   state: RecognitionState;
-  /** 이번 프레임에서 성공한 얼굴의 `학번 이름`(화면의 `성공 · 학번 이름`). 없으면 null. */
-  success: string | null;
-  /** 이번 프레임에서 이미 출석 처리돼 있던 학생을 다시 인식한 얼굴의 `학번 이름`. 없으면 null(DEC-073). */
-  alreadyDone: string | null;
+  /** 이번 프레임에서 성공한 얼굴마다의 `학번 이름`(화면의 `성공 · 학번 이름`). 최대 5명, 없으면 빈 목록(DEC-101). */
+  success: string[];
+  /** 이번 프레임에서 이미 출석 처리돼 있던 학생을 다시 인식한 얼굴마다의 `학번 이름`. 최대 5명, 없으면 빈 목록(DEC-073, DEC-101). */
+  alreadyDone: string[];
   /** 이번 프레임에서 다른 층 학생을 새로 알아본 얼굴이 있는가(DEC-100). 같은 트랙은 한 번만 알린다. */
   otherFloor: boolean;
   /** 이번 프레임에서 새 실패가 생겼는가(위쪽 가운데의 `인식 실패` 토스트). */
@@ -70,8 +73,8 @@ export function applyFrame(
   for (const [id, track] of Object.entries(prev.tracks)) {
     if (nowMs - track.seenAt <= TRACK_MEMORY_MS) tracks[id] = track;
   }
-  let success: string | null = null;
-  let alreadyDone: string | null = null;
+  const success: string[] = [];
+  const alreadyDone: string[] = [];
   let qrRecommended = false;
   let failure = false;
   let otherFloor = false;
@@ -102,10 +105,10 @@ export function applyFrame(
       const label = `${face.studentNumber} ${face.studentName}`;
       if (face.attendance === "RECORDED") {
         // 같은 트랙의 이어지는 프레임이 곧바로 `이미 처리됨`으로 바뀌지 않게 이 트랙을 처리된 것으로 표시한다.
-        if (!done) success = label;
+        if (!done) success.push(label);
         tracks[face.trackId].done = true;
       } else if (face.attendance === "DUPLICATE") {
-        if (!done) alreadyDone = label;
+        if (!done) alreadyDone.push(label);
         tracks[face.trackId].done = true;
       }
     } else if (face.status === "OTHER_FLOOR") {
@@ -118,8 +121,8 @@ export function applyFrame(
 
   return {
     state: { tracks },
-    success,
-    alreadyDone,
+    success: success.slice(0, MAX_TOASTS_PER_FRAME),
+    alreadyDone: alreadyDone.slice(0, MAX_TOASTS_PER_FRAME),
     otherFloor,
     failure,
     qrRecommended,
