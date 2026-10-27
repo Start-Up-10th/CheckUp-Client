@@ -233,6 +233,10 @@ describe("AdminFaceRecognition", () => {
     expect(screen.getByText("성공 · 2405 김도현")).toBeInTheDocument();
     expect(screen.getByText("성공 · 2412 박서연")).toBeInTheDocument();
     expect(screen.getByText("성공 · 2401 정민수")).toBeInTheDocument();
+    // 토스트가 겹쳐 가려지지 않고 모두 보이도록 묶음(stacked)을 쓰지 않고 오른쪽 위에 놓는다(DEC-107).
+    const container = document.querySelector(".Toastify__toast-container");
+    expect(container).not.toHaveAttribute("data-stacked", "true");
+    expect(container).toHaveClass("Toastify__toast-container--top-right");
   });
 
   it("이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 `이미 처리됐어요 · 학번 이름`을 보인다", async () => {
