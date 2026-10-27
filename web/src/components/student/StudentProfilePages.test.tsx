@@ -56,16 +56,25 @@ const FACE_ENROLLED = {
 const toResponse = ({ status, body }: Reply) =>
   new Response(body === undefined ? null : JSON.stringify(body), { status });
 
-/** 본인 정보·호실 명단 응답을 정한다. 읽지 않은 알림은 없음으로 답한다. */
+const NOT_ACTIVE = { dormitory: false, studyRoom: false };
+
+/** 본인 정보·호실 명단·출석 진행 여부 응답을 정한다. 읽지 않은 알림은 없음으로 답한다. 진행 여부는 부를 때마다 차례로 쓰고 마지막 값을 되풀이한다. */
 function mockMe(
   status: number,
   body?: unknown,
   roster: Reply | "pending" = { status: 200, body: ROSTER },
   face: Reply = { status: 200, body: FACE_ENROLLED },
+  active: Reply[] = [{ status: 200, body: NOT_ACTIVE }],
 ) {
+  const activeQueue = [...active];
   const fetchMock = vi.fn(async (...[url]: [string, RequestInit?]) => {
     if (url === "/api/v1/auth/me") return toResponse({ status, body });
     if (url === "/api/v1/face/me") return toResponse(face);
+    if (url === "/api/v1/attendance/active") {
+      return toResponse(
+        activeQueue.length > 1 ? activeQueue.shift()! : activeQueue[0],
+      );
+    }
     if (url.startsWith("/api/v1/room/student")) {
       return roster === "pending"
         ? new Promise<Response>(() => {})
@@ -188,6 +197,88 @@ describe("StudentMain 본인 정보", () => {
     expect(
       await screen.findByText("서버와 연결이 원활하지 않습니다."),
     ).toBeInTheDocument();
+  });
+});
+
+describe("StudentMain 출석 진행 여부(#357)", () => {
+  const activeStatus = () =>
+    within(screen.getByRole("main")).findByRole("status");
+
+  it("출석을 받는 중이면 받는 용도와 함께 알린다", async () => {
+    mockMe(200, me(), undefined, undefined, [
+      { status: 200, body: { dormitory: true, studyRoom: false } },
+    ]);
+    render(<StudentMain />);
+
+    expect(await activeStatus()).toHaveTextContent(
+      "지금 출석을 받고 있어요 · 기숙사",
+    );
+  });
+
+  it("두 용도 모두 받는 중이면 둘 다 보인다", async () => {
+    mockMe(200, me(), undefined, undefined, [
+      { status: 200, body: { dormitory: true, studyRoom: true } },
+    ]);
+    render(<StudentMain />);
+
+    expect(await activeStatus()).toHaveTextContent(
+      "지금 출석을 받고 있어요 · 기숙사·자습실",
+    );
+  });
+
+  it("받는 중이 아니면 받고 있지 않다고 알린다", async () => {
+    mockMe(200, me());
+    render(<StudentMain />);
+
+    expect(await activeStatus()).toHaveTextContent(
+      "지금은 출석을 받고 있지 않아요",
+    );
+  });
+
+  it("받지 못하면 틀린 상태를 보이지 않도록 아무 것도 보이지 않는다", async () => {
+    const fetchMock = mockMe(200, me(), undefined, undefined, [
+      { status: 500 },
+    ]);
+    render(<StudentMain />);
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/v1/attendance/active", {
+        credentials: "include",
+      }),
+    );
+    expect(
+      within(screen.getByRole("main")).queryByRole("status"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("화면으로 돌아오면 다시 받아 바뀐 상태를 보인다", async () => {
+    mockMe(200, me(), undefined, undefined, [
+      { status: 200, body: NOT_ACTIVE },
+      { status: 200, body: { dormitory: true, studyRoom: false } },
+    ]);
+    render(<StudentMain />);
+    expect(await activeStatus()).toHaveTextContent("받고 있지 않아요");
+
+    document.dispatchEvent(new Event("visibilitychange"));
+
+    await waitFor(() =>
+      expect(screen.getByRole("main")).toHaveTextContent(
+        "지금 출석을 받고 있어요 · 기숙사",
+      ),
+    );
+  });
+
+  it("학생이 아닌 계정은 조회하지 않는다", async () => {
+    const fetchMock = mockMe(200, me(null));
+    render(<StudentMain />);
+
+    expect(
+      await screen.findByText("학생 계정만 이용할 수 있어요"),
+    ).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/v1/attendance/active",
+      expect.anything(),
+    );
   });
 });
 
