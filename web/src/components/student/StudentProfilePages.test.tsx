@@ -1,10 +1,19 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { StudentMain } from "./StudentMain";
 import { StudentMyPage } from "./StudentMyPage";
 
-const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
+const { replace, push } = vi.hoisted(() => ({
+  replace: vi.fn(),
+  push: vi.fn(),
+}));
 vi.mock("next/navigation", () => {
-  const router = { replace, push: vi.fn() };
+  const router = { replace, push };
   return { useRouter: () => router, usePathname: () => "/main" };
 });
 vi.mock("next/font/google", () => ({
@@ -80,6 +89,7 @@ const homeHeader = () => screen.getByRole("banner");
 
 afterEach(() => {
   replace.mockReset();
+  push.mockReset();
   vi.unstubAllGlobals();
 });
 
@@ -250,7 +260,7 @@ describe("StudentMyPage 본인 정보", () => {
     ).toBeInTheDocument();
   });
 
-  it("봉사 활동 아래에 얼굴 재설정 메뉴가 있고 누르면 얼굴 다시 등록 화면으로 간다", async () => {
+  it("봉사 활동 아래에 얼굴 재설정 메뉴가 있다", async () => {
     mockMe(200, me());
     render(<StudentMyPage />);
 
@@ -258,15 +268,67 @@ describe("StudentMyPage 본인 정보", () => {
     const volunteer = await within(main).findByRole("link", {
       name: /봉사 활동/,
     });
-    const reset = within(main).getByRole("link", { name: /얼굴 재설정/ });
+    const reset = within(main).getByRole("button", { name: /얼굴 재설정/ });
 
-    expect(reset).toHaveAttribute("href", "/face?reset=1");
     // 메뉴 순서: 봉사 활동 다음이 얼굴 재설정이다(Figma 6:2·227:2).
     expect(
       volunteer.compareDocumentPosition(reset) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
+
+  it("얼굴 재설정은 확인 창을 먼저 띄우고, 취소하면 머물고 다시 등록하면 촬영 화면으로 간다(#356)", async () => {
+    mockMe(200, me());
+    render(<StudentMyPage />);
+
+    const main = screen.getByRole("main");
+    fireEvent.click(
+      await within(main).findByRole("button", { name: /얼굴 재설정/ }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "얼굴을 다시 등록할까요?" }),
+    ).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "취소" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+
+    fireEvent.click(within(main).getByRole("button", { name: /얼굴 재설정/ }));
+    fireEvent.click(screen.getByRole("button", { name: "다시 등록" }));
+    expect(push).toHaveBeenCalledWith("/face?reset=1");
+  });
+
+  it.each([
+    ["핸드폰 마이페이지", () => screen.getByRole("main")],
+    ["노트북 사이드바", () => screen.getByRole("complementary")],
+  ])(
+    "%s 로그아웃은 확인 창을 먼저 띄우고, 취소하면 그대로, 로그아웃을 누르면 로그아웃한다(#356)",
+    async (_, area) => {
+      const fetchMock = mockMe(200, me());
+      const logoutCalls = () =>
+        fetchMock.mock.calls.filter(([url]) => url === "/api/v1/auth/logout");
+      render(<StudentMyPage />);
+      await screen.findAllByText("홍길동");
+
+      fireEvent.click(within(area()).getByRole("button", { name: "로그아웃" }));
+      const dialog = screen.getByRole("dialog", { name: "로그아웃할까요?" });
+
+      fireEvent.click(within(dialog).getByRole("button", { name: "취소" }));
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(logoutCalls()).toHaveLength(0);
+      expect(replace).not.toHaveBeenCalledWith("/login");
+
+      fireEvent.click(within(area()).getByRole("button", { name: "로그아웃" }));
+      fireEvent.click(
+        within(screen.getByRole("dialog")).getByRole("button", {
+          name: "로그아웃",
+        }),
+      );
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/login"));
+      expect(logoutCalls()).toHaveLength(1);
+    },
+  );
 
   it("호실이 배정되지 않았으면 호실 미배정", async () => {
     mockMe(200, me({ ...STUDENT, dormitoryRoom: null, dormitoryFloor: null }));
