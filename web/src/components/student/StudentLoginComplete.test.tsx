@@ -53,6 +53,15 @@ afterEach(() => {
 });
 
 describe("StudentLoginComplete", () => {
+  it("이동 전 눈에 보이는 로딩 표시를 둔다", () => {
+    mockMe(401);
+    const { getByRole } = render(<StudentLoginComplete />);
+    const status = getByRole("status");
+    expect(status).toHaveTextContent("로그인하는 중");
+    expect(status.querySelector(".sr-only")).toBeNull();
+    expect(status.className).not.toContain("sr-only");
+  });
+
   it("로그인이 안 됐으면 로그인 실패 화면으로", async () => {
     mockMe(401);
     render(<StudentLoginComplete />);
