@@ -65,8 +65,6 @@ export function useFaceRecognition({
   const [success, setSuccess] = useState<string[]>([]);
   // 이미 출석 처리된 학생을 다시 인식했을 때의 `학번 이름`(DEC-073). 성공과 따로 잠깐 보인다.
   const [alreadyDone, setAlreadyDone] = useState<string[]>([]);
-  // 세션 층이 아닌 학생을 인식했을 때 잠깐 true다(DEC-100). 성공과 따로 잠깐 보인다.
-  const [otherFloor, setOtherFloor] = useState(false);
   const [failure, setFailure] = useState(false);
   // 서버가 요청이 너무 많다고(429) 한 동안 true다. 다음 프레임 응답이 오면 false로 돌아온다.
   const [rateLimited, setRateLimited] = useState(false);
@@ -83,7 +81,6 @@ export function useFaceRecognition({
     let qrTimer: ReturnType<typeof setTimeout> | undefined;
     let successTimer: ReturnType<typeof setTimeout> | undefined;
     let alreadyTimer: ReturnType<typeof setTimeout> | undefined;
-    let otherFloorTimer: ReturnType<typeof setTimeout> | undefined;
     let failureTimer: ReturnType<typeof setTimeout> | undefined;
 
     function sleep(ms: number): Promise<void> {
@@ -184,14 +181,6 @@ export function useFaceRecognition({
                 alreadyTimer,
               );
             }
-            if (outcome.otherFloor) {
-              otherFloorTimer = hold(
-                () => setOtherFloor(true),
-                () => setOtherFloor(false),
-                SUCCESS_HOLD_MS,
-                otherFloorTimer,
-              );
-            }
             if (outcome.qrRecommended) {
               qrActive = true;
               qrTimer = hold(
@@ -269,7 +258,6 @@ export function useFaceRecognition({
     setQrNotice(false);
     setSuccess([]);
     setAlreadyDone([]);
-    setOtherFloor(false);
     setFailure(false);
     setRateLimited(false);
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -292,7 +280,6 @@ export function useFaceRecognition({
       clearTimeout(qrTimer);
       clearTimeout(successTimer);
       clearTimeout(alreadyTimer);
-      clearTimeout(otherFloorTimer);
       clearTimeout(failureTimer);
       closeCurrentSession();
     };
@@ -312,7 +299,6 @@ export function useFaceRecognition({
     qrNotice,
     success,
     alreadyDone,
-    otherFloor,
     failure,
     rateLimited,
     retry,
