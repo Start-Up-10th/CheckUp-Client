@@ -20,6 +20,9 @@ import {
 const PURPOSE: Purpose = "dorm";
 const HEARTBEAT_INTERVAL_MS = 20_000;
 const EXPIRED_MESSAGE = "유효 시간이 만료되었습니다.";
+/** 처음 발급 실패. 토스트의 `다시 시도`로 새 세션을 다시 발급한다(#352). */
+const CREATE_FAILED_MESSAGE =
+  "QR 자동 생성에 실패했습니다. 다시 시도해 주세요.";
 
 type ActiveSession = {
   sessionId: string;
@@ -128,7 +131,7 @@ export function AdminQrGeneration() {
             setSessionKey((k) => k + 1);
           }, err.retryAfterMs);
         } else {
-          setError("QR 자동 생성에 실패했습니다. 새로고침해 주세요.");
+          setError(CREATE_FAILED_MESSAGE);
         }
       }
     }
@@ -187,7 +190,19 @@ export function AdminQrGeneration() {
       <ToastLayer
         toast={
           bannerMessage
-            ? { variant: bannerVariant, message: bannerMessage }
+            ? {
+                variant: bannerVariant,
+                message: bannerMessage,
+                ...(error && {
+                  action: {
+                    label: "다시 시도",
+                    onClick: () => {
+                      setError(null);
+                      setSessionKey((k) => k + 1);
+                    },
+                  },
+                }),
+              }
             : null
         }
       />
@@ -197,6 +212,9 @@ export function AdminQrGeneration() {
           qrValue={session.qrUrl}
           countdownLabel={countdownLabel}
         />
+      ) : error || expired ? (
+        // 오류·만료는 로딩 중으로 보이지 않게 움직이지 않는 빈 자리로 둔다. 안내는 토스트가 한다.
+        <div className="flex w-full flex-1 rounded-[18px] bg-admin-surface xl:rounded-panel" />
       ) : (
         <QrCodeGenerationSkeleton />
       )}

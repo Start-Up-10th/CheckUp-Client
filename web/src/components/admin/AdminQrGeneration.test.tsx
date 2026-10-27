@@ -1,4 +1,10 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { AdminQrGeneration } from "./AdminQrGeneration";
 
 const redirectToAdminLogin = vi.fn();
@@ -58,6 +64,25 @@ describe("AdminQrGeneration 세션 만료", () => {
     // 다른 화면의 상태 메시지와 같은 토스트(react-toastify)로 보인다.
     expect(message.closest(".Toastify__toast")).not.toBeNull();
     expect(redirectToAdminLogin).not.toHaveBeenCalled();
+    // 오류 상태는 로딩 스켈레톤(깜빡임)으로 보이지 않는다.
+    expect(document.querySelector(".animate-pulse")).toBeNull();
+  });
+
+  it("QR 발급 실패 후 다시 시도를 누르면 새 세션을 다시 발급한다", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(json(500))
+      .mockResolvedValue(json(201, SESSION));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AdminQrGeneration />);
+    fireEvent.click(await screen.findByRole("button", { name: "다시 시도" }));
+
+    expect(await screen.findByText("남은 유효 시간")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body as string)).toEqual({
+      purpose: "DORMITORY",
+    });
   });
 
   it("heartbeat가 401이면 관리자 로그인으로 보내고 갱신 실패 문구는 보이지 않는다", async () => {
@@ -191,6 +216,7 @@ describe("AdminQrGeneration 갱신 실패·만료", () => {
 
     expect(screen.getByText("유효 시간이 만료되었습니다.")).toBeInTheDocument();
     expect(screen.queryByText("남은 유효 시간")).not.toBeInTheDocument();
+    expect(document.querySelector(".animate-pulse")).toBeNull();
   });
 
   it("만료된 뒤 갱신이 성공하면 새 QR로 돌아온다", async () => {
