@@ -51,7 +51,7 @@ describe("AdminQrGeneration 세션 만료", () => {
     await vi.waitFor(() =>
       expect(redirectToAdminLogin).toHaveBeenCalledTimes(1),
     );
-    expect(screen.queryByText(/QR 자동 생성에 실패/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/QR을 만들지 못했어요/)).not.toBeInTheDocument();
   });
 
   it("QR 발급이 서버 오류면 오류 문구를 보이고 로그인으로 보내지 않는다", async () => {
@@ -59,7 +59,7 @@ describe("AdminQrGeneration 세션 만료", () => {
 
     render(<AdminQrGeneration />);
 
-    const message = await screen.findByText(/QR 자동 생성에 실패/);
+    const message = await screen.findByText(/QR을 만들지 못했어요/);
     expect(message).toBeInTheDocument();
     // 다른 화면의 상태 메시지와 같은 토스트(react-toastify)로 보인다.
     expect(message.closest(".Toastify__toast")).not.toBeNull();
@@ -149,7 +149,7 @@ describe("AdminQrGeneration 갱신 실패·만료", () => {
     expect(
       await screen.findByText("잠시 후 다시 시도해 주세요."),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/QR 자동 생성에 실패/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/QR을 만들지 못했어요/)).not.toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     await act(async () => {

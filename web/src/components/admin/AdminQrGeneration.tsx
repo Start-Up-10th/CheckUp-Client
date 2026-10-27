@@ -21,8 +21,7 @@ const PURPOSE: Purpose = "dorm";
 const HEARTBEAT_INTERVAL_MS = 20_000;
 const EXPIRED_MESSAGE = "유효 시간이 만료되었습니다.";
 /** 처음 발급 실패. 토스트의 `다시 시도`로 새 세션을 다시 발급한다(#352). */
-const CREATE_FAILED_MESSAGE =
-  "QR 자동 생성에 실패했습니다. 다시 시도해 주세요.";
+const CREATE_FAILED_MESSAGE = "QR을 만들지 못했어요";
 
 type ActiveSession = {
   sessionId: string;
