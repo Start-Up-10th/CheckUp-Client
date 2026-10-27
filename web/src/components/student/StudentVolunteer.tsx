@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ToastLayer } from "@/components/admin/Toast";
 import { useCurrentStudent } from "@/lib/student/current-student";
 import {
   VolunteerLoginRequiredError,
@@ -18,8 +17,6 @@ import { VolunteerCountCard } from "./VolunteerCountCard";
 import { VolunteerHistoryItem } from "./VolunteerHistoryItem";
 import { VolunteerHistorySkeleton } from "./VolunteerHistorySkeleton";
 import { RateLimitedError } from "@/lib/rate-limit";
-
-const LOAD_FAILED_MESSAGE = "봉사 활동 내역을 불러오지 못했습니다.";
 
 type LoadState =
   | { status: "loading" }
@@ -37,6 +34,8 @@ type LoadState =
  * `…/volunteer/history`를 함께 받는다. 로딩(459:901)은 막대 6개, 실패(459:949)는 공통 오류/다시 시도,
  * 로그인이 안 돼 있으면 로그인 화면으로 보낸다. 내역이 없어도 남은 횟수는 알아야 해서 카드는 그대로 두고
  * 목록 자리에만 빈 상태를 보인다(Figma 빈 상태 456:986은 카드 없이 안내만 있어 정한 값).
+ * 실패는 알림 화면처럼 오류 카드 하나로만 알리고 토스트를 겹쳐 띄우지 않는다(#355 — 같은 실패가 두 번 보이고
+ * 429에도 빨간 실패 문구가 뜨던 것을 고침).
  */
 export function StudentVolunteer() {
   return (
@@ -141,11 +140,6 @@ function StudentVolunteerContent() {
           )}
         </div>
       </div>
-      <ToastLayer
-        toast={
-          failed ? { variant: "error", message: LOAD_FAILED_MESSAGE } : null
-        }
-      />
     </main>
   );
 }

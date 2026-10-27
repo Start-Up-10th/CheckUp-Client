@@ -1,4 +1,10 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { AdminQrGeneration } from "./AdminQrGeneration";
 
 const redirectToAdminLogin = vi.fn();
@@ -45,7 +51,7 @@ describe("AdminQrGeneration 세션 만료", () => {
     await vi.waitFor(() =>
       expect(redirectToAdminLogin).toHaveBeenCalledTimes(1),
     );
-    expect(screen.queryByText(/QR 자동 생성에 실패/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/QR을 만들지 못했어요/)).not.toBeInTheDocument();
   });
 
   it("QR 발급이 서버 오류면 오류 문구를 보이고 로그인으로 보내지 않는다", async () => {
@@ -53,11 +59,30 @@ describe("AdminQrGeneration 세션 만료", () => {
 
     render(<AdminQrGeneration />);
 
-    const message = await screen.findByText(/QR 자동 생성에 실패/);
+    const message = await screen.findByText(/QR을 만들지 못했어요/);
     expect(message).toBeInTheDocument();
     // 다른 화면의 상태 메시지와 같은 토스트(react-toastify)로 보인다.
     expect(message.closest(".Toastify__toast")).not.toBeNull();
     expect(redirectToAdminLogin).not.toHaveBeenCalled();
+    // 오류 상태는 로딩 스켈레톤(깜빡임)으로 보이지 않는다.
+    expect(document.querySelector(".animate-pulse")).toBeNull();
+  });
+
+  it("QR 발급 실패 후 다시 시도를 누르면 새 세션을 다시 발급한다", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(json(500))
+      .mockResolvedValue(json(201, SESSION));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<AdminQrGeneration />);
+    fireEvent.click(await screen.findByRole("button", { name: "다시 시도" }));
+
+    expect(await screen.findByText("남은 유효 시간")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body as string)).toEqual({
+      purpose: "DORMITORY",
+    });
   });
 
   it("heartbeat가 401이면 관리자 로그인으로 보내고 갱신 실패 문구는 보이지 않는다", async () => {
@@ -124,7 +149,7 @@ describe("AdminQrGeneration 갱신 실패·만료", () => {
     expect(
       await screen.findByText("잠시 후 다시 시도해 주세요."),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/QR 자동 생성에 실패/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/QR을 만들지 못했어요/)).not.toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     await act(async () => {
@@ -191,6 +216,7 @@ describe("AdminQrGeneration 갱신 실패·만료", () => {
 
     expect(screen.getByText("유효 시간이 만료되었습니다.")).toBeInTheDocument();
     expect(screen.queryByText("남은 유효 시간")).not.toBeInTheDocument();
+    expect(document.querySelector(".animate-pulse")).toBeNull();
   });
 
   it("만료된 뒤 갱신이 성공하면 새 QR로 돌아온다", async () => {

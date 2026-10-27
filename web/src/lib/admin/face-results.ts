@@ -10,8 +10,8 @@ export function alreadyDoneMessage(label: string): string {
   return `이미 처리됐어요 · ${label}`;
 }
 
-/** 세션 층이 아닌 학생을 인식했을 때의 안내. 이름·학번 없이 상태만 알린다(REQ-FACE-005, DEC-100). */
-export const OTHER_FLOOR_MESSAGE = "다른 층 학생이에요";
+/** 한 프레임에서 성공·이미 처리됨 토스트를 학생마다 띄우는 최대 인원(사용자 결정, DEC-101). 넘는 학생의 알림은 건너뛴다. */
+export const MAX_TOASTS_PER_FRAME = 5;
 
 /** 화면에서 사라진 얼굴 트랙의 시도 횟수를 기억하는 시간. 잠깐 놓쳤다 돌아와도 실패를 다시 세지 않는다. */
 export const TRACK_MEMORY_MS = 30_000;
@@ -23,12 +23,8 @@ export type RecognitionState = {
    * 트랙별로 마지막으로 본 시도 횟수와 시각. 같은 시도를 프레임마다 실패로 세지 않기 위해 둔다.
    * `done`은 그 트랙에서 이미 성공(`RECORDED`)이나 이미 처리됨(`DUPLICATE`) 안내를 보였는지다. 같은 얼굴이 계속 서 있는 동안
    * 프레임마다 안내를 되풀이하거나, 방금 성공했는데 곧바로 `이미 처리됐어요`로 바뀌지 않게 한다.
-   * `otherFloor`는 그 트랙에서 `다른 층 학생이에요`를 이미 알렸는지다.
    */
-  tracks: Record<
-    string,
-    { attempts: number; seenAt: number; done?: boolean; otherFloor?: boolean }
-  >;
+  tracks: Record<string, { attempts: number; seenAt: number; done?: boolean }>;
 };
 
 export const INITIAL_RECOGNITION: RecognitionState = {
@@ -37,12 +33,10 @@ export const INITIAL_RECOGNITION: RecognitionState = {
 
 export type FrameOutcome = {
   state: RecognitionState;
-  /** 이번 프레임에서 성공한 얼굴의 `학번 이름`(화면의 `성공 · 학번 이름`). 없으면 null. */
-  success: string | null;
-  /** 이번 프레임에서 이미 출석 처리돼 있던 학생을 다시 인식한 얼굴의 `학번 이름`. 없으면 null(DEC-073). */
-  alreadyDone: string | null;
-  /** 이번 프레임에서 다른 층 학생을 새로 알아본 얼굴이 있는가(DEC-100). 같은 트랙은 한 번만 알린다. */
-  otherFloor: boolean;
+  /** 이번 프레임에서 성공한 얼굴마다의 `학번 이름`(화면의 `성공 · 학번 이름`). 최대 5명, 없으면 빈 목록(DEC-101). */
+  success: string[];
+  /** 이번 프레임에서 이미 출석 처리돼 있던 학생을 다시 인식한 얼굴마다의 `학번 이름`. 최대 5명, 없으면 빈 목록(DEC-073, DEC-101). */
+  alreadyDone: string[];
   /** 이번 프레임에서 새 실패가 생겼는가(위쪽 가운데의 `인식 실패` 토스트). */
   failure: boolean;
   /** 이번 프레임의 얼굴 중 QR 출석을 안내해야 하는 얼굴이 있는가(REQ-FACE-006). */
@@ -56,7 +50,6 @@ export type FrameOutcome = {
  *   아무 것도 하지 않는다.
  * - UNKNOWN은 신원 없는 `인식 실패`다. 트랙의 시도 횟수(attempts)가 늘었을 때만 실패로 알리고, 서버가 센 시도
  *   단위를 쓴다(매 프레임을 실패 1회로 세지 않는다).
- * - OTHER_FLOOR는 인식 실패가 아니라 `다른 층 학생이에요`로 알린다. 실패 횟수·QR 안내에 세지 않고 같은 트랙은 한 번만 알린다.
  * - NOT_ATTEMPTED는 아직 시도하지 않은 얼굴이라 아무 것도 하지 않는다.
  * 얼굴마다 따로 처리해 서로의 이름·실패 횟수를 섞지 않는다.
  */
@@ -70,21 +63,18 @@ export function applyFrame(
   for (const [id, track] of Object.entries(prev.tracks)) {
     if (nowMs - track.seenAt <= TRACK_MEMORY_MS) tracks[id] = track;
   }
-  let success: string | null = null;
-  let alreadyDone: string | null = null;
+  const success: string[] = [];
+  const alreadyDone: string[] = [];
   let qrRecommended = false;
   let failure = false;
-  let otherFloor = false;
 
   for (const face of faces) {
     const seenAttempts = tracks[face.trackId]?.attempts ?? 0;
     const done = tracks[face.trackId]?.done === true;
-    const otherFloorSeen = tracks[face.trackId]?.otherFloor === true;
     tracks[face.trackId] = {
       attempts: Math.max(seenAttempts, face.attempts),
       seenAt: nowMs,
       ...(done ? { done: true } : {}),
-      ...(otherFloorSeen ? { otherFloor: true } : {}),
     };
     // 서버 권고가 없어도 같은 얼굴이 3회 실패하면 QR 안내를 보인다(사용자 결정 2026-10-06, DEC-004 수정).
     if (
@@ -102,15 +92,12 @@ export function applyFrame(
       const label = `${face.studentNumber} ${face.studentName}`;
       if (face.attendance === "RECORDED") {
         // 같은 트랙의 이어지는 프레임이 곧바로 `이미 처리됨`으로 바뀌지 않게 이 트랙을 처리된 것으로 표시한다.
-        if (!done) success = label;
+        if (!done) success.push(label);
         tracks[face.trackId].done = true;
       } else if (face.attendance === "DUPLICATE") {
-        if (!done) alreadyDone = label;
+        if (!done) alreadyDone.push(label);
         tracks[face.trackId].done = true;
       }
-    } else if (face.status === "OTHER_FLOOR") {
-      if (!otherFloorSeen) otherFloor = true;
-      tracks[face.trackId].otherFloor = true;
     } else if (face.status === "UNKNOWN" && face.attempts > seenAttempts) {
       failure = true;
     }
@@ -118,9 +105,8 @@ export function applyFrame(
 
   return {
     state: { tracks },
-    success,
-    alreadyDone,
-    otherFloor,
+    success: success.slice(0, MAX_TOASTS_PER_FRAME),
+    alreadyDone: alreadyDone.slice(0, MAX_TOASTS_PER_FRAME),
     failure,
     qrRecommended,
   };

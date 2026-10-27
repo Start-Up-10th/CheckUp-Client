@@ -1,10 +1,19 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { StudentMain } from "./StudentMain";
 import { StudentMyPage } from "./StudentMyPage";
 
-const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
+const { replace, push } = vi.hoisted(() => ({
+  replace: vi.fn(),
+  push: vi.fn(),
+}));
 vi.mock("next/navigation", () => {
-  const router = { replace, push: vi.fn() };
+  const router = { replace, push };
   return { useRouter: () => router, usePathname: () => "/main" };
 });
 vi.mock("next/font/google", () => ({
@@ -47,16 +56,25 @@ const FACE_ENROLLED = {
 const toResponse = ({ status, body }: Reply) =>
   new Response(body === undefined ? null : JSON.stringify(body), { status });
 
-/** 본인 정보·호실 명단 응답을 정한다. 읽지 않은 알림은 없음으로 답한다. */
+const NOT_ACTIVE = { dormitory: false, studyRoom: false };
+
+/** 본인 정보·호실 명단·출석 진행 여부 응답을 정한다. 읽지 않은 알림은 없음으로 답한다. 진행 여부는 부를 때마다 차례로 쓰고 마지막 값을 되풀이한다. */
 function mockMe(
   status: number,
   body?: unknown,
   roster: Reply | "pending" = { status: 200, body: ROSTER },
   face: Reply = { status: 200, body: FACE_ENROLLED },
+  active: Reply[] = [{ status: 200, body: NOT_ACTIVE }],
 ) {
+  const activeQueue = [...active];
   const fetchMock = vi.fn(async (...[url]: [string, RequestInit?]) => {
     if (url === "/api/v1/auth/me") return toResponse({ status, body });
     if (url === "/api/v1/face/me") return toResponse(face);
+    if (url === "/api/v1/attendance/active") {
+      return toResponse(
+        activeQueue.length > 1 ? activeQueue.shift()! : activeQueue[0],
+      );
+    }
     if (url.startsWith("/api/v1/room/student")) {
       return roster === "pending"
         ? new Promise<Response>(() => {})
@@ -80,6 +98,7 @@ const homeHeader = () => screen.getByRole("banner");
 
 afterEach(() => {
   replace.mockReset();
+  push.mockReset();
   vi.unstubAllGlobals();
 });
 
@@ -181,6 +200,88 @@ describe("StudentMain 본인 정보", () => {
   });
 });
 
+describe("StudentMain 출석 진행 여부(#357)", () => {
+  const activeStatus = () =>
+    within(screen.getByRole("main")).findByRole("status");
+
+  it("출석을 받는 중이면 받는 용도와 함께 알린다", async () => {
+    mockMe(200, me(), undefined, undefined, [
+      { status: 200, body: { dormitory: true, studyRoom: false } },
+    ]);
+    render(<StudentMain />);
+
+    expect(await activeStatus()).toHaveTextContent(
+      "지금 출석을 받고 있어요 · 기숙사",
+    );
+  });
+
+  it("두 용도 모두 받는 중이면 둘 다 보인다", async () => {
+    mockMe(200, me(), undefined, undefined, [
+      { status: 200, body: { dormitory: true, studyRoom: true } },
+    ]);
+    render(<StudentMain />);
+
+    expect(await activeStatus()).toHaveTextContent(
+      "지금 출석을 받고 있어요 · 기숙사·자습실",
+    );
+  });
+
+  it("받는 중이 아니면 받고 있지 않다고 알린다", async () => {
+    mockMe(200, me());
+    render(<StudentMain />);
+
+    expect(await activeStatus()).toHaveTextContent(
+      "지금은 출석을 받고 있지 않아요",
+    );
+  });
+
+  it("받지 못하면 틀린 상태를 보이지 않도록 아무 것도 보이지 않는다", async () => {
+    const fetchMock = mockMe(200, me(), undefined, undefined, [
+      { status: 500 },
+    ]);
+    render(<StudentMain />);
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith("/api/v1/attendance/active", {
+        credentials: "include",
+      }),
+    );
+    expect(
+      within(screen.getByRole("main")).queryByRole("status"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("화면으로 돌아오면 다시 받아 바뀐 상태를 보인다", async () => {
+    mockMe(200, me(), undefined, undefined, [
+      { status: 200, body: NOT_ACTIVE },
+      { status: 200, body: { dormitory: true, studyRoom: false } },
+    ]);
+    render(<StudentMain />);
+    expect(await activeStatus()).toHaveTextContent("받고 있지 않아요");
+
+    document.dispatchEvent(new Event("visibilitychange"));
+
+    await waitFor(() =>
+      expect(screen.getByRole("main")).toHaveTextContent(
+        "지금 출석을 받고 있어요 · 기숙사",
+      ),
+    );
+  });
+
+  it("학생이 아닌 계정은 조회하지 않는다", async () => {
+    const fetchMock = mockMe(200, me(null));
+    render(<StudentMain />);
+
+    expect(
+      await screen.findByText("학생 계정만 이용할 수 있어요"),
+    ).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      "/api/v1/attendance/active",
+      expect.anything(),
+    );
+  });
+});
+
 describe("StudentMain 얼굴 등록 확인", () => {
   const faceCalls = (fetchMock: ReturnType<typeof mockMe>) =>
     fetchMock.mock.calls.filter(([url]) => url === "/api/v1/face/me");
@@ -250,7 +351,7 @@ describe("StudentMyPage 본인 정보", () => {
     ).toBeInTheDocument();
   });
 
-  it("봉사 활동 아래에 얼굴 재설정 메뉴가 있고 누르면 얼굴 다시 등록 화면으로 간다", async () => {
+  it("봉사 활동 아래에 얼굴 재설정 메뉴가 있다", async () => {
     mockMe(200, me());
     render(<StudentMyPage />);
 
@@ -258,15 +359,67 @@ describe("StudentMyPage 본인 정보", () => {
     const volunteer = await within(main).findByRole("link", {
       name: /봉사 활동/,
     });
-    const reset = within(main).getByRole("link", { name: /얼굴 재설정/ });
+    const reset = within(main).getByRole("button", { name: /얼굴 재설정/ });
 
-    expect(reset).toHaveAttribute("href", "/face?reset=1");
     // 메뉴 순서: 봉사 활동 다음이 얼굴 재설정이다(Figma 6:2·227:2).
     expect(
       volunteer.compareDocumentPosition(reset) &
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
+
+  it("얼굴 재설정은 확인 창을 먼저 띄우고, 취소하면 머물고 다시 등록하면 촬영 화면으로 간다(#356)", async () => {
+    mockMe(200, me());
+    render(<StudentMyPage />);
+
+    const main = screen.getByRole("main");
+    fireEvent.click(
+      await within(main).findByRole("button", { name: /얼굴 재설정/ }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "얼굴을 다시 등록할까요?" }),
+    ).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "취소" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
+
+    fireEvent.click(within(main).getByRole("button", { name: /얼굴 재설정/ }));
+    fireEvent.click(screen.getByRole("button", { name: "다시 등록" }));
+    expect(push).toHaveBeenCalledWith("/face?reset=1");
+  });
+
+  it.each([
+    ["핸드폰 마이페이지", () => screen.getByRole("main")],
+    ["노트북 사이드바", () => screen.getByRole("complementary")],
+  ])(
+    "%s 로그아웃은 확인 창을 먼저 띄우고, 취소하면 그대로, 로그아웃을 누르면 로그아웃한다(#356)",
+    async (_, area) => {
+      const fetchMock = mockMe(200, me());
+      const logoutCalls = () =>
+        fetchMock.mock.calls.filter(([url]) => url === "/api/v1/auth/logout");
+      render(<StudentMyPage />);
+      await screen.findAllByText("홍길동");
+
+      fireEvent.click(within(area()).getByRole("button", { name: "로그아웃" }));
+      const dialog = screen.getByRole("dialog", { name: "로그아웃할까요?" });
+
+      fireEvent.click(within(dialog).getByRole("button", { name: "취소" }));
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      expect(logoutCalls()).toHaveLength(0);
+      expect(replace).not.toHaveBeenCalledWith("/login");
+
+      fireEvent.click(within(area()).getByRole("button", { name: "로그아웃" }));
+      fireEvent.click(
+        within(screen.getByRole("dialog")).getByRole("button", {
+          name: "로그아웃",
+        }),
+      );
+      await waitFor(() => expect(replace).toHaveBeenCalledWith("/login"));
+      expect(logoutCalls()).toHaveLength(1);
+    },
+  );
 
   it("호실이 배정되지 않았으면 호실 미배정", async () => {
     mockMe(200, me({ ...STUDENT, dormitoryRoom: null, dormitoryFloor: null }));

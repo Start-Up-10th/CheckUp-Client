@@ -13,7 +13,8 @@ import { takeQrReturnUrl } from "@/lib/student/qr-return-url";
  * - QR 링크로 왔다가 로그인하러 갔으면 → 저장해 둔 `/qr#t=<토큰>`으로 돌아가 출석을 이어간다.
  * - 그 밖에는 동의 여부로 정한 첫 화면(`homePathFor`: 동의 안 한 학생 `/consent`, 동의한 학생 `/main`). 얼굴 미등록 학생은 홈이 얼굴 등록으로 보낸다(REQ-UI-003).
  * 페이지째 이동(`location.replace`)해서 뒤로가기로 이 화면에 돌아오지 않게 하고, QR 주소의 `#t=`를
- * QR 화면이 처음 열릴 때 읽게 한다. 이 화면 디자인은 Figma에 없어 로그인 화면과 같은 배경만 둔다.
+ * QR 화면이 처음 열릴 때 읽게 한다. 이 화면 디자인은 Figma에 없어 로그인 화면과 같은 배경에
+ * 스피너와 `로그인하는 중` 문구만 둔다(#351).
  */
 export function StudentLoginComplete() {
   // React 개발 모드(Strict Mode)에서 effect가 두 번 돌아도 한 번만 처리한다.
@@ -34,9 +35,19 @@ export function StudentLoginComplete() {
 
   return (
     <main className="flex min-h-dvh items-center justify-center bg-[#f5f5f7] dark:bg-admin-bg md:bg-admin-bg">
-      <p role="status" className="sr-only">
-        로그인하는 중
-      </p>
+      {/* 서서히 나타나 빠르게 이동해도 번쩍이지 않는다. */}
+      <div
+        role="status"
+        className="flex animate-dim-in flex-col items-center gap-3"
+      >
+        <span
+          aria-hidden
+          className="size-8 animate-spin rounded-full border-[3px] border-admin-border border-t-admin-text motion-reduce:animate-none"
+        />
+        <p className="text-[15px] font-medium text-admin-textMuted">
+          로그인하는 중
+        </p>
+      </div>
     </main>
   );
 }

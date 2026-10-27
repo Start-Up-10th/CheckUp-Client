@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import type { CurrentStudentProfile } from "@/lib/student/current-student";
-import { useLogout } from "@/lib/student/use-logout";
+import { LogoutConfirmDialog } from "./LogoutConfirmDialog";
 import { MaskIcon } from "./MaskIcon";
 import { ThemedImg } from "./ThemedImg";
 import { StudentSidebarLink, type SidebarTone } from "./StudentSidebarLink";
@@ -37,7 +38,7 @@ type StudentSidebarProps = {
  * Figma 사용자-노트북 227:6(폭 240px). 너비는 300px이다. 1280px 미만은 하단 탭바를 쓰고 사이드바(96px 레일, DEC-086)는 없앴다(DEC-094). 읽지 않은 알림은 종 안의 빨간 점(수정된 Figma 889:11)으로만
  * 알리고, 알림 항목의 초록 강조는 알림 화면에 있을 때만 쓴다(REQ-COM-005, 2026-09-25 변경).
  * 알림을 읽은 상태의 종(bell.svg)은 Figma에 없어 bell-unread.svg에서 빨간 점만 뺐다.
- * 로그아웃 동작은 핸드폰 로그아웃 버튼과 같은 useLogout()을 쓴다(REQ-AUTH-005).
+ * 로그아웃은 핸드폰 로그아웃 버튼과 같은 확인 창을 먼저 띄운다(REQ-AUTH-005, DEC-105).
  * QR 카메라 화면의 사이드바는 라이트 모드에서 다른 학생 화면과 같은 흰 사이드바이고(본문 검정과 구별, #317),
  * 다크 모드에서 어두운 사이드바(Figma 228:6: 프로필 카드 흰 6%, 오른쪽 흰 10% 선 DEC-085)다. 모드는 `dark:` 변형으로만 나눈다.
  * 종은 수정된 Figma(889:5)대로 다크 모드에서 회색 선에 빨간 점이라 어두운 배경에서도 보인다(bell-unread-dark.svg).
@@ -54,7 +55,7 @@ export function StudentSidebar({
 }: StudentSidebarProps) {
   const camera = tone === "camera";
   const pathname = usePathname();
-  const logout = useLogout();
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
   const onNotifications = pathname === "/notifications";
 
   return (
@@ -139,12 +140,15 @@ export function StudentSidebar({
       <div className="flex-1" />
       <button
         type="button"
-        onClick={logout}
+        onClick={() => setConfirmingLogout(true)}
         className="flex items-center justify-start gap-2.5 rounded-control bg-admin-danger-bg px-3 py-[11px] text-sm leading-normal text-admin-danger-text transition-colors hover:bg-admin-danger-border"
       >
         <MaskIcon src="/icons/student-nav/logout.svg" className="size-[18px]" />
         로그아웃
       </button>
+      {confirmingLogout && (
+        <LogoutConfirmDialog onCancel={() => setConfirmingLogout(false)} />
+      )}
     </aside>
   );
 }

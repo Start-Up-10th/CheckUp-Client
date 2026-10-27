@@ -42,7 +42,7 @@ npm run check   # 위 다섯을 한 번에
 - `web/`의 `npm run check`(lint·typecheck·format·test·build)가 통과한다. 테스트는 Vitest 59개 파일 584개다.
 - CI는 `web.yml`(web 변경), `harness.yml`(하네스)이 돈다. develop·main에 push되면 열린 PR 브랜치를 자동으로 갱신하는 `auto-update-branches.yml`도 있다. main에 `web/**`가 반영되면 `cd.yml`이 학교 서버(GSM SV)에 배포하고 지금까지 모든 배포가 성공했다.
 - 배포 사이트 `https://checkup.https.gsmsv.site`의 `/`, `/admin`, `/admin/login`이 200을 응답하고 `manifest.webmanifest`가 최신이다.
-- 웹이 부르는 서버 API(`/api/v1/auth`·`consent`·`face`·`qr`·`room`·`volunteer`·`users`·`notifications`)는 배포 swagger(`/v3/api-docs`, 36개)와 대조해 연결했다. 웹 화면이 쓰지 않는 서버 엔드포인트는 `webhook/sync`, `attendance/me`, `face/recognitions`, `face/consent`, `users/{studentId}`다.
+- 웹이 부르는 서버 API(`/api/v1/auth`·`consent`·`face`·`qr`·`room`·`volunteer`·`users`·`notifications`)는 배포 swagger(`/v3/api-docs`, 36개)와 대조해 연결했다. `attendance/active`(DEC-106)는 서버 PR(CheckUp-server#261) 코드 기준으로 연결했고 배포 swagger 대조는 하지 못했다. 웹 화면이 쓰지 않는 서버 엔드포인트는 `webhook/sync`, `attendance/me`, `face/recognitions`, `face/consent`, `users/{studentId}`다.
 - 개발용 대역(`*-mock-gateway.ts`)은 로그인 없이 보는 확인용 페이지(`/admin/state-demo/*`)와 테스트에서만 쓰고 운영 화면에는 쓰지 않는다.
 
 실행하지 못했거나 실측하지 못한 것(제출 시 미검증으로 본다):

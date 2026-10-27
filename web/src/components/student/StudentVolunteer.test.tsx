@@ -99,23 +99,27 @@ describe("StudentVolunteer", () => {
       await screen.findByText("잠시 후 다시 시도해 주세요."),
     ).toBeInTheDocument();
     expect(screen.queryByText("불러오지 못했어요")).not.toBeInTheDocument();
+    // 429는 고장이 아니라 빨간 실패 문구를 띄우지 않고, 안내도 한 번만 보인다.
+    expect(
+      screen.queryByText("봉사 활동 내역을 불러오지 못했습니다."),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByText("잠시 후 다시 시도해 주세요.")).toHaveLength(1);
   });
 
   it("불러오지 못하면 오류를 보여 주고, 다시 시도하면 다시 불러온다", async () => {
     mockApi({ history: [{ status: 500 }, { status: 200, body: HISTORY }] });
     render(<StudentVolunteer />);
 
+    // 오류 카드 하나로만 알리고 같은 실패를 토스트로 다시 띄우지 않는다.
     expect(await screen.findByText("불러오지 못했어요")).toBeInTheDocument();
     expect(
-      screen.getByText("봉사 활동 내역을 불러오지 못했습니다."),
-    ).toBeInTheDocument();
+      screen.queryByText("봉사 활동 내역을 불러오지 못했습니다."),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
 
     expect(await screen.findAllByRole("listitem")).toHaveLength(2);
-    expect(
-      screen.queryByText("봉사 활동 내역을 불러오지 못했습니다."),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("불러오지 못했어요")).not.toBeInTheDocument();
   });
 
   it("본인 정보를 받지 못하면 오류를 보여 준다", async () => {

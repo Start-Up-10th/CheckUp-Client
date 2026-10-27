@@ -1,6 +1,7 @@
 import type { FaceResult } from "./face-api";
 import {
   INITIAL_RECOGNITION,
+  MAX_TOASTS_PER_FRAME,
   QR_NOTICE_ATTEMPTS,
   TRACK_MEMORY_MS,
   applyFrame,
@@ -46,7 +47,7 @@ describe("applyFrame 성공", () => {
   it("KNOWN은 `학번 이름` 성공을 알린다", () => {
     const { success, failure } = run(INITIAL_RECOGNITION, [known()]);
 
-    expect(success).toBe("2405 김도현");
+    expect(success).toEqual(["2405 김도현"]);
     expect(failure).toBe(false);
   });
 
@@ -55,8 +56,8 @@ describe("applyFrame 성공", () => {
       known({ attendance: "DUPLICATE" }),
     ]);
 
-    expect(success).toBe(null);
-    expect(alreadyDone).toBe("2405 김도현");
+    expect(success).toEqual([]);
+    expect(alreadyDone).toEqual(["2405 김도현"]);
     expect(alreadyDoneMessage("2405 김도현")).toBe(
       "이미 처리됐어요 · 2405 김도현",
     );
@@ -65,17 +66,17 @@ describe("applyFrame 성공", () => {
   it("이번에 기록된 학생(RECORDED)은 성공이고 이미 처리됨은 아니다", () => {
     const { success, alreadyDone } = run(INITIAL_RECOGNITION, [known()]);
 
-    expect(success).toBe("2405 김도현");
-    expect(alreadyDone).toBe(null);
+    expect(success).toEqual(["2405 김도현"]);
+    expect(alreadyDone).toEqual([]);
   });
 
   it("같은 얼굴이 계속 서 있어도 성공 뒤에 곧바로 이미 처리됨으로 바뀌지 않는다", () => {
     const first = run(INITIAL_RECOGNITION, [known()]);
     const next = run(first.state, [known({ attendance: "DUPLICATE" })]);
 
-    expect(first.success).toBe("2405 김도현");
-    expect(next.success).toBe(null);
-    expect(next.alreadyDone).toBe(null);
+    expect(first.success).toEqual(["2405 김도현"]);
+    expect(next.success).toEqual([]);
+    expect(next.alreadyDone).toEqual([]);
   });
 
   it("이미 처리됨은 같은 얼굴 트랙에서 한 번만 알린다", () => {
@@ -84,8 +85,8 @@ describe("applyFrame 성공", () => {
     ]);
     const next = run(first.state, [known({ attendance: "DUPLICATE" })]);
 
-    expect(first.alreadyDone).toBe("2405 김도현");
-    expect(next.alreadyDone).toBe(null);
+    expect(first.alreadyDone).toEqual(["2405 김도현"]);
+    expect(next.alreadyDone).toEqual([]);
   });
 
   it("성공한 학생이 나갔다 다른 트랙으로 다시 인식되면 이미 처리됨으로 알린다", () => {
@@ -97,25 +98,25 @@ describe("applyFrame 성공", () => {
       later,
     );
 
-    expect(again.success).toBe(null);
-    expect(again.alreadyDone).toBe("2405 김도현");
+    expect(again.success).toEqual([]);
+    expect(again.alreadyDone).toEqual(["2405 김도현"]);
   });
 
   it("서버가 거절한 출석(STALE·REJECTED)은 성공으로 세지 않는다", () => {
     for (const attendance of ["STALE", "REJECTED"] as const) {
       const outcome = run(INITIAL_RECOGNITION, [known({ attendance })]);
-      expect(outcome.success).toBe(null);
-      expect(outcome.alreadyDone).toBe(null);
+      expect(outcome.success).toEqual([]);
+      expect(outcome.alreadyDone).toEqual([]);
     }
   });
 
   it("이름이나 학번이 없는 KNOWN은 신원을 만들지 않는다", () => {
     expect(
       run(INITIAL_RECOGNITION, [known({ studentName: undefined })]).success,
-    ).toBe(null);
+    ).toEqual([]);
     expect(
       run(INITIAL_RECOGNITION, [known({ studentNumber: undefined })]).success,
-    ).toBe(null);
+    ).toEqual([]);
   });
 
   it("NOT_ATTEMPTED는 아무 것도 알리지 않는다", () => {
@@ -128,7 +129,7 @@ describe("applyFrame 성공", () => {
       },
     ]);
 
-    expect(outcome.success).toBe(null);
+    expect(outcome.success).toEqual([]);
     expect(outcome.failure).toBe(false);
     expect(outcome.qrRecommended).toBe(false);
   });
@@ -167,7 +168,7 @@ describe("applyFrame 실패 표시", () => {
   it("한 프레임의 여러 얼굴은 서로 섞이지 않는다", () => {
     const outcome = run(INITIAL_RECOGNITION, [known(), unknown("t1", 1)]);
 
-    expect(outcome.success).toBe("2405 김도현");
+    expect(outcome.success).toEqual(["2405 김도현"]);
     expect(outcome.failure).toBe(true);
   });
 
@@ -222,45 +223,42 @@ describe("successMessage", () => {
     expect(successMessage("2405 김도현")).toBe("성공 · 2405 김도현");
   });
 
-  describe("다른 층 학생", () => {
-    const otherFloor = (trackId = "o"): FaceResult => ({
-      trackId,
-      status: "OTHER_FLOOR",
-      attempts: 1,
-      qrRecommended: false,
-    });
-
-    it("실패나 QR 안내가 아니라 다른 층 학생으로 한 번만 알린다", () => {
-      const first = applyFrame(INITIAL_RECOGNITION, [otherFloor()], NOW);
-      const same = applyFrame(first.state, [otherFloor()], NOW);
-
-      expect(first).toMatchObject({
-        otherFloor: true,
-        failure: false,
-        qrRecommended: false,
-        success: null,
-      });
-      expect(same.otherFloor).toBe(false);
-    });
-
-    it("트랙 기억 시간이 지나 다시 서면 다시 알린다", () => {
-      const first = applyFrame(INITIAL_RECOGNITION, [otherFloor()], NOW);
-      const later = new Date(NOW.getTime() + TRACK_MEMORY_MS + 1);
-
-      expect(applyFrame(first.state, [otherFloor()], later).otherFloor).toBe(
-        true,
-      );
-    });
-
-    it("다른 얼굴의 성공을 막지 않는다", () => {
-      const outcome = applyFrame(
-        INITIAL_RECOGNITION,
-        [otherFloor("o"), known()],
-        NOW,
+  describe("한 프레임에 여러 명(DEC-101)", () => {
+    const people = [2401, 2402, 2403, 2404, 2405, 2406, 2407];
+    const many = (attendance: "RECORDED" | "DUPLICATE", count = 3) =>
+      people.slice(0, count).map((n) =>
+        known({
+          trackId: `k${n}`,
+          studentNumber: n,
+          studentName: `학생${n}`,
+          attendance,
+        }),
       );
 
-      expect(outcome.otherFloor).toBe(true);
-      expect(outcome.success).toBe("2405 김도현");
+    it("성공한 학생마다 알린다", () => {
+      const outcome = run(INITIAL_RECOGNITION, many("RECORDED"));
+
+      expect(outcome.success).toEqual([
+        "2401 학생2401",
+        "2402 학생2402",
+        "2403 학생2403",
+      ]);
+    });
+
+    it("이미 처리된 학생도 학생마다 알린다", () => {
+      expect(run(INITIAL_RECOGNITION, many("DUPLICATE")).alreadyDone).toEqual([
+        "2401 학생2401",
+        "2402 학생2402",
+        "2403 학생2403",
+      ]);
+    });
+
+    it(`한 프레임에 최대 ${MAX_TOASTS_PER_FRAME}명까지만 알리고, 넘는 학생은 다음 프레임에도 알리지 않는다`, () => {
+      const first = run(INITIAL_RECOGNITION, many("RECORDED", 7));
+      const next = run(first.state, many("RECORDED", 7));
+
+      expect(first.success).toHaveLength(MAX_TOASTS_PER_FRAME);
+      expect(next.success).toEqual([]);
     });
   });
 });
