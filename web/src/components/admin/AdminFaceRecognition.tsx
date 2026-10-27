@@ -109,6 +109,7 @@ function FaceRecognitionView({
         (다시 시도 버튼) > QR 안내 > 인식 실패 > 429 `잠시 후 다시 시도` 순서로 하나만 보이고, 성공은 따로 잠깐 떴다 사라진다.
       */}
       <ToastLayer
+        stacked={false}
         toast={
           serverFailed
             ? {

@@ -2,12 +2,12 @@ import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { toast as notify } from "react-toastify";
 import { ToastLayer, useToast, type ToastMessage } from "./Toast";
 
-function Stack() {
+function Stack({ stacked }: { stacked?: boolean }) {
   const { showToast } = useToast();
   const show = (toast: ToastMessage) => () => showToast(toast);
   return (
     <>
-      <ToastLayer />
+      <ToastLayer stacked={stacked} />
       <button onClick={show({ variant: "success", message: "성공 하나" })}>
         성공
       </button>
@@ -68,6 +68,17 @@ describe("토스트 쌓기", () => {
     const container = document.querySelector(".Toastify__toast-container");
     expect(container).toHaveClass("Toastify__toast-container--top-center");
     expect(container).toHaveAttribute("data-stacked", "true");
+  });
+
+  it("겹치지 않게 하면 묶음(stacked) 없이 나란히 놓인다", async () => {
+    render(<Stack stacked={false} />);
+
+    await press("성공");
+    await press("오류");
+
+    const container = document.querySelector(".Toastify__toast-container");
+    expect(container).not.toHaveAttribute("data-stacked", "true");
+    expect(messages()).toHaveLength(2);
   });
 
   it("종류마다 알맞은 토스트다(성공·오류·안내)", async () => {

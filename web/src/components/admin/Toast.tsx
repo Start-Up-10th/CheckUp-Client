@@ -112,7 +112,13 @@ export function useToast() {
  * `toast`는 상태가 풀릴 때까지 유지하는 단일 토스트다(얼굴 인식·QR 생성·QR 스캔 결과): 문구가 바뀌면 그 자리에서
  * 바뀌고, null이 되면 닫힌다.
  */
-export function ToastLayer({ toast = null }: { toast?: StickyToast | null }) {
+export function ToastLayer({
+  toast = null,
+  stacked = true,
+}: {
+  toast?: StickyToast | null;
+  stacked?: boolean;
+}) {
   const variant = toast?.variant;
   const message = toast?.message;
   const actionLabel = toast?.action?.label;
@@ -164,7 +170,7 @@ export function ToastLayer({ toast = null }: { toast?: StickyToast | null }) {
   return (
     <ToastContainer
       position="top-center"
-      stacked
+      stacked={stacked}
       limit={5}
       theme={theme}
       transition={instant ? InstantTransition : Bounce}

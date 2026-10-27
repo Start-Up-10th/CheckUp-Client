@@ -233,6 +233,10 @@ describe("AdminFaceRecognition", () => {
     expect(screen.getByText("성공 · 2405 김도현")).toBeInTheDocument();
     expect(screen.getByText("성공 · 2412 박서연")).toBeInTheDocument();
     expect(screen.getByText("성공 · 2401 정민수")).toBeInTheDocument();
+    // 토스트가 겹쳐 가려지지 않고 모두 보이도록 묶음(stacked)을 쓰지 않는다(DEC-107).
+    expect(
+      document.querySelector(".Toastify__toast-container"),
+    ).not.toHaveAttribute("data-stacked", "true");
   });
 
   it("이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 `이미 처리됐어요 · 학번 이름`을 보인다", async () => {
