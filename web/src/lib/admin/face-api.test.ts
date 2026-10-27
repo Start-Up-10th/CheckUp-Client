@@ -193,7 +193,7 @@ describe("sendFaceFrame", () => {
     expect(other.status).toBe("NOT_ATTEMPTED");
   });
 
-  it("OTHER_FLOOR는 이름·학번·출석 없이 돌려준다", async () => {
+  it("OTHER_FLOOR는 이름·학번·출석 없는 UNKNOWN으로 읽는다", async () => {
     mockFetch(200, {
       frameId: "f-1",
       faces: [
@@ -210,7 +210,7 @@ describe("sendFaceFrame", () => {
 
     const [other] = (await sendFaceFrame("s-1", frame, "f-1")).faces;
 
-    expect(other.status).toBe("OTHER_FLOOR");
+    expect(other.status).toBe("UNKNOWN");
     expect(other.studentName).toBeUndefined();
     expect(other.studentNumber).toBeUndefined();
     expect(other.attendance).toBeUndefined();

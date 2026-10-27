@@ -255,29 +255,6 @@ describe("AdminFaceRecognition", () => {
     expect(document.querySelector(".Toastify__toast--success")).toBeNull();
   });
 
-  it("다른 층 학생을 인식하면 인식 실패가 아니라 `다른 층 학생이에요`를 이름 없이 보인다", async () => {
-    const gateway = createMockFaceGateway([[]]);
-    vi.spyOn(gateway, "sendFrame")
-      .mockResolvedValueOnce({
-        frameId: "f",
-        faces: [
-          {
-            trackId: "o",
-            status: "OTHER_FLOOR",
-            attempts: 1,
-            qrRecommended: false,
-          },
-        ],
-      })
-      .mockResolvedValue({ frameId: "f", faces: [] });
-    renderWith(gateway);
-    await tick();
-
-    expect(screen.getByRole("status")).toHaveTextContent("다른 층 학생이에요");
-    expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
-    expect(document.querySelector(".Toastify__toast--info")).not.toBeNull();
-  });
-
   it("카메라 허용 전에는 서버에 세션을 만들지 않는다", async () => {
     camera.status = "requesting";
     const gateway = createMockFaceGateway([[]]);
