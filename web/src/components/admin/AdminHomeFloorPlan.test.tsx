@@ -421,3 +421,103 @@ describe("AdminHomeFloorPlan 호실 수정", () => {
     await waitFor(() => expect(redirectToAdminLogin).toHaveBeenCalledTimes(1));
   });
 });
+
+describe("AdminHomeFloorPlan 현황 자동 갱신", () => {
+  let visibility: DocumentVisibilityState = "visible";
+  Object.defineProperty(document, "visibilityState", {
+    configurable: true,
+    get: () => visibility,
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    visibility = "visible";
+  });
+
+  /** 3층 301호 출석 인원을 바꿀 수 있는 게이트웨이. */
+  function gatewayWithCount() {
+    const gateway = createMockRoomGateway();
+    const state = { present: 1, fail: false };
+    gateway.floor = vi.fn(async () => {
+      if (state.fail) throw new Error("network");
+      return [{ number: "301", assigned: 4, present: state.present }];
+    });
+    return { gateway, state };
+  }
+
+  async function advance(ms: number) {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+  }
+
+  it("30초마다 현재 층을 다시 받아 깜빡임 없이 숫자를 바꾼다", async () => {
+    const { gateway, state } = gatewayWithCount();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    renderWith(gateway);
+    expect(await screen.findByText("1/4명")).toBeInTheDocument();
+
+    state.present = 3;
+    await advance(29_000);
+    expect(screen.getByText("1/4명")).toBeInTheDocument();
+    await advance(1_000);
+
+    expect(screen.getByText("3/4명")).toBeInTheDocument();
+    expect(screen.getByText("3층 전개도")).toBeInTheDocument();
+    expect(document.querySelector("[aria-busy='true']")).toBeNull();
+  });
+
+  it("탭이 숨겨진 동안은 받지 않고, 돌아오면 바로 받는다", async () => {
+    const { gateway, state } = gatewayWithCount();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    renderWith(gateway);
+    await screen.findByText("1/4명");
+    const calls = vi.mocked(gateway.floor).mock.calls.length;
+
+    visibility = "hidden";
+    document.dispatchEvent(new Event("visibilitychange"));
+    await advance(90_000);
+    expect(gateway.floor).toHaveBeenCalledTimes(calls);
+
+    state.present = 2;
+    visibility = "visible";
+    document.dispatchEvent(new Event("visibilitychange"));
+    await advance(0);
+    expect(gateway.floor).toHaveBeenCalledTimes(calls + 1);
+    expect(screen.getByText("2/4명")).toBeInTheDocument();
+  });
+
+  it("갱신이 실패하면 이전 값을 두고 안내 없이 다음 주기에 다시 받는다", async () => {
+    const { gateway, state } = gatewayWithCount();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    renderWith(gateway);
+    await screen.findByText("1/4명");
+
+    state.fail = true;
+    await advance(30_000);
+    expect(screen.getByText("1/4명")).toBeInTheDocument();
+    expect(
+      screen.queryByText("전개도를 불러오지 못했습니다."),
+    ).not.toBeInTheDocument();
+
+    state.fail = false;
+    state.present = 4;
+    await advance(30_000);
+    expect(screen.getByText("4/4명")).toBeInTheDocument();
+  });
+
+  it("호실 상세가 열려 있는 동안 뒤 현황이 바뀌어도 다이얼로그 내용은 그대로다", async () => {
+    const { gateway, state } = gatewayWithCount();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    renderWith(gateway);
+    fireEvent.click(await screen.findByRole("button", { name: /^301/ }));
+    const dialog = await screen.findByRole("dialog");
+    const before = dialog.textContent;
+
+    state.present = 3;
+    await advance(30_000);
+
+    expect(screen.getByText("3/4명")).toBeInTheDocument();
+    expect(screen.getByRole("dialog").textContent).toBe(before);
+  });
+});

@@ -30,6 +30,9 @@ const DEFAULT_FLOOR: Floor = 3;
 /** 새 층 현황이 이 시간 안에 오면 이전 화면을 그대로 두고, 더 걸릴 때만 격자를 스켈레톤으로 바꿔 깜빡임을 없앤다. */
 const SKELETON_DELAY_MS = 300;
 
+/** 홈이 열려 있는 동안 현재 층 현황을 다시 받는 주기(DEC-101). 탭이 숨겨진 동안은 받지 않는다. */
+const FLOOR_REFRESH_MS = 30_000;
+
 const LOAD_FAILED_MESSAGE = "전개도를 불러오지 못했습니다.";
 const ROOM_LOAD_FAILED_MESSAGE = "호실 명단을 불러오지 못했습니다.";
 const SAVE_FAILED_MESSAGE = "전개도 변경에 실패했습니다. 다시 시도해 주세요.";
@@ -95,6 +98,32 @@ export function AdminHomeFloorPlan() {
       clearTimeout(slowTimer);
     };
   }, [gateway, selectedFloor, attempt]);
+
+  // 점호 중 다른 곳(얼굴 인식 등)에서 바뀐 출석을 반영한다. 화면은 그대로 두고 값만 바꾸며, 실패는 조용히 넘겨 다음 주기에 다시 받는다.
+  // 호실 다이얼로그는 따로 받은 `dialogRoom`을 보이므로 뒤 화면이 바뀌어도 내용이 바뀌지 않는다.
+  useEffect(() => {
+    let cancelled = false;
+    function refresh() {
+      if (document.visibilityState !== "visible") return;
+      gateway
+        .floor(selectedFloor)
+        .then((rooms) => {
+          if (!cancelled)
+            setByFloor((prev) => ({ ...prev, [selectedFloor]: rooms }));
+        })
+        .catch((error) => {
+          if (!cancelled && error instanceof AdminUnauthorizedError)
+            redirectToAdminLogin();
+        });
+    }
+    const timer = setInterval(refresh, FLOOR_REFRESH_MS);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [gateway, selectedFloor]);
 
   const selectedRooms = byFloor[selectedFloor];
   const loadFailed =
