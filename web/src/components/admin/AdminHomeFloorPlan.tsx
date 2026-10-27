@@ -30,7 +30,7 @@ const DEFAULT_FLOOR: Floor = 3;
 /** 새 층 현황이 이 시간 안에 오면 이전 화면을 그대로 두고, 더 걸릴 때만 격자를 스켈레톤으로 바꿔 깜빡임을 없앤다. */
 const SKELETON_DELAY_MS = 300;
 
-/** 홈이 열려 있는 동안 현재 층 현황을 다시 받는 주기(DEC-101). 탭이 숨겨진 동안은 받지 않는다. */
+/** 홈이 열려 있는 동안 현재 층 현황을 다시 받는 주기(DEC-103). 탭이 숨겨진 동안은 받지 않는다. */
 const FLOOR_REFRESH_MS = 30_000;
 
 const LOAD_FAILED_MESSAGE = "전개도를 불러오지 못했습니다.";
