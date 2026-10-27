@@ -77,22 +77,19 @@ function FaceRecognitionView({
     floor,
   });
 
-  // 성공(`성공 · 학번 이름`)은 토스트로 잠깐 보인다(REQ-FACE-006·007). 카메라가 안 켜졌으면 서버 오류 토스트는 숨긴다.
+  // 성공(`성공 · 학번 이름`)은 학생마다 토스트로 잠깐 보인다(REQ-FACE-006·007, DEC-101). 카메라가 안 켜졌으면 서버 오류 토스트는 숨긴다.
   const { showToast } = useToast();
   const success = recognition.success;
   useEffect(() => {
-    if (success) {
-      showToast({ variant: "success", message: successMessage(success) });
+    for (const label of success) {
+      showToast({ variant: "success", message: successMessage(label) });
     }
   }, [success, showToast]);
   // 이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 이미 처리됐다고 안내한다(DEC-073).
   const alreadyDone = recognition.alreadyDone;
   useEffect(() => {
-    if (alreadyDone) {
-      showToast({
-        variant: "neutral",
-        message: alreadyDoneMessage(alreadyDone),
-      });
+    for (const label of alreadyDone) {
+      showToast({ variant: "neutral", message: alreadyDoneMessage(label) });
     }
   }, [alreadyDone, showToast]);
   // 세션 층이 아닌 학생은 인식 실패가 아니라 `다른 층 학생이에요`로 알린다. 이름은 없다(DEC-100).
