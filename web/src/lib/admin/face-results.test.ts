@@ -223,7 +223,6 @@ describe("successMessage", () => {
     expect(successMessage("2405 김도현")).toBe("성공 · 2405 김도현");
   });
 
-
   describe("한 프레임에 여러 명(DEC-101)", () => {
     const people = [2401, 2402, 2403, 2404, 2405, 2406, 2407];
     const many = (attendance: "RECORDED" | "DUPLICATE", count = 3) =>
