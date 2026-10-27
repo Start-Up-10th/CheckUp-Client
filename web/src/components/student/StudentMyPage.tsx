@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ToastLayer } from "@/components/admin/Toast";
 import { useCurrentStudent } from "@/lib/student/current-student";
+import { FaceResetMenuRow } from "./FaceResetMenuRow";
 import { LogoutButton } from "./LogoutButton";
 import { MenuRow } from "./MenuRow";
 import { MyProfile } from "./MyProfile";
@@ -19,6 +20,7 @@ import { ThemeMenuRow } from "./ThemeMenuRow";
  * 프로필(이름·학번·층·호실)은 공통 틀이 서버에서 받은 본인 정보(`/api/v1/auth/me`)다. 로그인하지 않았으면
  * 로그인 화면으로 보낸다. 받지 못하면 Figma 마이페이지 state messages(345:13, 345:48)의
  * `정보를 불러오지 못했습니다.`를 학생 홈 오류와 같은 자리(핸드폰 아래, 노트북 오른쪽 위)에 보여 준다.
+ * `얼굴 재설정`과 로그아웃은 바로 실행하지 않고 확인 창을 먼저 띄운다(#356, DEC-105).
  */
 export function StudentMyPage() {
   return (
@@ -49,7 +51,7 @@ function StudentMyPageContent() {
           />
           <div className="flex flex-1 flex-col gap-2.5 px-[18px] py-4 md:flex-none md:p-0">
             <MenuRow href="/volunteer" label="봉사 활동" />
-            <MenuRow href="/face?reset=1" label="얼굴 재설정" />
+            <FaceResetMenuRow />
             <ThemeMenuRow />
             <div className="flex-1 md:hidden" />
             <LogoutButton />
