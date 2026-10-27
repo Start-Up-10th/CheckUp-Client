@@ -4,11 +4,10 @@ import { throwIfRateLimited } from "@/lib/rate-limit";
 import { AdminUnauthorizedError, PURPOSE_TO_API } from "@/lib/admin/qr-api";
 
 /**
- * 서버 `Recognition.status`. KNOWN은 서버가 후보 학생과 확인한 경우, UNKNOWN은 못 찾은 경우다. OTHER_FLOOR는 세션 층이 아닌
- * 학생이라 이름·학번·출석이 없다(DEC-100).
+ * 서버 `Recognition.status`. KNOWN은 서버가 후보 학생과 확인한 경우, UNKNOWN은 못 찾은 경우다. 서버가 보낼 수 있는
+ * OTHER_FLOOR는 UNKNOWN으로 읽는다(DEC-104).
  */
-export type RecognitionStatus =
-  "KNOWN" | "UNKNOWN" | "NOT_ATTEMPTED" | "OTHER_FLOOR";
+export type RecognitionStatus = "KNOWN" | "UNKNOWN" | "NOT_ATTEMPTED";
 
 /** 서버가 KNOWN 얼굴에 출석을 기록한 결과. 웹은 출석을 직접 기록하지 않는다. */
 export type RecognitionAttendance =
@@ -56,12 +55,7 @@ type FaceApiBody = {
   }>;
 };
 
-const STATUSES: readonly string[] = [
-  "KNOWN",
-  "UNKNOWN",
-  "NOT_ATTEMPTED",
-  "OTHER_FLOOR",
-];
+const STATUSES: readonly string[] = ["KNOWN", "UNKNOWN", "NOT_ATTEMPTED"];
 const ATTENDANCES: readonly string[] = [
   "RECORDED",
   "DUPLICATE",
@@ -79,9 +73,12 @@ function toFaceResult(face: FaceApiBody["faces"][number]): FaceResult {
     typeof raw.studentNumber === "number" && Number.isFinite(raw.studentNumber)
       ? raw.studentNumber
       : undefined;
-  let status: RecognitionStatus = STATUSES.includes(raw.status)
-    ? (raw.status as RecognitionStatus)
-    : "NOT_ATTEMPTED";
+  let status: RecognitionStatus =
+    raw.status === "OTHER_FLOOR"
+      ? "UNKNOWN"
+      : STATUSES.includes(raw.status)
+        ? (raw.status as RecognitionStatus)
+        : "NOT_ATTEMPTED";
   // KNOWN인데 이름이나 학번을 읽을 수 없으면 신원을 만들지 않고 인식하지 못한 것으로 둔다(REQ-FACE-005).
   if (
     status === "KNOWN" &&
