@@ -7,7 +7,7 @@ const RESULT: Record<RecentEntry["kind"], { text: string; color: string }> = {
 };
 
 /**
- * REQ-FACE-007: 최근 인식 목록. 최근 것이 위에 오고, 넘치면 안에서 스크롤한다(최대 30개, DEC-107).
+ * REQ-FACE-007: 최근 인식 목록. 최근 것이 위에 오고, 넘치면 안에서 스크롤한다(최대 30개, DEC-108).
  * 컴퓨터(xl)는 카메라 오른쪽, 패드·휴대폰은 카메라 아래에 둔다.
  */
 export function RecentRecognitions({ entries }: { entries: RecentEntry[] }) {

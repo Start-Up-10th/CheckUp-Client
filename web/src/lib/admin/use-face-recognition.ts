@@ -51,7 +51,7 @@ type Options = {
 
 /**
  * REQ-FACE-004·006·007: 관리자 카메라 얼굴 인식. 카메라가 준비되면 서버에 세션을 만들고, 응답이 올 때마다
- * 프레임을 한 장씩(겹치지 않게) 보낸 뒤 결과를 최근 인식 목록과 QR 안내로 알린다(DEC-107). 화면을
+ * 프레임을 한 장씩(겹치지 않게) 보낸 뒤 결과를 최근 인식 목록과 QR 안내로 알린다(DEC-108). 화면을
  * 떠나면 그 세션만 종료하고 카메라 자체는 건드리지 않는다. 프레임은 저장하지 않는다.
  */
 export function useFaceRecognition({
@@ -66,7 +66,7 @@ export function useFaceRecognition({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [status, setStatus] = useState<FaceSessionStatus>("starting");
   const [qrNotice, setQrNotice] = useState(false);
-  // 최근 인식 목록(최대 30개, DEC-107). 화면 메모리에만 두고, 세션을 새로 만들면(재시도·층 변경) 비운다.
+  // 최근 인식 목록(최대 30개, DEC-108). 화면 메모리에만 두고, 세션을 새로 만들면(재시도·층 변경) 비운다.
   const [recent, setRecent] = useState<RecentEntry[]>([]);
   // 서버가 요청이 너무 많다고(429) 한 동안 true다. 다음 프레임 응답이 오면 false로 돌아온다.
   const [rateLimited, setRateLimited] = useState(false);

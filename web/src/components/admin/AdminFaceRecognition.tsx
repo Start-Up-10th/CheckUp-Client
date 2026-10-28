@@ -56,7 +56,7 @@ type FaceRecognitionViewProps = {
 /**
  * REQ-FACE-004: 진입하면 카메라가 자동으로 켜지고 인식 세션이 시작된다. 페이지를 벗어나면 정리된다.
  * 화면은 카메라 패널 하나와 오른쪽 위 층 탭이다. 층을 바꿔도 카메라·세션은 그대로다(서버 세션에 층이 없다, DEC-100).
- * 용도 탭·전체화면은 없다(DEC-036). 최근 인식 목록은 DEC-107.
+ * 용도 탭·전체화면은 없다(DEC-036). 최근 인식 목록은 DEC-108.
  */
 function FaceRecognitionView({
   floor,
@@ -91,6 +91,8 @@ function FaceRecognitionView({
         (다시 시도 버튼) > QR 안내 > 429 `잠시 후 다시 시도` 순서로 하나만 보인다. 성공·실패 결과는 최근 인식 목록에 남는다.
       */}
       <ToastLayer
+        stacked={false}
+        position="top-right"
         toast={
           serverFailed
             ? {

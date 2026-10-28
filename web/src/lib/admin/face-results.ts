@@ -1,6 +1,6 @@
 import type { FaceResult } from "@/lib/admin/face-api";
 
-/** 최근 인식 목록에 남기는 최대 개수(사용자 결정, DEC-107). 넘으면 가장 오래된 항목부터 지운다. */
+/** 최근 인식 목록에 남기는 최대 개수(사용자 결정, DEC-108). 넘으면 가장 오래된 항목부터 지운다. */
 export const MAX_RECENT = 30;
 
 /** 최근 인식 목록의 한 줄. `label`(`학번 이름`)은 실패에는 없다(REQ-FACE-005). */
