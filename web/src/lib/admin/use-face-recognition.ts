@@ -16,6 +16,7 @@ import {
   newEntries,
   applyFrame,
   INITIAL_RECOGNITION,
+  msUntilNextReset,
   type RecentEntry,
 } from "@/lib/admin/face-results";
 import type { Floor } from "@/lib/admin/floor-types";
@@ -72,6 +73,19 @@ export function useFaceRecognition({
   const [rateLimited, setRateLimited] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
+
+  // 매일 08:00에 목록을 비운다(당일 기록 폐기, DEC-108). 새 결과가 없어도 어제 이름이 남지 않게 한다.
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    function schedule() {
+      timer = setTimeout(() => {
+        setRecent([]);
+        schedule();
+      }, msUntilNextReset(new Date()));
+    }
+    schedule();
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!cameraReady) return;

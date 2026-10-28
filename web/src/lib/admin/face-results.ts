@@ -1,5 +1,22 @@
 import type { FaceResult } from "@/lib/admin/face-api";
 
+/** 당일 기록을 폐기하는 시각(시). 최근 인식 목록은 이 시각을 하루의 경계로 삼는다(DEC-108). */
+export const DAY_RESET_HOUR = 8;
+
+/** `at`이 속한 운영일(`YYYY-MM-DD`). 08:00에 바뀌므로 그 전의 새벽은 전날로 센다. */
+function operatingDay(at: Date): string {
+  const shifted = new Date(at.getTime() - DAY_RESET_HOUR * 3_600_000);
+  return `${shifted.getFullYear()}-${String(shifted.getMonth() + 1).padStart(2, "0")}-${String(shifted.getDate()).padStart(2, "0")}`;
+}
+
+/** 다음 08:00까지 남은 시간(ms). 이때 목록을 비운다. */
+export function msUntilNextReset(now: Date): number {
+  const next = new Date(now);
+  next.setHours(DAY_RESET_HOUR, 0, 0, 0);
+  if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 1);
+  return next.getTime() - now.getTime();
+}
+
 /** 최근 인식 목록에 남기는 최대 개수(사용자 결정, DEC-108). 넘으면 가장 오래된 항목부터 지운다. */
 export const MAX_RECENT = 30;
 
@@ -10,7 +27,7 @@ export type RecentEntry = {
   label?: string;
   /** 인식한 시각 `HH:mm`. */
   time: string;
-  /** 인식한 날짜(`YYYY-MM-DD`). 하루가 지나면 지난 날의 줄을 지우는 데 쓴다. */
+  /** 인식한 운영일(`YYYY-MM-DD`, 08:00 기준). 운영일이 바뀌면 지난 날의 줄을 지우는 데 쓴다. */
   day: string;
 };
 
@@ -20,7 +37,7 @@ export function newEntries(
   at: Date,
 ): RecentEntry[] {
   const time = `${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")}`;
-  const day = `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, "0")}-${String(at.getDate()).padStart(2, "0")}`;
+  const day = operatingDay(at);
   const entry = (kind: RecentEntry["kind"], label?: string): RecentEntry => ({
     id: crypto.randomUUID(),
     kind,
@@ -35,7 +52,7 @@ export function newEntries(
   ];
 }
 
-/** 새 줄을 목록 맨 위에 더한다(최근 것이 위). 날짜가 바뀌면 지난 날의 줄은 지우고, 최대 개수를 넘으면 가장 오래된 것부터 지운다. */
+/** 새 줄을 목록 맨 위에 더한다(최근 것이 위). 운영일(08:00 기준)이 바뀌면 지난 날의 줄은 지우고, 최대 개수를 넘으면 가장 오래된 것부터 지운다. */
 export function addRecent(
   prev: RecentEntry[],
   added: RecentEntry[],
