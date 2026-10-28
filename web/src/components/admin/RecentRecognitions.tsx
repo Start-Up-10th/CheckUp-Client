@@ -11,7 +11,7 @@ const RESULT: Record<
   },
   alreadyDone: {
     text: "이미 처리",
-    dot: "bg-admin-text-muted",
+    dot: "bg-admin-textMuted",
     pill: "border-admin-absence-border bg-admin-absence-bg text-admin-absence-text",
   },
   failure: {
