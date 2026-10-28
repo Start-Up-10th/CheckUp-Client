@@ -9,11 +9,9 @@ import {
 import { FaceGatewayProvider, type FaceGateway } from "./face-gateway";
 import {
   ERROR_BACKOFF_MS,
-  FAILURE_HOLD_MS,
   FRAME_INTERVAL_MS,
   MAX_CONSECUTIVE_FAILURES,
   QR_NOTICE_HOLD_MS,
-  SUCCESS_HOLD_MS,
   useFaceRecognition,
 } from "./use-face-recognition";
 import { AdminUnauthorizedError } from "./qr-api";
@@ -91,6 +89,9 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
 });
+
+const labels = (result: { current: { recent: { label?: string }[] } }) =>
+  result.current.recent.map((entry) => entry.label);
 
 describe("useFaceRecognition 세션", () => {
   it("카메라 허용 전에는 세션을 만들지 않고 허용되면 만든다", async () => {
@@ -201,14 +202,15 @@ describe("useFaceRecognition 세션", () => {
     });
     const { result, rerender } = setup(gateway);
     await tick();
-    expect(result.current.success).toEqual(["2405 김도현"]);
+    expect(labels(result)).toEqual(["2405 김도현"]);
 
     rerender({ cameraReady: true, purpose: "study", floor: 3 });
     await tick();
 
     expect(gateway.closeSession).toHaveBeenCalledWith("session-1");
     expect(gateway.createSession).toHaveBeenLastCalledWith("study", 3);
-    expect(result.current.success).toEqual(["2405 김도현"]);
+    // 목록은 세션이 바뀌면 비우고 새로 쌓는다.
+    expect(labels(result)).toEqual(["2405 김도현"]);
     expect(gateway.sendFrame).toHaveBeenLastCalledWith(
       "session-2",
       FRAME,
@@ -407,14 +409,12 @@ describe("useFaceRecognition 프레임 전송", () => {
     const { result } = setup(gateway);
 
     await tick(FRAME_INTERVAL_MS * 3);
-    expect(result.current.failure).toBe(true);
-    await tick(FAILURE_HOLD_MS);
-    expect(result.current.failure).toBe(false);
+    expect(result.current.recent).toHaveLength(1);
 
     // 새 세션의 같은 트랙 id가 attempts 1로 시작해도 새 시도로 센다.
     await act(async () => release());
     await tick();
-    expect(result.current.failure).toBe(true);
+    expect(result.current.recent).toHaveLength(2);
   });
 
   it("연속 실패가 쌓이면 error가 되고 성공하면 횟수를 다시 센다", async () => {
@@ -460,7 +460,7 @@ describe("useFaceRecognition 프레임 전송", () => {
 });
 
 describe("useFaceRecognition 결과", () => {
-  it("성공은 `학번 이름`을 붙인 성공 표시를 잠깐 만든다", async () => {
+  it("성공은 `학번 이름`을 붙여 목록 맨 위에 남기고 시간이 지나도 지우지 않는다", async () => {
     const gateway = makeGateway({
       sendFrame: vi
         .fn<FaceGateway["sendFrame"]>()
@@ -470,13 +470,16 @@ describe("useFaceRecognition 결과", () => {
     const { result } = setup(gateway);
     await tick();
 
-    expect(result.current.success).toEqual(["2405 김도현"]);
+    expect(result.current.recent[0]).toMatchObject({
+      kind: "success",
+      label: "2405 김도현",
+    });
 
-    await tick(SUCCESS_HOLD_MS);
-    expect(result.current.success).toEqual([]);
+    await tick(10_000);
+    expect(result.current.recent).toHaveLength(1);
   });
 
-  it("같은 학생이 계속 비치면 성공은 한 번만 알리고 이미 처리됨으로 바뀌지 않는다", async () => {
+  it("같은 학생이 계속 비치면 성공은 한 번만 남기고 이미 처리됨을 더하지 않는다", async () => {
     const gateway = makeGateway({
       sendFrame: vi
         .fn<FaceGateway["sendFrame"]>()
@@ -486,19 +489,14 @@ describe("useFaceRecognition 결과", () => {
         ),
     });
     const { result } = setup(gateway);
-    await tick();
+    await tick(FRAME_INTERVAL_MS * 3);
 
-    expect(result.current.success).toEqual(["2405 김도현"]);
-    expect(result.current.alreadyDone).toEqual([]);
-
-    await tick(SUCCESS_HOLD_MS);
-
-    // 성공 안내는 시간이 지나 사라지고, 같은 얼굴이 이어서 비쳐도 이미 처리됨 안내를 새로 띄우지 않는다.
-    expect(result.current.success).toEqual([]);
-    expect(result.current.alreadyDone).toEqual([]);
+    expect(result.current.recent.map((entry) => entry.kind)).toEqual([
+      "success",
+    ]);
   });
 
-  it("이미 출석 처리된 학생을 인식하면 alreadyDone을 잠깐 켜고 지난 뒤 끈다", async () => {
+  it("이미 출석 처리된 학생을 인식하면 alreadyDone으로 남긴다", async () => {
     const gateway = makeGateway({
       sendFrame: vi
         .fn<FaceGateway["sendFrame"]>()
@@ -512,15 +510,13 @@ describe("useFaceRecognition 결과", () => {
     const { result } = setup(gateway);
     await tick();
 
-    expect(result.current.alreadyDone).toEqual(["2405 김도현"]);
-    expect(result.current.success).toEqual([]);
-
-    await tick(SUCCESS_HOLD_MS);
-
-    expect(result.current.alreadyDone).toEqual([]);
+    expect(result.current.recent[0]).toMatchObject({
+      kind: "alreadyDone",
+      label: "2405 김도현",
+    });
   });
 
-  it("실패하면 잠깐 failure를 켜고 지난 뒤 끈다", async () => {
+  it("실패는 신원 없이 목록에 남긴다", async () => {
     const gateway = makeGateway({
       sendFrame: vi
         .fn<FaceGateway["sendFrame"]>()
@@ -538,11 +534,9 @@ describe("useFaceRecognition 결과", () => {
     });
     const { result } = setup(gateway);
     await tick();
-    expect(result.current.failure).toBe(true);
 
-    await tick(FAILURE_HOLD_MS);
-
-    expect(result.current.failure).toBe(false);
+    expect(result.current.recent[0]).toMatchObject({ kind: "failure" });
+    expect(result.current.recent[0].label).toBeUndefined();
   });
 
   it("서버가 QR을 권하면 안내를 켜고 일정 시간 뒤 끈다", async () => {

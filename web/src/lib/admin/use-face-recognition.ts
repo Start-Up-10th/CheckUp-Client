@@ -11,7 +11,13 @@ import { redirectToAdminLogin } from "@/lib/admin/admin-session";
 import { captureFrame } from "@/lib/admin/capture-frame";
 import { FaceApiError } from "@/lib/admin/face-api";
 import { useFaceGateway } from "@/lib/admin/face-gateway";
-import { applyFrame, INITIAL_RECOGNITION } from "@/lib/admin/face-results";
+import {
+  addRecent,
+  newEntries,
+  applyFrame,
+  INITIAL_RECOGNITION,
+  type RecentEntry,
+} from "@/lib/admin/face-results";
 import type { Floor } from "@/lib/admin/floor-types";
 import type { Purpose } from "@/lib/admin/purpose";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
@@ -23,10 +29,8 @@ export const FRAME_INTERVAL_MS = 500;
 export const ERROR_BACKOFF_MS = 2000;
 /** 연속 실패가 이만큼 쌓이면 오류 상태로 알린다. */
 export const MAX_CONSECUTIVE_FAILURES = 5;
-/** QR 안내·성공 표시를 유지하는 시간. 얼굴이 잠깐 사라져도 깜빡이지 않게 한다. */
+/** QR 안내를 유지하는 시간. 얼굴이 잠깐 사라져도 깜빡이지 않게 한다. */
 export const QR_NOTICE_HOLD_MS = 8000;
-export const SUCCESS_HOLD_MS = 3000;
-export const FAILURE_HOLD_MS = 3000;
 
 /** 서버가 프레임 요청에서 세션이 없거나 종료됐다고 알리는 오류 코드. */
 const SESSION_GONE_CODE = "FACE_SESSION_NOT_FOUND";
@@ -47,7 +51,7 @@ type Options = {
 
 /**
  * REQ-FACE-004·006·007: 관리자 카메라 얼굴 인식. 카메라가 준비되면 서버에 세션을 만들고, 응답이 올 때마다
- * 프레임을 한 장씩(겹치지 않게) 보낸 뒤 결과를 성공·실패·QR 안내로 알린다(최근 인식 목록은 없다, DEC-036). 화면을
+ * 프레임을 한 장씩(겹치지 않게) 보낸 뒤 결과를 최근 인식 목록과 QR 안내로 알린다(DEC-108). 화면을
  * 떠나면 그 세션만 종료하고 카메라 자체는 건드리지 않는다. 프레임은 저장하지 않는다.
  */
 export function useFaceRecognition({
@@ -62,10 +66,8 @@ export function useFaceRecognition({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [status, setStatus] = useState<FaceSessionStatus>("starting");
   const [qrNotice, setQrNotice] = useState(false);
-  const [success, setSuccess] = useState<string[]>([]);
-  // 이미 출석 처리된 학생을 다시 인식했을 때의 `학번 이름`(DEC-073). 성공과 따로 잠깐 보인다.
-  const [alreadyDone, setAlreadyDone] = useState<string[]>([]);
-  const [failure, setFailure] = useState(false);
+  // 최근 인식 목록(최대 30개, DEC-108). 화면 메모리에만 두고, 세션을 새로 만들면(재시도·층 변경) 비운다.
+  const [recent, setRecent] = useState<RecentEntry[]>([]);
   // 서버가 요청이 너무 많다고(429) 한 동안 true다. 다음 프레임 응답이 오면 false로 돌아온다.
   const [rateLimited, setRateLimited] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -79,9 +81,6 @@ export function useFaceRecognition({
     let state = INITIAL_RECOGNITION;
     const timers = new Set<ReturnType<typeof setTimeout>>();
     let qrTimer: ReturnType<typeof setTimeout> | undefined;
-    let successTimer: ReturnType<typeof setTimeout> | undefined;
-    let alreadyTimer: ReturnType<typeof setTimeout> | undefined;
-    let failureTimer: ReturnType<typeof setTimeout> | undefined;
 
     function sleep(ms: number): Promise<void> {
       return new Promise((resolve) => {
@@ -102,18 +101,6 @@ export function useFaceRecognition({
       clearTimeout(previous);
       show();
       return setTimeout(hide, ms);
-    }
-
-    let qrActive = false;
-    let failurePending = false;
-    function showFailure() {
-      failurePending = false;
-      failureTimer = hold(
-        () => setFailure(true),
-        () => setFailure(false),
-        FAILURE_HOLD_MS,
-        failureTimer,
-      );
     }
 
     const takeFrame =
@@ -163,42 +150,15 @@ export function useFaceRecognition({
             setRateLimited(false);
             const outcome = applyFrame(state, result.faces, new Date());
             state = outcome.state;
-            const found = outcome.success;
-            if (found.length > 0) {
-              successTimer = hold(
-                () => setSuccess(found),
-                () => setSuccess([]),
-                SUCCESS_HOLD_MS,
-                successTimer,
-              );
-            }
-            const already = outcome.alreadyDone;
-            if (already.length > 0) {
-              alreadyTimer = hold(
-                () => setAlreadyDone(already),
-                () => setAlreadyDone([]),
-                SUCCESS_HOLD_MS,
-                alreadyTimer,
-              );
-            }
+            const added = newEntries(outcome, new Date());
+            setRecent((list) => addRecent(list, added));
             if (outcome.qrRecommended) {
-              qrActive = true;
               qrTimer = hold(
                 () => setQrNotice(true),
-                () => {
-                  qrActive = false;
-                  setQrNotice(false);
-                  // QR 안내에 밀려 기다리던 인식 실패 표시를 이어서 보인다.
-                  if (failurePending) showFailure();
-                },
+                () => setQrNotice(false),
                 QR_NOTICE_HOLD_MS,
                 qrTimer,
               );
-            }
-            if (outcome.failure) {
-              // QR 안내가 떠 있으면 같은 자리를 쓰므로 안내가 끝난 뒤에 보인다.
-              if (qrActive) failurePending = true;
-              else showFailure();
             }
           } catch (error) {
             if (cancelled) break;
@@ -256,9 +216,7 @@ export function useFaceRecognition({
     /* eslint-disable react-hooks/set-state-in-effect */
     setStatus("starting");
     setQrNotice(false);
-    setSuccess([]);
-    setAlreadyDone([]);
-    setFailure(false);
+    setRecent([]);
     setRateLimited(false);
     /* eslint-enable react-hooks/set-state-in-effect */
     void run();
@@ -278,9 +236,6 @@ export function useFaceRecognition({
       window.removeEventListener("pagehide", closeCurrentSession);
       timers.forEach(clearTimeout);
       clearTimeout(qrTimer);
-      clearTimeout(successTimer);
-      clearTimeout(alreadyTimer);
-      clearTimeout(failureTimer);
       closeCurrentSession();
     };
   }, [
@@ -297,9 +252,7 @@ export function useFaceRecognition({
   return {
     status,
     qrNotice,
-    success,
-    alreadyDone,
-    failure,
+    recent,
     rateLimited,
     retry,
   };
