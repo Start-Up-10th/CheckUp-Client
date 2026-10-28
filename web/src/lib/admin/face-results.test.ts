@@ -3,6 +3,7 @@ import {
   INITIAL_RECOGNITION,
   MAX_RECENT,
   addRecent,
+  msUntilNextReset,
   newEntries,
   QR_NOTICE_ATTEMPTS,
   TRACK_MEMORY_MS,
@@ -256,6 +257,34 @@ describe("newEntries·addRecent", () => {
       ["failure", undefined, "22:06"],
       ["success", "2405 김도현", "22:04"],
     ]);
+  });
+
+  it("새벽은 전날로 세고 08:00에 운영일이 바뀐다", () => {
+    const night = addRecent(
+      [],
+      entries({ failure: 1 }, new Date(2026, 9, 28, 23, 50)),
+    );
+    const dawn = addRecent(
+      night,
+      entries({ failure: 1 }, new Date(2026, 9, 29, 7, 59)),
+    );
+    const morning = addRecent(
+      dawn,
+      entries({ failure: 1 }, new Date(2026, 9, 29, 8, 0)),
+    );
+
+    expect(dawn).toHaveLength(2);
+    expect(morning).toHaveLength(1);
+  });
+
+  it("다음 08:00까지 남은 시간을 센다", () => {
+    expect(msUntilNextReset(new Date(2026, 9, 28, 7, 59, 0))).toBe(60_000);
+    expect(msUntilNextReset(new Date(2026, 9, 28, 8, 0, 0))).toBe(
+      24 * 3_600_000,
+    );
+    expect(msUntilNextReset(new Date(2026, 9, 28, 22, 0, 0))).toBe(
+      10 * 3_600_000,
+    );
   });
 
   it("날짜가 바뀌면 지난 날의 줄은 지운다", () => {
