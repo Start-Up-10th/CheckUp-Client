@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import type { FaceResult } from "@/lib/admin/face-api";
 import {
@@ -83,12 +83,19 @@ describe("AdminFaceRecognition", () => {
     expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
   });
 
-  it("성공은 `학번 이름`으로, 성공은 카메라 하단에, 실패는 신원 없는 인식 실패로 오른쪽 상단에 보인다", async () => {
+  it("성공은 `학번 이름`으로, 실패는 신원 없는 `인식 실패`로 최근 인식 목록에 보이고 토스트는 없다", async () => {
     renderWith(createMockFaceGateway([[known(), unknown(1)]]));
     await tick();
 
-    expect(screen.getByRole("status")).toHaveTextContent("성공 · 2405 김도현");
-    expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
+    const rows = within(screen.getByRole("region", { name: "최근 인식" }))
+      .getAllByRole("listitem")
+      .map((row) => row.textContent);
+    expect(rows).toEqual([
+      expect.stringMatching(/^2405 김도현\d\d:\d\d · 성공$/),
+      expect.stringMatching(/^인식 실패\d\d:\d\d · 실패$/),
+    ]);
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("서버가 429로 막으면 잠시 후 다시 시도 안내를 보이고 풀리면 사라진다", async () => {
@@ -110,7 +117,7 @@ describe("AdminFaceRecognition", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("용도 탭·전체화면 버튼·최근 인식 목록은 없다", async () => {
+  it("용도 탭·전체화면 버튼은 없다", async () => {
     renderWith(createMockFaceGateway([[known()]]));
     await tick();
 
@@ -119,7 +126,6 @@ describe("AdminFaceRecognition", () => {
     expect(
       screen.queryByRole("button", { name: "전체화면으로 보기" }),
     ).toBeNull();
-    expect(screen.queryByText("최근 인식")).toBeNull();
   });
 
   it("서버가 QR을 권하면 안내 문구를 보여 주고 시간이 지나면 사라진다", async () => {
@@ -151,108 +157,45 @@ describe("AdminFaceRecognition", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("3회 실패하면 QR 안내를 먼저 보이고 인식 실패는 안내가 끝난 뒤에 보인다", async () => {
-    const gateway = createMockFaceGateway([[]]);
-    vi.spyOn(gateway, "sendFrame")
-      .mockResolvedValueOnce({ frameId: "f", faces: [unknown(3)] })
-      .mockResolvedValue({ frameId: "f", faces: [] });
-    renderWith(gateway);
+  it("3회 실패하면 QR 안내 토스트와 함께 실패가 목록에 남는다", async () => {
+    renderWith(createMockFaceGateway([[unknown(3)]]));
     await tick();
 
     expect(
       screen.getByText("인식 실패 · 3회 초과 시 QR로 출석"),
     ).toBeInTheDocument();
-    expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
-
-    await tick(8_000);
-    // 토스트 갱신은 라이브러리 안에서 한 박자 뒤에 반영된다.
-    await tick(100);
-    expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
     expect(
-      screen.queryByText("인식 실패 · 3회 초과 시 QR로 출석"),
-    ).not.toBeInTheDocument();
+      within(screen.getByRole("region", { name: "최근 인식" })).getAllByRole(
+        "listitem",
+      ),
+    ).toHaveLength(1);
   });
 
-  it("실패하면 오른쪽 상단에 인식 실패 토스트를 잠깐 보이고 사라진다", async () => {
-    const gateway = createMockFaceGateway([[]]);
-    vi.spyOn(gateway, "sendFrame")
-      .mockResolvedValueOnce({ frameId: "f", faces: [unknown(1)] })
-      .mockResolvedValue({ frameId: "f", faces: [] });
-    renderWith(gateway);
+  it("한 프레임에 6명이 성공해도 모두 목록에 남는다", async () => {
+    const faces = Array.from({ length: 6 }, (_, i) => ({
+      ...known(),
+      trackId: `k${i}`,
+      studentNumber: 2401 + i,
+    }));
+    renderWith(createMockFaceGateway([faces]));
     await tick();
 
-    expect(screen.getByRole("alert")).toHaveTextContent("인식 실패");
-
-    await tick(5_000);
-    // 사라지는 애니메이션(200ms) 동안은 마지막 토스트를 그린다.
-    await tick(500);
-    expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "최근 인식" })).getAllByRole(
+        "listitem",
+      ),
+    ).toHaveLength(6);
   });
 
-  it("성공하면 `성공 · 학번 이름` 성공 토스트를 잠깐(2초) 보인다", async () => {
-    const gateway = createMockFaceGateway([[]]);
-    vi.spyOn(gateway, "sendFrame")
-      .mockResolvedValueOnce({ frameId: "f", faces: [known()] })
-      .mockResolvedValue({ frameId: "f", faces: [] });
-    renderWith(gateway);
-    await tick();
-
-    expect(screen.getByRole("status")).toHaveTextContent("성공 · 2405 김도현");
-    expect(document.querySelector(".Toastify__toast--success")).not.toBeNull();
-    // 닫히는 시간은 라이브러리가 진행 막대로 센다(성공 2초).
-    expect(screen.getByRole("progressbar").style.animationDuration).toBe(
-      "2000ms",
+  it("이미 출석 처리된 학생을 다시 인식하면 `이미 처리` 행으로 보인다", async () => {
+    renderWith(
+      createMockFaceGateway([[{ ...known(), attendance: "DUPLICATE" }]]),
     );
-  });
-
-  it("한 프레임에 여러 명이 성공하면 학생마다 성공 토스트를 보인다", async () => {
-    const gateway = createMockFaceGateway([[]]);
-    vi.spyOn(gateway, "sendFrame")
-      .mockResolvedValueOnce({
-        frameId: "f",
-        faces: [
-          known(),
-          {
-            ...known(),
-            trackId: "k2412",
-            studentNumber: 2412,
-            studentName: "박서연",
-          },
-          {
-            ...known(),
-            trackId: "k2401",
-            studentNumber: 2401,
-            studentName: "정민수",
-          },
-        ],
-      })
-      .mockResolvedValue({ frameId: "f", faces: [] });
-    renderWith(gateway);
     await tick();
 
-    expect(screen.getByText("성공 · 2405 김도현")).toBeInTheDocument();
-    expect(screen.getByText("성공 · 2412 박서연")).toBeInTheDocument();
-    expect(screen.getByText("성공 · 2401 정민수")).toBeInTheDocument();
-  });
-
-  it("이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 `이미 처리됐어요 · 학번 이름`을 보인다", async () => {
-    const gateway = createMockFaceGateway([[]]);
-    vi.spyOn(gateway, "sendFrame")
-      .mockResolvedValueOnce({
-        frameId: "f",
-        faces: [{ ...known(), trackId: "again", attendance: "DUPLICATE" }],
-      })
-      .mockResolvedValue({ frameId: "f", faces: [] });
-    renderWith(gateway);
-    await tick();
-
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "이미 처리됐어요 · 2405 김도현",
+    expect(screen.getByRole("listitem")).toHaveTextContent(
+      /^2405 김도현\d\d:\d\d · 이미 처리$/,
     );
-    expect(screen.queryByText(/성공 ·/)).not.toBeInTheDocument();
-    // 성공(녹색)이 아니라 안내(info) 토스트다.
-    expect(document.querySelector(".Toastify__toast--info")).not.toBeNull();
-    expect(document.querySelector(".Toastify__toast--success")).toBeNull();
   });
 
   it("카메라 허용 전에는 서버에 세션을 만들지 않는다", async () => {
