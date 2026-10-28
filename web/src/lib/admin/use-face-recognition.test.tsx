@@ -516,6 +516,23 @@ describe("useFaceRecognition 결과", () => {
     });
   });
 
+  it("매일 08:00이 되면 새 결과가 없어도 목록을 비운다", async () => {
+    vi.setSystemTime(new Date(2026, 9, 28, 7, 59, 0));
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn<FaceGateway["sendFrame"]>()
+        .mockResolvedValueOnce(frameOf([known()]))
+        .mockResolvedValue(frameOf([])),
+    });
+    const { result } = setup(gateway);
+    await tick();
+    expect(result.current.recent).toHaveLength(1);
+
+    await tick(60_000);
+
+    expect(result.current.recent).toHaveLength(0);
+  });
+
   it("실패는 신원 없이 목록에 남긴다", async () => {
     const gateway = makeGateway({
       sendFrame: vi

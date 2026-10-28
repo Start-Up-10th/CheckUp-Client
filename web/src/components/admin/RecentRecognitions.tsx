@@ -1,9 +1,24 @@
 import type { RecentEntry } from "@/lib/admin/face-results";
 
-const RESULT: Record<RecentEntry["kind"], { text: string; color: string }> = {
-  success: { text: "성공", color: "text-admin-attendance-text" },
-  alreadyDone: { text: "이미 처리", color: "text-admin-text-muted" },
-  failure: { text: "실패", color: "text-admin-danger-text" },
+const RESULT: Record<
+  RecentEntry["kind"],
+  { text: string; dot: string; pill: string }
+> = {
+  success: {
+    text: "성공",
+    dot: "bg-admin-attendance-text",
+    pill: "border-admin-attendance-border bg-admin-attendance-bg text-admin-attendance-text",
+  },
+  alreadyDone: {
+    text: "이미 처리",
+    dot: "bg-admin-textMuted",
+    pill: "border-admin-absence-border bg-admin-absence-bg text-admin-textSecondary",
+  },
+  failure: {
+    text: "실패",
+    dot: "bg-admin-danger-text",
+    pill: "border-admin-danger-border bg-admin-danger-bg text-admin-danger-text",
+  },
 };
 
 /**
@@ -14,24 +29,32 @@ export function RecentRecognitions({ entries }: { entries: RecentEntry[] }) {
   return (
     <section
       aria-label="최근 인식"
-      className="flex h-[260px] w-full shrink-0 flex-col gap-3 rounded-[18px] bg-admin-surface p-4 md:p-5 xl:h-auto xl:w-[420px] xl:rounded-[20px] xl:p-6"
+      className="flex h-[260px] w-full shrink-0 flex-col gap-3 rounded-[18px] bg-admin-surface p-4 md:h-[360px] md:p-5 xl:h-auto xl:w-[420px] xl:rounded-[20px] xl:p-6"
     >
       <h2 className="text-sm font-bold text-admin-text md:text-base">
         최근 인식
       </h2>
       <ul
         aria-live="polite"
-        className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto"
+        className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto [scrollbar-color:rgb(var(--admin-border))_transparent] [scrollbar-width:thin]"
       >
         {entries.map(({ id, kind, label, time }) => (
           <li
             key={id}
-            className="flex h-[54px] shrink-0 items-center justify-between rounded-xl bg-admin-row-surface px-4 text-sm"
+            className="flex h-[54px] shrink-0 items-center justify-between gap-2 rounded-xl border border-admin-divider bg-admin-ghost-bg px-4 text-sm"
           >
-            <span className="min-w-0 truncate text-admin-text">
-              {label ?? "인식 실패"}
+            <span className="flex min-w-0 items-center gap-2.5">
+              <span
+                aria-hidden
+                className={`size-2 shrink-0 rounded-full ${RESULT[kind].dot}`}
+              />
+              <span className="min-w-0 truncate font-medium text-admin-text">
+                {kind === "failure" ? "인식 실패" : label}
+              </span>
             </span>
-            <span className={`shrink-0 pl-2 ${RESULT[kind].color}`}>
+            <span
+              className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium ${RESULT[kind].pill}`}
+            >
               {time} · {RESULT[kind].text}
             </span>
           </li>
