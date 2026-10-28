@@ -148,9 +148,10 @@ export function useFaceRecognition({
             if (cancelled) break;
             failures = 0;
             setRateLimited(false);
-            const outcome = applyFrame(state, result.faces, new Date());
+            const now = new Date();
+            const outcome = applyFrame(state, result.faces, now);
             state = outcome.state;
-            const added = newEntries(outcome, new Date());
+            const added = newEntries(outcome, now);
             setRecent((list) => addRecent(list, added));
             if (outcome.qrRecommended) {
               qrTimer = hold(

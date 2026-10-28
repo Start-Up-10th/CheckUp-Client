@@ -49,7 +49,7 @@ export function RecentRecognitions({ entries }: { entries: RecentEntry[] }) {
                 className={`size-2 shrink-0 rounded-full ${RESULT[kind].dot}`}
               />
               <span className="min-w-0 truncate font-medium text-admin-text">
-                {label ?? "인식 실패"}
+                {kind === "failure" ? "인식 실패" : label}
               </span>
             </span>
             <span
