@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaceFloorDialog } from "@/components/admin/FaceFloorDialog";
 import { FloorTabs } from "@/components/admin/FloorTabs";
-import { ToastLayer, useToast } from "@/components/admin/Toast";
+import { ToastLayer } from "@/components/admin/Toast";
 import { CameraPanel } from "@/components/admin/CameraPanel";
-import { alreadyDoneMessage, successMessage } from "@/lib/admin/face-results";
+import { RecentRecognitions } from "@/components/admin/RecentRecognitions";
 import { useFaceRecognition } from "@/lib/admin/use-face-recognition";
 import { RATE_LIMIT_MESSAGE } from "@/lib/rate-limit";
 import { useCameraStream } from "@/lib/admin/use-camera-stream";
@@ -15,9 +15,6 @@ import type { Purpose } from "@/lib/admin/purpose";
 
 /** 용도 탭이 없어서(Figma 2026-10-06, DEC-036) 얼굴 인식은 기숙사 용도로 고정한다. */
 const PURPOSE: Purpose = "dorm";
-
-/** 인식에 실패한 순간 위쪽 가운데 토스트로 잠깐 보이는 문구. 신원을 붙이지 않는다(REQ-FACE-005). */
-const FAILURE_MESSAGE = "인식 실패";
 
 /** 인식 서버에 연결하지 못했을 때(다시 시도 버튼과 함께 보인다). */
 const SERVER_FAILED_MESSAGE = "불러오지 못했어요";
@@ -59,7 +56,7 @@ type FaceRecognitionViewProps = {
 /**
  * REQ-FACE-004: 진입하면 카메라가 자동으로 켜지고 인식 세션이 시작된다. 페이지를 벗어나면 정리된다.
  * 화면은 카메라 패널 하나와 오른쪽 위 층 탭이다. 층을 바꿔도 카메라·세션은 그대로다(서버 세션에 층이 없다, DEC-100).
- * 용도 탭·전체화면·최근 인식 목록은 없다(DEC-036).
+ * 용도 탭·전체화면은 없다(DEC-036). 최근 인식 목록은 DEC-108.
  */
 function FaceRecognitionView({
   floor,
@@ -73,21 +70,6 @@ function FaceRecognitionView({
     floor,
   });
 
-  // 성공(`성공 · 학번 이름`)은 학생마다 토스트로 잠깐 보인다(REQ-FACE-006·007, DEC-101). 카메라가 안 켜졌으면 서버 오류 토스트는 숨긴다.
-  const { showToast } = useToast();
-  const success = recognition.success;
-  useEffect(() => {
-    for (const label of success) {
-      showToast({ variant: "success", message: successMessage(label) });
-    }
-  }, [success, showToast]);
-  // 이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 이미 처리됐다고 안내한다(DEC-073).
-  const alreadyDone = recognition.alreadyDone;
-  useEffect(() => {
-    for (const label of alreadyDone) {
-      showToast({ variant: "neutral", message: alreadyDoneMessage(label) });
-    }
-  }, [alreadyDone, showToast]);
   const serverFailed = recognition.status === "error" && status !== "error";
 
   return (
@@ -105,10 +87,12 @@ function FaceRecognitionView({
       </div>
 
       {/*
-        모든 상태 메시지는 토스트(위쪽 가운데)로 보인다. 상태가 풀릴 때까지 유지하는 한 자리(`toast`)는 인식 서버 연결 실패
-        (다시 시도 버튼) > QR 안내 > 인식 실패 > 429 `잠시 후 다시 시도` 순서로 하나만 보이고, 성공은 따로 잠깐 떴다 사라진다.
+        상태 안내는 토스트(위쪽 가운데)로 보인다. 상태가 풀릴 때까지 유지하는 한 자리는 인식 서버 연결 실패
+        (다시 시도 버튼) > QR 안내 > 429 `잠시 후 다시 시도` 순서로 하나만 보인다. 성공·실패 결과는 최근 인식 목록에 남는다.
       */}
       <ToastLayer
+        stacked={false}
+        position="top-right"
         toast={
           serverFailed
             ? {
@@ -118,16 +102,21 @@ function FaceRecognitionView({
               }
             : recognition.qrNotice
               ? { variant: "error", message: QR_NOTICE_MESSAGE }
-              : recognition.failure
-                ? { variant: "error", message: FAILURE_MESSAGE }
-                : recognition.rateLimited
-                  ? { variant: "neutral", message: RATE_LIMIT_MESSAGE }
-                  : null
+              : recognition.rateLimited
+                ? { variant: "neutral", message: RATE_LIMIT_MESSAGE }
+                : null
         }
       />
 
-      <div className="flex min-h-0 w-full flex-1">
-        <CameraPanel videoRef={videoRef} status={status} mirrored={mirrored} />
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-3.5 overflow-y-auto md:gap-4 xl:flex-row xl:gap-5">
+        <div className="flex min-h-[240px] w-full flex-1">
+          <CameraPanel
+            videoRef={videoRef}
+            status={status}
+            mirrored={mirrored}
+          />
+        </div>
+        <RecentRecognitions entries={recognition.recent} />
       </div>
     </div>
   );
