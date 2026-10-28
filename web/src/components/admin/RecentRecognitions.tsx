@@ -12,7 +12,7 @@ const RESULT: Record<
   alreadyDone: {
     text: "이미 처리",
     dot: "bg-admin-textMuted",
-    pill: "border-admin-absence-border bg-admin-absence-bg text-admin-absence-text",
+    pill: "border-admin-absence-border bg-admin-absence-bg text-admin-textSecondary",
   },
   failure: {
     text: "실패",
@@ -29,14 +29,14 @@ export function RecentRecognitions({ entries }: { entries: RecentEntry[] }) {
   return (
     <section
       aria-label="최근 인식"
-      className="flex h-[260px] w-full shrink-0 flex-col gap-3 rounded-[18px] bg-admin-surface p-4 md:p-5 xl:h-auto xl:w-[420px] xl:rounded-[20px] xl:p-6"
+      className="flex h-[260px] w-full shrink-0 flex-col gap-3 rounded-[18px] bg-admin-surface p-4 md:h-[360px] md:p-5 xl:h-auto xl:w-[420px] xl:rounded-[20px] xl:p-6"
     >
       <h2 className="text-sm font-bold text-admin-text md:text-base">
         최근 인식
       </h2>
       <ul
         aria-live="polite"
-        className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto"
+        className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto [scrollbar-color:rgb(var(--admin-border))_transparent] [scrollbar-width:thin]"
       >
         {entries.map(({ id, kind, label, time }) => (
           <li
