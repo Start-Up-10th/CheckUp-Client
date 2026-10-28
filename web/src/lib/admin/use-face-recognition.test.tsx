@@ -272,6 +272,25 @@ describe("useFaceRecognition 프레임 전송", () => {
     expect(gateway.sendFrame).toHaveBeenCalledTimes(2);
   });
 
+  it("간격은 전송을 시작한 시각부터 센다: 응답이 늦은 만큼 덜 쉰다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi.fn(
+        () =>
+          new Promise<FaceFrameResult>((resolve) =>
+            setTimeout(() => resolve(frameOf([])), 100),
+          ),
+      ),
+    });
+    setup(gateway);
+    await tick();
+    expect(gateway.sendFrame).toHaveBeenCalledTimes(1);
+
+    await tick(FRAME_INTERVAL_MS - 1);
+    expect(gateway.sendFrame).toHaveBeenCalledTimes(1);
+    await tick(1);
+    expect(gateway.sendFrame).toHaveBeenCalledTimes(2);
+  });
+
   it("영상이 아직 준비되지 않아 프레임이 없으면 보내지 않고 기다린다", async () => {
     const gateway = makeGateway();
     const wrapper = ({ children }: { children: ReactNode }) => (
