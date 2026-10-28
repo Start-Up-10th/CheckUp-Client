@@ -24,8 +24,8 @@ import type { Purpose } from "@/lib/admin/purpose";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import { RateLimitedError } from "@/lib/rate-limit";
 
-/** 응답이 온 뒤 다음 프레임을 보내기까지의 간격. 서버 최소 간격(200ms)보다 넉넉히 둔다. */
-export const FRAME_INTERVAL_MS = 500;
+/** 프레임 전송을 시작한 시각부터 다음 프레임을 보내기까지의 간격. 서버 최소 간격(200ms, 이전 프레임 시작 시각 기준)보다 넉넉히 둔다. */
+export const FRAME_INTERVAL_MS = 250;
 /** 그 밖의 실패 뒤 다시 보내기까지 기다리는 시간. */
 export const ERROR_BACKOFF_MS = 2000;
 /** 연속 실패가 이만큼 쌓이면 오류 상태로 알린다. */
@@ -153,6 +153,7 @@ export function useFaceRecognition({
         if (cancelled) break;
         let delay = intervalMs;
         if (frame) {
+          const sentAt = Date.now();
           try {
             const result = await gateway.sendFrame(
               sessionId,
@@ -161,6 +162,8 @@ export function useFaceRecognition({
             );
             if (cancelled) break;
             failures = 0;
+            // 응답이 오래 걸렸으면 그만큼 덜 쉰다. 서버는 전송 시작 시각부터 최소 간격을 센다.
+            delay = Math.max(0, intervalMs - (Date.now() - sentAt));
             setRateLimited(false);
             const now = new Date();
             const outcome = applyFrame(state, result.faces, now);
