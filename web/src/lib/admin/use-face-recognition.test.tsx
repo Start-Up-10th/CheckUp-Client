@@ -535,6 +535,60 @@ describe("useFaceRecognition 결과", () => {
     });
   });
 
+  it("카메라가 끊겼다 돌아와 세션을 새로 만들어도 목록을 남긴다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn<FaceGateway["sendFrame"]>()
+        .mockResolvedValueOnce(frameOf([known()]))
+        .mockResolvedValue(frameOf([])),
+    });
+    const { result, rerender } = setup(gateway);
+    await tick();
+    expect(labels(result)).toEqual(["2405 김도현"]);
+
+    rerender({ cameraReady: false, purpose: "dorm", floor: 3 });
+    await tick();
+    rerender({ cameraReady: true, purpose: "dorm", floor: 3 });
+    await tick();
+
+    expect(gateway.createSession).toHaveBeenCalledTimes(2);
+    expect(labels(result)).toEqual(["2405 김도현"]);
+  });
+
+  it("재시도로 세션을 새로 만들어도 목록을 남긴다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn<FaceGateway["sendFrame"]>()
+        .mockResolvedValueOnce(frameOf([known()]))
+        .mockResolvedValue(frameOf([])),
+    });
+    const { result } = setup(gateway);
+    await tick();
+
+    act(() => result.current.retry());
+    await tick();
+
+    expect(gateway.createSession).toHaveBeenCalledTimes(2);
+    expect(labels(result)).toEqual(["2405 김도현"]);
+  });
+
+  it("층을 바꾸면 목록을 비운다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn<FaceGateway["sendFrame"]>()
+        .mockResolvedValueOnce(frameOf([known()]))
+        .mockResolvedValue(frameOf([])),
+    });
+    const { result, rerender } = setup(gateway);
+    await tick();
+    expect(labels(result)).toEqual(["2405 김도현"]);
+
+    rerender({ cameraReady: true, purpose: "dorm", floor: 4 });
+    await tick();
+
+    expect(result.current.recent).toEqual([]);
+  });
+
   it("매일 08:00이 되면 새 결과가 없어도 목록을 비운다", async () => {
     vi.setSystemTime(new Date(2026, 9, 28, 7, 59, 0));
     const gateway = makeGateway({
