@@ -423,6 +423,24 @@ describe("useFaceRecognition 프레임 전송", () => {
     expect(result.current.recent).toHaveLength(2);
   });
 
+  it("서버 오류는 코드와 함께 진단 로그에 최근 것이 위로 남는다", async () => {
+    const gateway = makeGateway({
+      sendFrame: vi
+        .fn()
+        .mockRejectedValueOnce(new FaceApiError(503, "FACE_AI_UNAVAILABLE"))
+        .mockRejectedValueOnce(new RateLimitedError(1000))
+        .mockResolvedValue(frameOf([])),
+    });
+    const { result } = setup(gateway);
+
+    await tick(ERROR_BACKOFF_MS + 1000);
+
+    expect(result.current.logs.map((entry) => entry.message)).toEqual([
+      "429 요청이 너무 많음, 1000ms 뒤 다시 보냄",
+      "프레임 실패: 503 FACE_AI_UNAVAILABLE (연속 1회)",
+    ]);
+  });
+
   it("연속 실패가 쌓이면 error가 되고 성공하면 횟수를 다시 센다", async () => {
     const gateway = makeGateway({
       sendFrame: vi.fn().mockRejectedValue(new FaceApiError(503, null)),
