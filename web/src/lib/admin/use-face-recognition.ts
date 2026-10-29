@@ -30,8 +30,6 @@ export const FRAME_INTERVAL_MS = 250;
 export const ERROR_BACKOFF_MS = 2000;
 /** 연속 실패가 이만큼 쌓이면 오류 상태로 알린다. */
 export const MAX_CONSECUTIVE_FAILURES = 5;
-/** QR 안내를 유지하는 시간. 얼굴이 잠깐 사라져도 깜빡이지 않게 한다. */
-export const QR_NOTICE_HOLD_MS = 8000;
 
 /** 서버가 프레임 요청에서 세션이 없거나 종료됐다고 알리는 오류 코드. */
 const SESSION_GONE_CODE = "FACE_SESSION_NOT_FOUND";
@@ -68,7 +66,7 @@ type Options = {
 
 /**
  * REQ-FACE-004·006·007: 관리자 카메라 얼굴 인식. 카메라가 준비되면 서버에 세션을 만들고, 응답이 올 때마다
- * 프레임을 한 장씩(겹치지 않게) 보낸 뒤 결과를 최근 인식 목록과 QR 안내로 알린다(DEC-108). 화면을
+ * 프레임을 한 장씩(겹치지 않게) 보낸 뒤 결과를 최근 인식 목록으로 알린다(DEC-108). 화면을
  * 떠나면 그 세션만 종료하고 카메라 자체는 건드리지 않는다. 프레임은 저장하지 않는다.
  */
 export function useFaceRecognition({
@@ -82,7 +80,6 @@ export function useFaceRecognition({
   const gateway = useFaceGateway();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [status, setStatus] = useState<FaceSessionStatus>("starting");
-  const [qrNotice, setQrNotice] = useState(false);
   // 최근 인식 목록(최대 30개, DEC-108). 화면 메모리에만 두고, 층·용도를 바꾸면 비운다.
   const [recent, setRecent] = useState<RecentEntry[]>([]);
   // 서버가 요청이 너무 많다고(429) 한 동안 true다. 다음 프레임 응답이 오면 false로 돌아온다.
@@ -116,7 +113,6 @@ export function useFaceRecognition({
     let closedSessionId: string | null = null;
     let state = INITIAL_RECOGNITION;
     const timers = new Set<ReturnType<typeof setTimeout>>();
-    let qrTimer: ReturnType<typeof setTimeout> | undefined;
 
     function sleep(ms: number): Promise<void> {
       return new Promise((resolve) => {
@@ -126,17 +122,6 @@ export function useFaceRecognition({
         }, ms);
         timers.add(timer);
       });
-    }
-
-    function hold(
-      show: () => void,
-      hide: () => void,
-      ms: number,
-      previous: ReturnType<typeof setTimeout> | undefined,
-    ) {
-      clearTimeout(previous);
-      show();
-      return setTimeout(hide, ms);
     }
 
     const takeFrame =
@@ -206,14 +191,6 @@ export function useFaceRecognition({
             state = outcome.state;
             const added = newEntries(outcome, now);
             setRecent((list) => addRecent(list, added));
-            if (outcome.qrRecommended) {
-              qrTimer = hold(
-                () => setQrNotice(true),
-                () => setQrNotice(false),
-                QR_NOTICE_HOLD_MS,
-                qrTimer,
-              );
-            }
           } catch (error) {
             if (cancelled) break;
             if (error instanceof AdminUnauthorizedError) {
@@ -276,7 +253,6 @@ export function useFaceRecognition({
     // 재시도마다 새 세션이므로 이전 세션의 상태를 비운다. 최근 인식 목록은 층·용도가 바뀔 때만 비운다(DEC-108).
     /* eslint-disable react-hooks/set-state-in-effect */
     setStatus("starting");
-    setQrNotice(false);
     setRateLimited(false);
     /* eslint-enable react-hooks/set-state-in-effect */
     void run();
@@ -295,7 +271,6 @@ export function useFaceRecognition({
       cancelled = true;
       window.removeEventListener("pagehide", closeCurrentSession);
       timers.forEach(clearTimeout);
-      clearTimeout(qrTimer);
       closeCurrentSession();
     };
   }, [
@@ -311,7 +286,6 @@ export function useFaceRecognition({
 
   return {
     status,
-    qrNotice,
     recent,
     rateLimited,
     logs,
