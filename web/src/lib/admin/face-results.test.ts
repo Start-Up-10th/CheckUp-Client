@@ -46,10 +46,9 @@ function run(state: RecognitionState, faces: FaceResult[], at: Date = NOW) {
 
 describe("applyFrame 성공", () => {
   it("KNOWN은 `학번 이름` 성공을 알린다", () => {
-    const { success, failure } = run(INITIAL_RECOGNITION, [known()]);
+    const { success } = run(INITIAL_RECOGNITION, [known()]);
 
     expect(success).toEqual(["2405 김도현"]);
-    expect(failure).toBe(0);
   });
 
   it("이미 출석해 있던 학생(DUPLICATE)은 성공이 아니라 이미 처리됨으로 알린다", () => {
@@ -128,46 +127,22 @@ describe("applyFrame 성공", () => {
     ]);
 
     expect(outcome.success).toEqual([]);
-    expect(outcome.failure).toBe(0);
     expect(outcome.qrRecommended).toBe(false);
   });
 });
 
-describe("applyFrame 실패 표시", () => {
-  it("트랙의 시도 횟수가 늘었을 때만 failure다", () => {
-    const first = run(INITIAL_RECOGNITION, [unknown("t1", 1)]);
-    const same = run(first.state, [unknown("t1", 1)]);
-    const next = run(same.state, [unknown("t1", 2)]);
+describe("applyFrame 인식 실패", () => {
+  it("UNKNOWN은 목록에 남길 결과를 만들지 않는다(DEC-110)", () => {
+    const outcome = run(INITIAL_RECOGNITION, [unknown("t1", 1)]);
 
-    expect([first.failure, same.failure, next.failure]).toEqual([1, 0, 1]);
-  });
-
-  it("화면에서 사라진 트랙은 기억 시간 안에서만 시도 횟수를 이어 센다", () => {
-    const first = run(INITIAL_RECOGNITION, [unknown("t1", 2)]);
-    const soon = run(
-      first.state,
-      [unknown("t1", 2)],
-      new Date(NOW.getTime() + TRACK_MEMORY_MS),
-    );
-    const later = run(
-      first.state,
-      [unknown("t1", 2)],
-      new Date(NOW.getTime() + TRACK_MEMORY_MS + 1),
-    );
-
-    expect(soon.failure).toBe(0);
-    expect(later.failure).toBe(1);
+    expect(outcome.success).toEqual([]);
+    expect(outcome.alreadyDone).toEqual([]);
   });
 
   it("한 프레임의 여러 얼굴은 서로 섞이지 않는다", () => {
     const outcome = run(INITIAL_RECOGNITION, [known(), unknown("t1", 1)]);
 
     expect(outcome.success).toEqual(["2405 김도현"]);
-    expect(outcome.failure).toBe(1);
-  });
-
-  it("성공만 있는 프레임은 failure가 아니다", () => {
-    expect(run(INITIAL_RECOGNITION, [known()]).failure).toBe(0);
   });
 });
 
@@ -225,15 +200,6 @@ describe("한 프레임에 여러 명", () => {
   it("성공한 학생을 모두 알린다(상한 없음)", () => {
     expect(run(INITIAL_RECOGNITION, many(7)).success).toHaveLength(7);
   });
-
-  it("실패한 얼굴 수를 센다", () => {
-    const outcome = run(INITIAL_RECOGNITION, [
-      unknown("a", 1),
-      unknown("b", 1),
-    ]);
-
-    expect(outcome.failure).toBe(2);
-  });
 });
 
 describe("newEntries·addRecent", () => {
@@ -241,20 +207,19 @@ describe("newEntries·addRecent", () => {
   const none = {
     success: [] as string[],
     alreadyDone: [] as string[],
-    failure: 0,
   };
   const entries = (o: Partial<typeof none>, when = at) =>
     newEntries({ ...none, ...o }, when);
 
-  it("최근 것을 맨 위에 두고 시각을 `HH:mm`으로 남긴다. 실패에는 이름이 없다", () => {
+  it("최근 것을 맨 위에 두고 시각을 `HH:mm`으로 남긴다", () => {
     const first = addRecent([], entries({ success: ["2405 김도현"] }));
     const list = addRecent(
       first,
-      entries({ failure: 1 }, new Date(2026, 9, 28, 22, 6)),
+      entries({ alreadyDone: ["2406 이서준"] }, new Date(2026, 9, 28, 22, 6)),
     );
 
     expect(list.map(({ kind, label, time }) => [kind, label, time])).toEqual([
-      ["failure", undefined, "22:06"],
+      ["alreadyDone", "2406 이서준", "22:06"],
       ["success", "2405 김도현", "22:04"],
     ]);
   });
@@ -262,15 +227,15 @@ describe("newEntries·addRecent", () => {
   it("새벽은 전날로 세고 08:00에 운영일이 바뀐다", () => {
     const night = addRecent(
       [],
-      entries({ failure: 1 }, new Date(2026, 9, 28, 23, 50)),
+      entries({ success: ["2405 김도현"] }, new Date(2026, 9, 28, 23, 50)),
     );
     const dawn = addRecent(
       night,
-      entries({ failure: 1 }, new Date(2026, 9, 29, 7, 59)),
+      entries({ success: ["2405 김도현"] }, new Date(2026, 9, 29, 7, 59)),
     );
     const morning = addRecent(
       dawn,
-      entries({ failure: 1 }, new Date(2026, 9, 29, 8, 0)),
+      entries({ success: ["2405 김도현"] }, new Date(2026, 9, 29, 8, 0)),
     );
 
     expect(dawn).toHaveLength(2);
@@ -288,17 +253,17 @@ describe("newEntries·addRecent", () => {
   });
 
   it("날짜가 바뀌면 지난 날의 줄은 지운다", () => {
-    const prev = addRecent([], entries({ failure: 1 }));
+    const prev = addRecent([], entries({ success: ["2405 김도현"] }));
     const next = addRecent(
       prev,
-      entries({ failure: 1 }, new Date(2026, 9, 29, 8, 0)),
+      entries({ success: ["2405 김도현"] }, new Date(2026, 9, 29, 8, 0)),
     );
 
     expect(next.map((entry) => entry.day)).toEqual(["2026-10-29"]);
   });
 
   it("결과가 없으면 목록을 그대로 둔다", () => {
-    const prev = addRecent([], entries({ failure: 1 }));
+    const prev = addRecent([], entries({ success: ["2405 김도현"] }));
 
     expect(addRecent(prev, entries({}))).toBe(prev);
   });
@@ -310,10 +275,10 @@ describe("newEntries·addRecent", () => {
         success: Array.from({ length: MAX_RECENT }, (_, i) => `n${i}`),
       }),
     );
-    const list = addRecent(full, entries({ failure: 1 }));
+    const list = addRecent(full, entries({ success: ["2405 김도현"] }));
 
     expect(list).toHaveLength(MAX_RECENT);
-    expect(list[0].kind).toBe("failure");
+    expect(list[0].label).toBe("2405 김도현");
     expect(list.at(-1)?.label).toBe(`n${MAX_RECENT - 2}`);
   });
 });

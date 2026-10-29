@@ -407,32 +407,19 @@ describe("useFaceRecognition 프레임 전송", () => {
     expect(result.current.status).toBe("error");
   });
 
-  it("세션을 새로 만들면 이전 세션의 트랙 시도 기록을 버려 새 실패가 가려지지 않는다", async () => {
-    const failFrame = (attempts: number) =>
-      frameOf([
-        { trackId: "a", status: "UNKNOWN", attempts, qrRecommended: false },
-      ]);
-    // 새 세션의 첫 프레임 응답을 첫 실패 표시가 사라진 뒤에 돌려줘서 두 번째 실패가 새로 세어지는지 본다.
-    let release: () => void = () => {};
-    const delayed = new Promise<FaceFrameResult>((resolve) => {
-      release = () => resolve(failFrame(1));
-    });
+  it("세션을 새로 만들면 이전 세션의 트랙 기록을 버려 새 성공이 가려지지 않는다", async () => {
     const gateway = makeGateway({
       sendFrame: vi
         .fn()
-        .mockResolvedValueOnce(failFrame(2))
+        .mockResolvedValueOnce(frameOf([known()]))
         .mockRejectedValueOnce(new FaceApiError(404, "FACE_SESSION_NOT_FOUND"))
-        .mockReturnValueOnce(delayed)
+        .mockResolvedValueOnce(frameOf([known()]))
         .mockResolvedValue(frameOf([])),
     });
     const { result } = setup(gateway);
 
+    // 새 세션의 같은 트랙 id도 새 얼굴로 보고 성공을 다시 남긴다.
     await tick(FRAME_INTERVAL_MS * 3);
-    expect(result.current.recent).toHaveLength(1);
-
-    // 새 세션의 같은 트랙 id가 attempts 1로 시작해도 새 시도로 센다.
-    await act(async () => release());
-    await tick();
     expect(result.current.recent).toHaveLength(2);
   });
 
@@ -606,7 +593,7 @@ describe("useFaceRecognition 결과", () => {
     expect(result.current.recent).toHaveLength(0);
   });
 
-  it("실패는 신원 없이 목록에 남긴다", async () => {
+  it("인식 실패는 목록에 남기지 않는다(DEC-110)", async () => {
     const gateway = makeGateway({
       sendFrame: vi
         .fn<FaceGateway["sendFrame"]>()
@@ -625,8 +612,8 @@ describe("useFaceRecognition 결과", () => {
     const { result } = setup(gateway);
     await tick();
 
-    expect(result.current.recent[0]).toMatchObject({ kind: "failure" });
-    expect(result.current.recent[0].label).toBeUndefined();
+    expect(gateway.sendFrame).toHaveBeenCalled();
+    expect(result.current.recent).toEqual([]);
   });
 
   it("서버가 QR을 권하면 안내를 켜고 일정 시간 뒤 끈다", async () => {
