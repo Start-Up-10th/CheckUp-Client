@@ -14,15 +14,10 @@ const RESULT: Record<
     dot: "bg-admin-textMuted",
     pill: "border-admin-absence-border bg-admin-absence-bg text-admin-textSecondary",
   },
-  failure: {
-    text: "실패",
-    dot: "bg-admin-danger-text",
-    pill: "border-admin-danger-border bg-admin-danger-bg text-admin-danger-text",
-  },
 };
 
 /**
- * REQ-FACE-007: 최근 인식 목록. 최근 것이 위에 오고, 넘치면 안에서 스크롤한다(최대 30개, DEC-108).
+ * REQ-FACE-007: 최근 인식 목록(성공·이미 처리됨, DEC-110). 최근 것이 위에 오고, 넘치면 안에서 스크롤한다(최대 30개, DEC-108).
  * 컴퓨터(xl)는 카메라 오른쪽, 패드·휴대폰은 카메라 아래에 둔다.
  */
 export function RecentRecognitions({ entries }: { entries: RecentEntry[] }) {
@@ -49,7 +44,7 @@ export function RecentRecognitions({ entries }: { entries: RecentEntry[] }) {
                 className={`size-2 shrink-0 rounded-full ${RESULT[kind].dot}`}
               />
               <span className="min-w-0 truncate font-medium text-admin-text">
-                {kind === "failure" ? "인식 실패" : label}
+                {label}
               </span>
             </span>
             <span
