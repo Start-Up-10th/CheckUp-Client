@@ -127,42 +127,12 @@ describe("AdminFaceRecognition", () => {
     ).toBeNull();
   });
 
-  it("서버가 QR을 권하면 안내 문구를 보여 주고 시간이 지나면 사라진다", async () => {
-    const gateway = createMockFaceGateway([[]]);
-    vi.spyOn(gateway, "sendFrame")
-      .mockResolvedValueOnce({ frameId: "f", faces: [unknown(4)] })
-      .mockResolvedValue({ frameId: "f", faces: [] });
-    renderWith(gateway);
+  it("같은 얼굴이 여러 번 실패해도 QR 안내 토스트는 없고 목록에도 남지 않는다(DEC-112)", async () => {
+    renderWith(createMockFaceGateway([[unknown(4)]]));
     await tick();
 
-    expect(
-      screen.getByText("인식 실패 · 3회 초과 시 QR로 출석"),
-    ).toBeInTheDocument();
-
-    await tick(10_000);
-    // 사라지는 애니메이션(200ms) 동안은 마지막 토스트를 그린다.
-    await tick(300);
-    expect(
-      screen.queryByText("인식 실패 · 3회 초과 시 QR로 출석"),
-    ).not.toBeInTheDocument();
-  });
-
-  it("실패가 3회 미만이면 QR 안내를 하지 않는다", async () => {
-    renderWith(createMockFaceGateway([[unknown(2)]]));
-    await tick();
-
-    expect(
-      screen.queryByText("인식 실패 · 3회 초과 시 QR로 출석"),
-    ).not.toBeInTheDocument();
-  });
-
-  it("3회 실패하면 QR 안내 토스트는 뜨고 실패는 목록에 남지 않는다", async () => {
-    renderWith(createMockFaceGateway([[unknown(3)]]));
-    await tick();
-
-    expect(
-      screen.getByText("인식 실패 · 3회 초과 시 QR로 출석"),
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/QR로 출석/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).toBeNull();
     expect(
       within(screen.getByRole("region", { name: "최근 인식" })).queryAllByRole(
         "listitem",

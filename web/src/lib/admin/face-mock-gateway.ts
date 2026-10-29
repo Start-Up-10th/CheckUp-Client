@@ -22,7 +22,7 @@ function unknown(trackId: string, attempts: number): FaceResult {
   };
 }
 
-/** 확인용 페이지가 돌려주는 프레임 순서. 성공 → 실패 → 한 프레임에 성공·실패 → QR 안내까지의 실패 누적이다. */
+/** 확인용 페이지가 돌려주는 프레임 순서. 성공 → 실패 → 한 프레임에 성공·실패 → 같은 얼굴의 실패 누적이다. */
 const DEMO_FRAMES: FaceResult[][] = [
   [],
   [known(2405, "김도현")],

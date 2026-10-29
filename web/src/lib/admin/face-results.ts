@@ -64,8 +64,6 @@ export function addRecent(
 
 /** 화면에서 사라진 얼굴 트랙을 기억하는 시간. 잠깐 놓쳤다 돌아와도 같은 안내를 되풀이하지 않는다. */
 export const TRACK_MEMORY_MS = 30_000;
-/** 한 얼굴이 이만큼 실패하면 QR 출석 안내를 보인다. */
-export const QR_NOTICE_ATTEMPTS = 3;
 
 export type RecognitionState = {
   /**
@@ -85,16 +83,14 @@ export type FrameOutcome = {
   success: string[];
   /** 이번 프레임에서 이미 출석 처리돼 있던 학생을 다시 인식한 얼굴마다의 `학번 이름`. 없으면 빈 목록(DEC-073). */
   alreadyDone: string[];
-  /** 이번 프레임의 얼굴 중 QR 출석을 안내해야 하는 얼굴이 있는가(REQ-FACE-006). */
-  qrRecommended: boolean;
 };
 
 /**
- * 프레임 한 장의 인식 결과를 성공·이미 처리됨·QR 안내로 가른다(REQ-FACE-005~007). 순수 함수다.
+ * 프레임 한 장의 인식 결과를 성공·이미 처리됨으로 가른다(REQ-FACE-005~007). 순수 함수다.
  * - KNOWN이고 출석이 이번에 기록됐으면(RECORDED) 성공이다. 이미 출석해 있던 학생(DUPLICATE)은 성공이 아니라 `이미 처리됐어요`로
  *   알린다. 같은 트랙에서 한 번 알렸으면(성공이든 이미 처리됨이든) 다시 알리지 않는다. 서버가 거절한 출석(STALE·REJECTED)은
  *   아무 것도 하지 않는다.
- * - UNKNOWN은 목록에 남기지 않고(DEC-110), 같은 얼굴이 반복해 실패하면 QR 안내만 한다.
+ * - UNKNOWN은 목록에 남기지 않고(DEC-110) QR 안내도 하지 않는다(DEC-112).
  * - NOT_ATTEMPTED는 아직 시도하지 않은 얼굴이라 아무 것도 하지 않는다.
  * 얼굴마다 따로 처리해 서로의 이름을 섞지 않는다.
  */
@@ -110,7 +106,6 @@ export function applyFrame(
   }
   const success: string[] = [];
   const alreadyDone: string[] = [];
-  let qrRecommended = false;
 
   for (const face of faces) {
     const done = tracks[face.trackId]?.done === true;
@@ -118,14 +113,6 @@ export function applyFrame(
       seenAt: nowMs,
       ...(done ? { done: true } : {}),
     };
-    // 서버 권고가 없어도 같은 얼굴이 3회 실패하면 QR 안내를 보인다(사용자 결정 2026-10-06, DEC-004 수정).
-    if (
-      face.status === "UNKNOWN" &&
-      (face.qrRecommended || face.attempts >= QR_NOTICE_ATTEMPTS)
-    ) {
-      qrRecommended = true;
-    }
-
     if (
       face.status === "KNOWN" &&
       face.studentNumber !== undefined &&
@@ -147,6 +134,5 @@ export function applyFrame(
     state: { tracks },
     success,
     alreadyDone,
-    qrRecommended,
   };
 }
