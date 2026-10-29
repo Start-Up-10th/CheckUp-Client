@@ -287,7 +287,7 @@
       "then": [
         "같은 트랙이 3회 실패하면 QR 안내 토스트가 뜨고 인식 실패는 최근 인식 목록에 남지 않는다",
         "영상 프레임을 각각 실패로 세지 않는다",
-        "트랙 간 횟수가 섞이지 않고 성공/이탈 때 정리된다"
+        "트랙별 시도 횟수는 서버가 세고 웹은 그 값(attempts·qrRecommended)으로 QR 안내만 하며 트랙 간 결과를 섞지 않는다"
       ],
       "status": "implemented",
       "implementation": [
@@ -314,7 +314,8 @@
         "LIVE가 표시되고 성공은 최근 인식 목록에 학번 이름으로 남는다",
         "이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 이미 처리로 남고 같은 얼굴에서 되풀이되지 않는다",
         "전체화면 버튼·용도 탭은 없다",
-        "미식별 실패는 최근 인식 목록에 남지 않는다"
+        "미식별 실패는 최근 인식 목록에 남지 않는다",
+        "서버 오류·429·세션 사라짐·느린 응답은 신원 없이 진단 로그에 최대 20개 남는다"
       ],
       "status": "implemented",
       "implementation": [
@@ -324,7 +325,8 @@
       ],
       "evidence": [
         "web/src/components/admin/CameraPanel.test.tsx",
-        "web/src/components/admin/AdminFaceRecognition.test.tsx"
+        "web/src/components/admin/AdminFaceRecognition.test.tsx",
+        "web/src/lib/admin/use-face-recognition.test.tsx"
       ]
     },
     {

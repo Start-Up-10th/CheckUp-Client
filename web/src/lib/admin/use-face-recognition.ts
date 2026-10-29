@@ -38,6 +38,22 @@ const SESSION_GONE_CODE = "FACE_SESSION_NOT_FOUND";
 
 export type FaceSessionStatus = "starting" | "running" | "error";
 
+// shortcut: 서버 오류를 화면에서 확인하려는 임시 진단 로그다. 서버 쪽 오류 기록이 생기면 없앤다.
+/** 진단 로그 최대 개수. 넘으면 오래된 것부터 지운다. */
+export const MAX_DIAGNOSTIC_LOGS = 20;
+/** 이보다 오래 걸린 프레임 응답은 느린 응답으로 남긴다. 느린 응답이 이어지면 처음 한 번만 남겨 앞선 오류를 밀어내지 않는다. */
+export const SLOW_RESPONSE_MS = 1000;
+
+/** 진단 로그 한 줄. 신원·프레임은 담지 않고 시각과 오류 요약만 둔다. */
+export type DiagnosticLog = { id: string; time: string; message: string };
+
+function describeError(error: unknown): string {
+  if (error instanceof FaceApiError)
+    return `${error.status} ${error.code ?? "코드 없음"}`;
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
 type Options = {
   videoRef: RefObject<HTMLVideoElement | null>;
   /** 카메라 허용을 받은 뒤에만 세션을 만든다. 허용 전에는 프레임을 보내지 않는다(REQ-FACE-004). */
@@ -71,6 +87,8 @@ export function useFaceRecognition({
   const [recent, setRecent] = useState<RecentEntry[]>([]);
   // 서버가 요청이 너무 많다고(429) 한 동안 true다. 다음 프레임 응답이 오면 false로 돌아온다.
   const [rateLimited, setRateLimited] = useState(false);
+  // 최근 것이 위. 세션을 새로 만들어도 남겨 실패 원인을 이어 볼 수 있게 한다.
+  const [logs, setLogs] = useState<DiagnosticLog[]>([]);
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((count) => count + 1), []);
 
@@ -128,12 +146,20 @@ export function useFaceRecognition({
         return captureFrame(video, canvasRef.current);
       });
 
+    function log(message: string) {
+      const time = new Date().toTimeString().slice(0, 8);
+      const entry = { id: crypto.randomUUID(), time, message };
+      setLogs((list) => [entry, ...list].slice(0, MAX_DIAGNOSTIC_LOGS));
+    }
+
     function fail(error: unknown) {
       if (error instanceof AdminUnauthorizedError) {
         redirectToAdminLogin();
         return;
       }
-      if (!cancelled) setStatus("error");
+      if (cancelled) return;
+      log(`인식 중단: ${describeError(error)}`);
+      setStatus("error");
     }
 
     async function run() {
@@ -151,6 +177,7 @@ export function useFaceRecognition({
       setStatus("running");
 
       let failures = 0;
+      let slow = false;
       while (!cancelled && sessionId) {
         const video = videoRef.current;
         const frame = video ? await takeFrame(video) : null;
@@ -166,6 +193,11 @@ export function useFaceRecognition({
             );
             if (cancelled) break;
             failures = 0;
+            const elapsed = Date.now() - sentAt;
+            if (elapsed >= SLOW_RESPONSE_MS && !slow) {
+              log(`느린 응답: ${elapsed}ms`);
+            }
+            slow = elapsed >= SLOW_RESPONSE_MS;
             // 응답이 오래 걸렸으면 그만큼 덜 쉰다. 간격은 전송 시작 시각부터 센다.
             delay = Math.max(0, intervalMs - (Date.now() - sentAt));
             setRateLimited(false);
@@ -195,6 +227,9 @@ export function useFaceRecognition({
               // 세션이 서버에서 사라졌다(유휴 정리 등). 새 세션을 만들어 이어 가되, 계속 사라지면 무한히 만들지
               // 않도록 실패로 세고 간격을 둔다. 라우트가 없는 404 등 다른 404는 이 경우가 아니다.
               failures += 1;
+              log(
+                `세션 사라짐(${SESSION_GONE_CODE}), 새 세션을 만듦 (연속 ${failures}회)`,
+              );
               if (failures >= MAX_CONSECUTIVE_FAILURES) {
                 fail(error);
                 return;
@@ -220,8 +255,12 @@ export function useFaceRecognition({
               // 요청이 너무 많다는 안내(429)는 실패로 세지 않고 서버가 알려 준 시간(Retry-After, 없으면 1초)만큼 기다린다.
               setRateLimited(true);
               delay = error.retryAfterMs;
+              log(`429 요청이 너무 많음, ${delay}ms 뒤 다시 보냄`);
             } else {
               failures += 1;
+              log(
+                `프레임 실패: ${describeError(error)} (${Date.now() - sentAt}ms, 연속 ${failures}회)`,
+              );
               if (failures >= MAX_CONSECUTIVE_FAILURES) {
                 fail(error);
                 return;
@@ -275,6 +314,7 @@ export function useFaceRecognition({
     qrNotice,
     recent,
     rateLimited,
+    logs,
     retry,
   };
 }
