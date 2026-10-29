@@ -5,7 +5,6 @@ import {
   addRecent,
   msUntilNextReset,
   newEntries,
-  QR_NOTICE_ATTEMPTS,
   TRACK_MEMORY_MS,
   applyFrame,
   type RecognitionState,
@@ -127,7 +126,6 @@ describe("applyFrame 성공", () => {
     ]);
 
     expect(outcome.success).toEqual([]);
-    expect(outcome.qrRecommended).toBe(false);
   });
 });
 
@@ -143,36 +141,6 @@ describe("applyFrame 인식 실패", () => {
     const outcome = run(INITIAL_RECOGNITION, [known(), unknown("t1", 1)]);
 
     expect(outcome.success).toEqual(["2405 김도현"]);
-  });
-});
-
-describe("applyFrame QR 안내", () => {
-  it("UNKNOWN 얼굴에 서버가 QR을 권하면 qrRecommended다", () => {
-    const { qrRecommended } = run(INITIAL_RECOGNITION, [
-      unknown("t1", 1, { qrRecommended: true }),
-    ]);
-
-    expect(qrRecommended).toBe(true);
-  });
-
-  it("서버 권고가 없어도 같은 얼굴이 3회 실패하면 QR을 안내한다", () => {
-    expect(
-      run(INITIAL_RECOGNITION, [unknown("t1", QR_NOTICE_ATTEMPTS - 1)])
-        .qrRecommended,
-    ).toBe(false);
-    expect(
-      run(INITIAL_RECOGNITION, [unknown("t1", QR_NOTICE_ATTEMPTS)])
-        .qrRecommended,
-    ).toBe(true);
-  });
-
-  it("성공한 얼굴이나 권하지 않은 얼굴은 QR을 안내하지 않는다", () => {
-    expect(
-      run(INITIAL_RECOGNITION, [
-        known({ qrRecommended: true }),
-        unknown("t1", 2),
-      ]).qrRecommended,
-    ).toBe(false);
   });
 });
 

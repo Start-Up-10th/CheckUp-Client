@@ -22,9 +22,6 @@ const PURPOSE: Purpose = "dorm";
 /** 인식 서버에 연결하지 못했을 때(다시 시도 버튼과 함께 보인다). */
 const SERVER_FAILED_MESSAGE = "불러오지 못했어요";
 
-/** REQ-FACE-006 문구. 서버가 한 얼굴의 인식을 반복해 놓쳤다고(qrRecommended) 알릴 때 보인다. */
-const QR_NOTICE_MESSAGE = "인식 실패 · 3회 초과 시 QR로 출석";
-
 type AdminFaceRecognitionProps = {
   /** 이 층으로 바로 들어간다. 없으면 층 선택 창을 먼저 보인다(DEC-100). */
   initialFloor?: Floor;
@@ -91,7 +88,7 @@ function FaceRecognitionView({
 
       {/*
         상태 안내는 토스트(오른쪽 위, DEC-107)로 보인다. 상태가 풀릴 때까지 유지하는 한 자리는 인식 서버 연결 실패
-        (다시 시도 버튼) > QR 안내 > 429 `잠시 후 다시 시도` 순서로 하나만 보인다. 성공·실패 결과는 최근 인식 목록에 남는다.
+        (다시 시도 버튼) > 429 `잠시 후 다시 시도` 순서로 하나만 보인다. 성공·이미 처리 결과는 최근 인식 목록에 남는다.
       */}
       <ToastLayer
         stacked={false}
@@ -103,11 +100,9 @@ function FaceRecognitionView({
                 message: SERVER_FAILED_MESSAGE,
                 action: { label: "다시 시도", onClick: recognition.retry },
               }
-            : recognition.qrNotice
-              ? { variant: "error", message: QR_NOTICE_MESSAGE }
-              : recognition.rateLimited
-                ? { variant: "neutral", message: RATE_LIMIT_MESSAGE }
-                : null
+            : recognition.rateLimited
+              ? { variant: "neutral", message: RATE_LIMIT_MESSAGE }
+              : null
         }
       />
 

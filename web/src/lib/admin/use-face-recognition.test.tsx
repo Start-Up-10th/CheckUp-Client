@@ -13,7 +13,6 @@ import {
   MAX_DIAGNOSTIC_LOGS,
   SLOW_RESPONSE_MS,
   MAX_CONSECUTIVE_FAILURES,
-  QR_NOTICE_HOLD_MS,
   useFaceRecognition,
 } from "./use-face-recognition";
 import { AdminUnauthorizedError } from "./qr-api";
@@ -666,28 +665,5 @@ describe("useFaceRecognition 결과", () => {
 
     expect(gateway.sendFrame).toHaveBeenCalled();
     expect(result.current.recent).toEqual([]);
-  });
-
-  it("서버가 QR을 권하면 안내를 켜고 일정 시간 뒤 끈다", async () => {
-    const gateway = makeGateway({
-      sendFrame: vi.fn(async () =>
-        frameOf([
-          {
-            trackId: "a",
-            status: "UNKNOWN",
-            attempts: 4,
-            qrRecommended: true,
-          },
-        ]),
-      ),
-    });
-    const { result } = setup(gateway);
-    await tick();
-    expect(result.current.qrNotice).toBe(true);
-
-    gateway.sendFrame.mockResolvedValue(frameOf([]));
-    await tick(QR_NOTICE_HOLD_MS);
-
-    expect(result.current.qrNotice).toBe(false);
   });
 });
