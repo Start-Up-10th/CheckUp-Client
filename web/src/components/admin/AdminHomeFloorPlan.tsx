@@ -9,9 +9,11 @@ import {
 import { FloorTabs } from "@/components/admin/FloorTabs";
 import { AttendanceStatCards } from "@/components/admin/AttendanceStatCards";
 import { RoomGrid } from "@/components/admin/RoomGrid";
+import { DutyCalendar } from "@/components/admin/DutyCalendar";
 import { RoomDetailDialog } from "@/components/admin/RoomDetailDialog";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { RoomAttendanceEditDialog } from "@/components/admin/RoomAttendanceEditDialog";
+import { operatingDayKey } from "@/lib/admin/operating-day";
 import { redirectToAdminLogin } from "@/lib/admin/admin-session";
 import {
   summarizeAttendance,
@@ -42,7 +44,32 @@ type DialogStage = "view" | "edit";
 
 /** 어떤 층·요청 차례(`attempt`)의 실패인지 함께 두어, 층을 바꾸거나 다시 시도했을 때 이전 실패를 쓰지 않는다. */
 /** 조회 실패. `rateLimited`는 429(요청이 너무 많음) 때문인지다. */
-type FloorFailure = { floor: Floor; attempt: number; rateLimited: boolean };
+type FloorFailure = {
+  floor: Floor;
+  date: string;
+  attempt: number;
+  rateLimited: boolean;
+};
+
+/** 층 현황 캐시의 키. 날짜마다 따로 둔다. */
+const cacheKey = (date: string, floor: Floor) => `${date}:${floor}`;
+
+/** 새 현황을 넣으면서 지금 보는 날과 오늘 것만 남겨, 본 날짜가 계속 쌓이지 않게 한다. */
+function putRooms(
+  prev: Partial<Record<string, Room[]>>,
+  date: string,
+  today: string,
+  floor: Floor,
+  rooms: Room[],
+) {
+  const next: Partial<Record<string, Room[]>> = {};
+  for (const [key, value] of Object.entries(prev)) {
+    if (key.startsWith(`${date}:`) || key.startsWith(`${today}:`))
+      next[key] = value;
+  }
+  next[cacheKey(date, floor)] = rooms;
+  return next;
+}
 
 /**
  * REQ-UI-001·002: 관리자 홈(전개도). 층 현황과 호실 명단은 서버(`RoomGateway`)에서 받는다. 호실 카드를 누르면 그 호실
@@ -54,11 +81,21 @@ export function AdminHomeFloorPlan() {
   // 서버에서 받은 층 현황과 다시 시도 차례. 호실 저장 결과는 받아 둔 현황에 바로 반영한다.
   const [attempt, setAttempt] = useState(0);
   // 층마다 마지막으로 받은 현황. 이미 본 층은 바로 보여 주고 뒤에서 다시 받아 갱신한다. 호실 저장 결과는 여기에 바로 반영한다.
-  const [byFloor, setByFloor] = useState<Partial<Record<Floor, Room[]>>>({});
-  // 지금 화면에 그려진 층. 새 층 현황이 오기 전에는 이전 층을 그대로 두고, 오면 제목·합계·격자를 한 번에 바꾼다.
-  const [shownFloor, setShownFloor] = useState<Floor | null>(null);
-  // 새 층이 `SKELETON_DELAY_MS`를 넘겨도 오지 않아 격자를 스켈레톤으로 바꿔야 하는 층.
-  const [slowFloor, setSlowFloor] = useState<Floor | null>(null);
+  const [byFloor, setByFloor] = useState<Partial<Record<string, Room[]>>>({});
+  // 보는 날 `YYYY-MM-DD`. 처음에는 오늘 운영일이고, 지난 날짜는 조회만 한다(수정은 오늘만).
+  const todayKey = operatingDayKey(new Date());
+  // 고른 지난 날짜. 없으면 오늘 운영일을 따라가, 화면을 연 채 08:00을 넘기면 새 운영일로 바뀐다.
+  const [picked, setPicked] = useState<string | null>(null);
+  const date = picked ?? todayKey;
+  const viewingPast = date !== todayKey;
+  // 오늘은 날짜 없이 요청해 기존 동작을 그대로 둔다. 층 현황 캐시는 날짜별로 나눈다.
+  const queryDate = viewingPast ? date : undefined;
+  // 지금 화면에 그려진 층·날짜. 새 현황이 오기 전에는 이전 것을 그대로 두고, 오면 제목·합계·격자를 한 번에 바꾼다.
+  const [shown, setShown] = useState<{ floor: Floor; date: string } | null>(
+    null,
+  );
+  // 새 현황이 `SKELETON_DELAY_MS`를 넘겨도 오지 않아 격자를 스켈레톤으로 바꿔야 하는 날짜·층의 캐시 키.
+  const [slowKey, setSlowKey] = useState<string | null>(null);
   const [failed, setFailed] = useState<FloorFailure | null>(null);
   const [dialogRoom, setDialogRoom] = useState<RoomDetail | null>(null);
   const [dialogStage, setDialogStage] = useState<DialogStage>("view");
@@ -71,14 +108,16 @@ export function AdminHomeFloorPlan() {
   useEffect(() => {
     let cancelled = false;
     const slowTimer = setTimeout(() => {
-      if (!cancelled) setSlowFloor(selectedFloor);
+      if (!cancelled) setSlowKey(cacheKey(date, selectedFloor));
     }, SKELETON_DELAY_MS);
     gateway
-      .floor(selectedFloor)
+      .floor(selectedFloor, queryDate)
       .then((rooms) => {
         if (cancelled) return;
-        setByFloor((prev) => ({ ...prev, [selectedFloor]: rooms }));
-        setShownFloor(selectedFloor);
+        setByFloor((prev) =>
+          putRooms(prev, date, todayKey, selectedFloor, rooms),
+        );
+        setShown({ floor: selectedFloor, date });
       })
       .catch((error) => {
         if (cancelled) return;
@@ -88,6 +127,7 @@ export function AdminHomeFloorPlan() {
         }
         setFailed({
           floor: selectedFloor,
+          date,
           attempt,
           rateLimited: error instanceof RateLimitedError,
         });
@@ -97,11 +137,13 @@ export function AdminHomeFloorPlan() {
       cancelled = true;
       clearTimeout(slowTimer);
     };
-  }, [gateway, selectedFloor, attempt]);
+  }, [gateway, selectedFloor, attempt, date, todayKey, queryDate]);
 
   // 점호 중 다른 곳(얼굴 인식 등)에서 바뀐 출석을 반영한다. 화면은 그대로 두고 값만 바꾸며, 실패는 조용히 넘겨 다음 주기에 다시 받는다.
   // 호실 다이얼로그는 따로 받은 `dialogRoom`을 보이므로 뒤 화면이 바뀌어도 내용이 바뀌지 않는다.
   useEffect(() => {
+    // 지난 날짜는 더 바뀌지 않으므로 다시 받지 않는다.
+    if (viewingPast) return;
     let cancelled = false;
     function refresh() {
       if (document.visibilityState !== "visible") return;
@@ -109,7 +151,10 @@ export function AdminHomeFloorPlan() {
         .floor(selectedFloor)
         .then((rooms) => {
           if (!cancelled)
-            setByFloor((prev) => ({ ...prev, [selectedFloor]: rooms }));
+            setByFloor((prev) => ({
+              ...prev,
+              [cacheKey(date, selectedFloor)]: rooms,
+            }));
         })
         .catch((error) => {
           if (!cancelled && error instanceof AdminUnauthorizedError)
@@ -123,21 +168,27 @@ export function AdminHomeFloorPlan() {
       clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [gateway, selectedFloor]);
+  }, [gateway, selectedFloor, viewingPast, date]);
 
-  const selectedRooms = byFloor[selectedFloor];
+  const selectedRooms = byFloor[cacheKey(date, selectedFloor)];
   const loadFailed =
-    failed?.floor === selectedFloor && failed.attempt === attempt;
+    failed?.floor === selectedFloor &&
+    failed.date === date &&
+    failed.attempt === attempt;
   // 받은 적 있는 층은 다시 받는 동안 이전 값을 그대로 보인다. 실패해도 이전 값을 두고 안내만 띄운다.
-  const displayFloor: Floor | null = selectedRooms ? selectedFloor : shownFloor;
+  const displayFloor: Floor | null = selectedRooms
+    ? selectedFloor
+    : (shown?.floor ?? null);
+  const displayDate = selectedRooms ? date : (shown?.date ?? date);
   const rooms = useMemo(
-    () => (displayFloor ? (byFloor[displayFloor] ?? []) : []),
-    [byFloor, displayFloor],
+    () =>
+      displayFloor ? (byFloor[cacheKey(displayDate, displayFloor)] ?? []) : [],
+    [byFloor, displayFloor, displayDate],
   );
   // 이미 받은 층이 하나도 없을 때만 전체 스켈레톤이다. 그 뒤에 오래 걸리는 층은 격자만 스켈레톤으로 바꾼다.
   const showError = loadFailed && !selectedRooms;
   const gridLoading =
-    !selectedRooms && !loadFailed && slowFloor === selectedFloor;
+    !selectedRooms && !loadFailed && slowKey === cacheKey(date, selectedFloor);
   const { present, absent } = useMemo(
     () => summarizeAttendance(rooms),
     [rooms],
@@ -158,8 +209,11 @@ export function AdminHomeFloorPlan() {
 
   function handleSelectFloor(floor: Floor) {
     setSelectedFloor(floor);
-    // 이미 받아 둔 층이면 바로 그 층을 보인다(뒤에서 다시 받아 갱신).
-    if (byFloor[floor]) setShownFloor(floor);
+    closeDialog();
+  }
+
+  function handleSelectDate(next: string) {
+    setPicked(next === todayKey ? null : next);
     closeDialog();
   }
 
@@ -171,7 +225,7 @@ export function AdminHomeFloorPlan() {
   async function openRoomDetail(room: Room) {
     const request = (roomRequest.current += 1);
     try {
-      const students = await gateway.students(room.number);
+      const students = await gateway.students(room.number, queryDate);
       if (request !== roomRequest.current) return;
       setDialogRoom({ number: room.number, students });
       setDialogStage("view");
@@ -210,6 +264,8 @@ export function AdminHomeFloorPlan() {
       showToast({ variant: "neutral", message: "변경된 내용이 없습니다." });
       return;
     }
+    // 저장하는 사이 날짜가 바뀌어도 저장을 시작한 날·층의 캐시에만 반영한다.
+    const savedKey = displayFloor && cacheKey(displayDate, displayFloor);
     saving.current = true;
     try {
       await gateway.save(roomNumber, changes);
@@ -233,12 +289,12 @@ export function AdminHomeFloorPlan() {
     }
     const presentCount = students.filter((student) => student.present).length;
     setByFloor((prev) => {
-      if (displayFloor === null) return prev;
-      const floorRooms = prev[displayFloor];
+      if (!savedKey) return prev;
+      const floorRooms = prev[savedKey];
       if (!floorRooms) return prev;
       return {
         ...prev,
-        [displayFloor]: floorRooms.map((room) =>
+        [savedKey]: floorRooms.map((room) =>
           room.number === roomNumber
             ? { ...room, present: presentCount }
             : room,
@@ -256,10 +312,6 @@ export function AdminHomeFloorPlan() {
       {/* 헤더: 제목 좌측 + 층 탭 우측 */}
       <div className="flex w-full items-center justify-between md:h-[57px] xl:h-auto xl:items-end">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
-          <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:tracking-[1.8px] xl:text-[11px] xl:leading-[15px] xl:tracking-[1.98px]">
-            <span className="md:hidden">ADMIN</span>
-            <span className="hidden md:inline">FLOOR PLAN</span>
-          </p>
           <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-[31px] md:tracking-[-0.78px] xl:text-[30px] xl:leading-[36px] xl:tracking-[-0.9px]">
             {displayFloor ?? selectedFloor}층 전개도
           </h1>
@@ -284,7 +336,19 @@ export function AdminHomeFloorPlan() {
           )}
         </div>
       ) : (
-        <RoomGrid rooms={rooms} onRoomClick={openRoomDetail} />
+        <RoomGrid
+          rooms={rooms}
+          onRoomClick={openRoomDetail}
+          busy={!selectedRooms && !loadFailed}
+          action={
+            <DutyCalendar
+              todayKey={todayKey}
+              selectedKey={date}
+              onSelect={handleSelectDate}
+              closeOnSelect
+            />
+          }
+        />
       )}
 
       {dialogRoom && dialogStage === "view" && (
@@ -292,7 +356,7 @@ export function AdminHomeFloorPlan() {
           key={dialogRoom.number}
           room={dialogRoom}
           onClose={closeDialog}
-          onEdit={() => setDialogStage("edit")}
+          onEdit={viewingPast ? undefined : () => setDialogStage("edit")}
         />
       )}
 

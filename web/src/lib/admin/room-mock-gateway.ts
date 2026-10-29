@@ -62,16 +62,23 @@ function buildMockRooms(): Map<string, Student[]> {
 export function createMockRoomGateway(): RoomGateway {
   const rooms = buildMockRooms();
 
-  function studentsOf(roomNumber: string): Student[] {
-    return rooms.get(roomNumber) ?? [];
+  /** 지난 날짜는 저장된 기록이 없으므로 날짜와 학생 번호로 출석 여부를 정해 날짜마다 다르게 보이게 한다. */
+  function studentsOf(roomNumber: string, date?: string): Student[] {
+    const students = rooms.get(roomNumber) ?? [];
+    if (!date) return students;
+    const seed = Number(date.replaceAll("-", ""));
+    return students.map((student) => ({
+      ...student,
+      present: (Number(student.studentId) + seed) % 4 !== 0,
+    }));
   }
 
   return {
-    floor: async (floor) => {
+    floor: async (floor, date) => {
       const { start, count } = FLOOR_ROOMS[floor];
       return Array.from({ length: count }, (_, i): Room => {
         const number = String(start + i);
-        const students = studentsOf(number);
+        const students = studentsOf(number, date);
         return {
           number,
           assigned: students.length,
@@ -79,8 +86,8 @@ export function createMockRoomGateway(): RoomGateway {
         };
       });
     },
-    students: async (roomNumber) =>
-      studentsOf(roomNumber).map((student) => ({ ...student })),
+    students: async (roomNumber, date) =>
+      studentsOf(roomNumber, date).map((student) => ({ ...student })),
     save: async (roomNumber, changes) => {
       const students = studentsOf(roomNumber);
       if (

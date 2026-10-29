@@ -261,10 +261,6 @@ export function AdminVolunteerDuty({
 
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 md:min-h-[57px] xl:min-h-0 xl:gap-y-5">
         <div className="flex flex-col gap-0.5 md:gap-[3px] xl:gap-1">
-          <p className="font-mono text-[10px] leading-[13px] tracking-[1.6px] text-admin-textFaint md:tracking-[1.8px] xl:text-[11px] xl:leading-[15px] xl:tracking-[1.98px]">
-            <span className="md:hidden">ADMIN</span>
-            <span className="hidden md:inline">VOLUNTEER</span>
-          </p>
           <h1 className="text-[22px] font-bold leading-[26px] tracking-[-0.44px] text-admin-text md:text-[26px] md:leading-[31px] md:tracking-[-0.78px] xl:text-[30px] xl:leading-[36px] xl:tracking-[-0.9px]">
             봉사자 관리
           </h1>
