@@ -10,6 +10,7 @@ import { FaceGatewayProvider, type FaceGateway } from "./face-gateway";
 import {
   ERROR_BACKOFF_MS,
   FRAME_INTERVAL_MS,
+  MAX_DIAGNOSTIC_LOGS,
   MAX_CONSECUTIVE_FAILURES,
   QR_NOTICE_HOLD_MS,
   useFaceRecognition,
@@ -439,6 +440,17 @@ describe("useFaceRecognition 프레임 전송", () => {
       "429 요청이 너무 많음, 1000ms 뒤 다시 보냄",
       "프레임 실패: 503 FACE_AI_UNAVAILABLE (연속 1회)",
     ]);
+  });
+
+  it(`진단 로그는 최근 ${MAX_DIAGNOSTIC_LOGS}개만 남긴다`, async () => {
+    const gateway = makeGateway({
+      sendFrame: vi.fn().mockRejectedValue(new RateLimitedError(100)),
+    });
+    const { result } = setup(gateway);
+
+    await tick(100 * (MAX_DIAGNOSTIC_LOGS + 5));
+
+    expect(result.current.logs).toHaveLength(MAX_DIAGNOSTIC_LOGS);
   });
 
   it("연속 실패가 쌓이면 error가 되고 성공하면 횟수를 다시 센다", async () => {

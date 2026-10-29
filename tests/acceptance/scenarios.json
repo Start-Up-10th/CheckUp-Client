@@ -314,7 +314,8 @@
         "LIVE가 표시되고 성공은 최근 인식 목록에 학번 이름으로 남는다",
         "이미 출석 처리된 학생을 다시 인식하면 성공이 아니라 이미 처리로 남고 같은 얼굴에서 되풀이되지 않는다",
         "전체화면 버튼·용도 탭은 없다",
-        "미식별 실패는 최근 인식 목록에 남지 않는다"
+        "미식별 실패는 최근 인식 목록에 남지 않는다",
+        "서버 오류·429·세션 사라짐·느린 응답은 신원 없이 진단 로그에 최대 20개 남는다"
       ],
       "status": "implemented",
       "implementation": [
@@ -324,7 +325,8 @@
       ],
       "evidence": [
         "web/src/components/admin/CameraPanel.test.tsx",
-        "web/src/components/admin/AdminFaceRecognition.test.tsx"
+        "web/src/components/admin/AdminFaceRecognition.test.tsx",
+        "web/src/lib/admin/use-face-recognition.test.tsx"
       ]
     },
     {
