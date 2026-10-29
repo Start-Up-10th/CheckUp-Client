@@ -4,19 +4,29 @@ import { useEffect, useState } from "react";
 import type { DutyRecord } from "@/lib/admin/volunteer-types";
 import { roomLabel } from "@/lib/admin/volunteer-roster";
 
-type DutyCalendarProps = {
+type DutyCalendarBase = {
   /** 오늘 운영일 `YYYY-MM-DD`. 이후 날짜는 고를 수 없다. */
   todayKey: string;
   /** 지금 보고 있는 날 `YYYY-MM-DD`. */
   selectedKey: string;
   onSelect: (key: string) => void;
+  /** 날짜를 고르면 달력을 닫는다. 달력 아래에 목록이 없는 쪽(전개도)에서 쓴다. */
+  closeOnSelect?: boolean;
   /** 그 달의 미이행 날짜별 인원. 없으면(서버 지원 전) 점을 찍지 않는다. */
   loadMonth?: (year: number, month: number) => Promise<Record<string, number>>;
-  /** 고른 날의 미이행 기록. 아직 받는 중이면 null이다. */
-  missed: DutyRecord[] | null;
-  /** 미이행 학생을 눌렀을 때. 호출한 쪽이 조정 다이얼로그를 연다. */
-  onPickMissed: (record: DutyRecord) => void;
 };
+
+/** 미이행 목록은 `missed`와 `onPickMissed`를 함께 줄 때만 보인다. 둘 다 없으면 날짜 선택만 한다(전개도). */
+type DutyCalendarProps = DutyCalendarBase &
+  (
+    | {
+        /** 고른 날의 미이행 기록. 아직 받는 중이면 null이다. */
+        missed: DutyRecord[] | null;
+        /** 미이행 학생을 눌렀을 때. 호출한 쪽이 조정 다이얼로그를 연다. */
+        onPickMissed: (record: DutyRecord) => void;
+      }
+    | { missed?: undefined; onPickMissed?: undefined }
+  );
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
@@ -38,6 +48,7 @@ export function DutyCalendar({
   todayKey,
   selectedKey,
   onSelect,
+  closeOnSelect,
   loadMonth,
   missed,
   onPickMissed,
@@ -99,7 +110,7 @@ export function DutyCalendar({
     "flex size-8 items-center justify-center rounded-lg text-admin-textMuted transition-colors hover:bg-admin-rowSurface disabled:opacity-30 disabled:hover:bg-transparent";
 
   return (
-    <div>
+    <div className="relative">
       <button
         type="button"
         aria-label={`날짜 선택, 지금 ${label}`}
@@ -220,7 +231,10 @@ export function DutyCalendar({
                         aria-label={`${view.y}년 ${view.m}월 ${day}일${marks[key] ? `, 미이행 ${marks[key]}명` : ""}`}
                         aria-pressed={key === selectedKey}
                         disabled={future}
-                        onClick={() => onSelect(key)}
+                        onClick={() => {
+                          onSelect(key);
+                          if (closeOnSelect) setOpen(false);
+                        }}
                         className={`relative flex h-8 items-center justify-center rounded-lg text-xs transition-colors disabled:opacity-40 md:h-9 md:text-[13px] xl:h-11 xl:text-sm ${
                           key === selectedKey
                             ? "bg-admin-accent-bg font-bold text-admin-accent-text"
@@ -238,15 +252,17 @@ export function DutyCalendar({
                     );
                   })}
                 </div>
-                <p className="pt-3 text-[10px] text-admin-textMuted md:text-[11px] xl:text-xs">
-                  <span
-                    aria-hidden="true"
-                    className="mr-1 inline-block size-1.5 rounded-full bg-admin-danger-text align-middle"
-                  />
-                  미이행이 있는 날
-                </p>
+                {onPickMissed && (
+                  <p className="pt-3 text-[10px] text-admin-textMuted md:text-[11px] xl:text-xs">
+                    <span
+                      aria-hidden="true"
+                      className="mr-1 inline-block size-1.5 rounded-full bg-admin-danger-text align-middle"
+                    />
+                    미이행이 있는 날
+                  </p>
+                )}
 
-                {(loadMonth || selectedKey === todayKey) && (
+                {onPickMissed && (loadMonth || selectedKey === todayKey) && (
                   <div className="mt-3 flex flex-col gap-1.5 border-t border-admin-divider pt-3">
                     <p className="text-xs font-bold text-admin-text md:text-[13px] xl:text-sm">
                       {selectedKey === todayKey

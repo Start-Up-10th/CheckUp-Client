@@ -10,7 +10,8 @@ import { useModalDialog } from "@/lib/admin/use-modal-dialog";
 type RoomDetailDialogProps = {
   room: RoomDetail;
   onClose: () => void;
-  onEdit: () => void;
+  /** 없으면 조회 전용(지난 날짜)이라 `수정` 버튼을 보이지 않는다. */
+  onEdit?: () => void;
 };
 
 /**
@@ -86,13 +87,15 @@ export function RoomDetailDialog({
           >
             닫기
           </button>
-          <button
-            type="button"
-            onClick={onEdit}
-            className="rounded-[13px] bg-admin-accent-bg transition hover:brightness-95 px-[18px] py-[11px] text-[13px] font-bold leading-4 text-admin-accent-text md:px-5 md:py-3 xl:px-[22px] xl:py-[13px] xl:text-sm xl:leading-[17px]"
-          >
-            수정
-          </button>
+          {onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="rounded-[13px] bg-admin-accent-bg transition hover:brightness-95 px-[18px] py-[11px] text-[13px] font-bold leading-4 text-admin-accent-text md:px-5 md:py-3 xl:px-[22px] xl:py-[13px] xl:text-sm xl:leading-[17px]"
+            >
+              수정
+            </button>
+          )}
         </div>
       </div>
     </div>

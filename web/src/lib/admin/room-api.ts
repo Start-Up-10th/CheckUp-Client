@@ -57,8 +57,13 @@ const isCount = (value: unknown): value is number =>
  * 배정된 학생이 없는 호실은 서버가 주지 않으므로 이 층의 모든 호실을 합쳐 돌려준다(등록하지 않은 호실은 0/0, DEC-059).
  * 응답이 계약과 다르면 오류를 던진다.
  */
-export async function fetchFloorRooms(floor: Floor): Promise<Room[]> {
-  const res = await request(`/floor?floor=${floor}&purpose=DORMITORY`);
+export async function fetchFloorRooms(
+  floor: Floor,
+  date?: string,
+): Promise<Room[]> {
+  const res = await request(
+    `/floor?floor=${floor}&purpose=DORMITORY${date ? `&date=${date}` : ""}`,
+  );
   const body = (await res.json()) as FloorApiBody;
   if (!Array.isArray(body.rooms)) throw new Error("room floor: unexpected");
   const rooms = body.rooms.map((room) => {
@@ -81,9 +86,10 @@ export async function fetchFloorRooms(floor: Floor): Promise<Room[]> {
 /** `GET /api/v1/room/attendance`: 호실 학생 명단과 오늘 기숙사 출석 여부. */
 export async function fetchRoomStudents(
   roomNumber: string,
+  date?: string,
 ): Promise<Student[]> {
   const res = await request(
-    `/attendance?dormitoryRoom=${encodeURIComponent(roomNumber)}`,
+    `/attendance?dormitoryRoom=${encodeURIComponent(roomNumber)}${date ? `&date=${date}` : ""}`,
   );
   const body = (await res.json()) as RoomStudentApiBody[];
   if (!Array.isArray(body)) throw new Error("room students: unexpected");

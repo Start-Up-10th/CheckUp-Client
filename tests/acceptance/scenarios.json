@@ -508,7 +508,8 @@
       "then": [
         "방 번호순 카드와 선택층 출석/미출석 통계를 표시하고 휴대폰 카드는 호실 번호만 보인다",
         "인원 분모는 DataGSM 배정 수이며 4로 고정하지 않는다",
-        "공실 메뉴/범례가 없고 전원/일부 출석 색상이 구별된다"
+        "공실 메뉴/범례가 없고 전원/일부 출석 색상이 구별된다",
+        "날짜 버튼(봉사자 관리 달력 재사용)은 처음 오늘 운영일이고, 지난 날짜는 `date`로 그날 현황을 조회만 한다(`수정`·자동 갱신 없음). 서버 날짜별 조회·보관 정책은 미확정(DEC-113)"
       ],
       "status": "implemented",
       "implementation": [
@@ -518,7 +519,8 @@
         "web/src/components/admin/FloorTabs.tsx",
         "web/src/components/admin/AttendanceStatCards.tsx",
         "web/src/lib/admin/room-api.ts",
-        "web/src/lib/admin/room-gateway.tsx"
+        "web/src/lib/admin/room-gateway.tsx",
+        "web/src/components/admin/DutyCalendar.tsx"
       ],
       "evidence": [
         "web/src/components/admin/AdminHomeFloorPlan.test.tsx",

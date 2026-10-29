@@ -62,7 +62,7 @@ describe("AdminHomeFloorPlan 층 현황", () => {
 
     expect(await screen.findByText("3/4명")).toBeInTheDocument();
     expect(screen.getByText("3/3명")).toBeInTheDocument();
-    expect(gateway.floor).toHaveBeenCalledWith(4);
+    expect(gateway.floor).toHaveBeenCalledWith(4, undefined);
     expect(screen.getByText("4층 전개도")).toBeInTheDocument();
   });
 
@@ -93,7 +93,7 @@ describe("AdminHomeFloorPlan 층 현황", () => {
     renderWith(gateway);
 
     expect(await screen.findByText("3층 전개도")).toBeInTheDocument();
-    expect(floor).toHaveBeenCalledWith(3);
+    expect(floor).toHaveBeenCalledWith(3, undefined);
     expect(screen.getByRole("button", { name: "3층" })).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -109,7 +109,7 @@ describe("AdminHomeFloorPlan 층 현황", () => {
     fireEvent.click(screen.getByRole("button", { name: "5층" }));
 
     expect(await screen.findByText("5층 전개도")).toBeInTheDocument();
-    expect(floor).toHaveBeenLastCalledWith(5);
+    expect(floor).toHaveBeenLastCalledWith(5, undefined);
   });
 
   describe("층을 바꿀 때 깜빡이지 않는다", () => {
@@ -279,7 +279,7 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
     fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
 
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(students).toHaveBeenCalledWith("402");
+    expect(students).toHaveBeenCalledWith("402", undefined);
     expect(screen.getByText("402호")).toBeInTheDocument();
   });
 
@@ -395,7 +395,7 @@ describe("AdminHomeFloorPlan 호실 수정", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     // 처음 3층, 4층 탭, 그리고 호실 학생이 아니라는 응답 뒤 4층을 다시 받는다.
     await waitFor(() => expect(floor).toHaveBeenCalledTimes(3));
-    expect(floor).toHaveBeenLastCalledWith(4);
+    expect(floor).toHaveBeenLastCalledWith(4, undefined);
   });
 
   it("저장이 429로 막히면 잠시 후 다시 시도 안내를 보이고 다이얼로그를 유지한다", async () => {
@@ -519,5 +519,75 @@ describe("AdminHomeFloorPlan 현황 자동 갱신", () => {
 
     expect(screen.getByText("3/4명")).toBeInTheDocument();
     expect(screen.getByRole("dialog").textContent).toBe(before);
+  });
+});
+
+describe("AdminHomeFloorPlan 날짜 선택", () => {
+  it("지난 날짜를 고르면 그날 현황을 날짜와 함께 받고 수정 버튼 없이 조회만 한다", async () => {
+    const gateway = createMockRoomGateway();
+    const floor = vi.spyOn(gateway, "floor");
+    renderWith(gateway);
+    fireEvent.click(await screen.findByRole("button", { name: /^날짜 선택/ }));
+    fireEvent.click(screen.getByRole("button", { name: "이전 달" }));
+    fireEvent.click(screen.getByRole("button", { name: /^\d+년 \d+월 1일$/ }));
+
+    await waitFor(() =>
+      expect(floor).toHaveBeenLastCalledWith(
+        3,
+        expect.stringMatching(/^\d{4}-\d{2}-01$/),
+      ),
+    );
+    fireEvent.click(await screen.findByRole("button", { name: /^301/ }));
+    expect(await screen.findByText(/^배정/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "수정" })).toBeNull();
+  });
+
+  it("오늘을 보는 채로 08:00을 넘기면 새 운영일로 따라가고, 고른 지난 날짜는 그대로 둔다", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      // 2026-10-30 07:50 KST = 10-29 운영일
+      vi.setSystemTime(new Date("2026-10-29T22:50:00Z"));
+      const gateway = createMockRoomGateway();
+      const floor = vi.spyOn(gateway, "floor");
+      renderWith(gateway);
+      await screen.findByRole("button", {
+        name: /^날짜 선택, 지금 2026.10.29/,
+      });
+      vi.setSystemTime(new Date("2026-10-29T23:10:00Z"));
+      fireEvent.click(screen.getByRole("button", { name: "4층" }));
+      await screen.findByRole("button", {
+        name: /^날짜 선택, 지금 2026.10.30/,
+      });
+      expect(floor).toHaveBeenLastCalledWith(4, undefined);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("날짜를 바꾸면 새 현황이 올 때까지 이전 격자를 그대로 두고 스켈레톤·빈 상태로 깜빡이지 않는다", async () => {
+    const gateway = createMockRoomGateway();
+    const base = gateway.floor;
+    let release: () => void = () => {};
+    gateway.floor = vi.fn((floor, date) =>
+      date
+        ? new Promise<Room[]>((resolve) => {
+            release = () =>
+              resolve([{ number: "301", assigned: 4, present: 1 }]);
+          })
+        : base(floor, date),
+    );
+    renderWith(gateway);
+    fireEvent.click(await screen.findByRole("button", { name: /^날짜 선택/ }));
+    fireEvent.click(screen.getByRole("button", { name: "이전 달" }));
+    fireEvent.click(screen.getByRole("button", { name: /^\d+년 \d+월 1일$/ }));
+
+    // 새 날짜가 오기 전: 이전(오늘) 격자와 제목이 남아 있다.
+    expect(screen.getByRole("button", { name: /^302/ })).toBeInTheDocument();
+    expect(screen.getByText("3층 전개도")).toBeInTheDocument();
+    await act(async () => release());
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: /^302/ })).toBeNull(),
+    );
+    expect(screen.getByRole("button", { name: /^301/ })).toBeInTheDocument();
   });
 });
