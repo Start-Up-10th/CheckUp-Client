@@ -41,7 +41,7 @@ export type FaceSessionStatus = "starting" | "running" | "error";
 // shortcut: 서버 오류를 화면에서 확인하려는 임시 진단 로그다. 서버 쪽 오류 기록이 생기면 없앤다.
 /** 진단 로그 최대 개수. 넘으면 오래된 것부터 지운다. */
 export const MAX_DIAGNOSTIC_LOGS = 20;
-/** 이보다 오래 걸린 프레임 응답은 느린 응답으로 남긴다. */
+/** 이보다 오래 걸린 프레임 응답은 느린 응답으로 남긴다. 느린 응답이 이어지면 처음 한 번만 남겨 앞선 오류를 밀어내지 않는다. */
 export const SLOW_RESPONSE_MS = 1000;
 
 /** 진단 로그 한 줄. 신원·프레임은 담지 않고 시각과 오류 요약만 둔다. */
@@ -177,6 +177,7 @@ export function useFaceRecognition({
       setStatus("running");
 
       let failures = 0;
+      let slow = false;
       while (!cancelled && sessionId) {
         const video = videoRef.current;
         const frame = video ? await takeFrame(video) : null;
@@ -193,7 +194,10 @@ export function useFaceRecognition({
             if (cancelled) break;
             failures = 0;
             const elapsed = Date.now() - sentAt;
-            if (elapsed >= SLOW_RESPONSE_MS) log(`느린 응답: ${elapsed}ms`);
+            if (elapsed >= SLOW_RESPONSE_MS && !slow) {
+              log(`느린 응답: ${elapsed}ms`);
+            }
+            slow = elapsed >= SLOW_RESPONSE_MS;
             // 응답이 오래 걸렸으면 그만큼 덜 쉰다. 간격은 전송 시작 시각부터 센다.
             delay = Math.max(0, intervalMs - (Date.now() - sentAt));
             setRateLimited(false);
@@ -254,7 +258,9 @@ export function useFaceRecognition({
               log(`429 요청이 너무 많음, ${delay}ms 뒤 다시 보냄`);
             } else {
               failures += 1;
-              log(`프레임 실패: ${describeError(error)} (연속 ${failures}회)`);
+              log(
+                `프레임 실패: ${describeError(error)} (${Date.now() - sentAt}ms, 연속 ${failures}회)`,
+              );
               if (failures >= MAX_CONSECUTIVE_FAILURES) {
                 fail(error);
                 return;
