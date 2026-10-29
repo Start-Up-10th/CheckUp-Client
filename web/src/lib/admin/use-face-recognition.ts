@@ -211,7 +211,7 @@ export function useFaceRecognition({
                 return;
               }
               sessionId = recreated;
-              // 새 세션은 얼굴 트랙도 새로 시작하므로 이전 세션의 트랙 시도 기록은 버린다.
+              // 새 세션은 얼굴 트랙도 새로 시작하므로 이전 세션의 트랙 기록은 버린다.
               state = { ...state, tracks: {} };
               await sleep(intervalMs);
               continue;

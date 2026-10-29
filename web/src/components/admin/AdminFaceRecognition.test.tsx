@@ -83,7 +83,7 @@ describe("AdminFaceRecognition", () => {
     expect(screen.queryByText("인식 실패")).not.toBeInTheDocument();
   });
 
-  it("성공은 `학번 이름`으로, 실패는 신원 없는 `인식 실패`로 최근 인식 목록에 보이고 토스트는 없다", async () => {
+  it("성공은 `학번 이름`으로 최근 인식 목록에 보이고 인식 실패는 남지 않으며 토스트는 없다", async () => {
     renderWith(createMockFaceGateway([[known(), unknown(1)]]));
     await tick();
 
@@ -92,7 +92,6 @@ describe("AdminFaceRecognition", () => {
       .map((row) => row.textContent);
     expect(rows).toEqual([
       expect.stringMatching(/^2405 김도현\d\d:\d\d · 성공$/),
-      expect.stringMatching(/^인식 실패\d\d:\d\d · 실패$/),
     ]);
     expect(screen.queryByRole("status")).toBeNull();
     expect(screen.queryByRole("alert")).toBeNull();
@@ -157,7 +156,7 @@ describe("AdminFaceRecognition", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("3회 실패하면 QR 안내 토스트와 함께 실패가 목록에 남는다", async () => {
+  it("3회 실패하면 QR 안내 토스트는 뜨고 실패는 목록에 남지 않는다", async () => {
     renderWith(createMockFaceGateway([[unknown(3)]]));
     await tick();
 
@@ -165,10 +164,10 @@ describe("AdminFaceRecognition", () => {
       screen.getByText("인식 실패 · 3회 초과 시 QR로 출석"),
     ).toBeInTheDocument();
     expect(
-      within(screen.getByRole("region", { name: "최근 인식" })).getAllByRole(
+      within(screen.getByRole("region", { name: "최근 인식" })).queryAllByRole(
         "listitem",
       ),
-    ).toHaveLength(1);
+    ).toHaveLength(0);
   });
 
   it("한 프레임에 6명이 성공해도 모두 목록에 남는다", async () => {
