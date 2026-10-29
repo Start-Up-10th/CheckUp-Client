@@ -24,7 +24,7 @@ import type { Purpose } from "@/lib/admin/purpose";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import { RateLimitedError } from "@/lib/rate-limit";
 
-/** 프레임 전송을 시작한 시각부터 다음 프레임을 보내기까지의 간격. 서버 최소 간격(200ms, 이전 프레임 시작 시각 기준)보다 넉넉히 둔다. */
+/** 프레임 전송을 시작한 시각부터 다음 프레임을 보내기까지의 간격. 서버 최소 간격은 1ms로 완화됐지만(CheckUp-server#266) 서버·기기 부하와 실패 누적 속도를 고려해 유지한다. */
 export const FRAME_INTERVAL_MS = 250;
 /** 그 밖의 실패 뒤 다시 보내기까지 기다리는 시간. */
 export const ERROR_BACKOFF_MS = 2000;
@@ -166,7 +166,7 @@ export function useFaceRecognition({
             );
             if (cancelled) break;
             failures = 0;
-            // 응답이 오래 걸렸으면 그만큼 덜 쉰다. 서버는 전송 시작 시각부터 최소 간격을 센다.
+            // 응답이 오래 걸렸으면 그만큼 덜 쉰다. 간격은 전송 시작 시각부터 센다.
             delay = Math.max(0, intervalMs - (Date.now() - sentAt));
             setRateLimited(false);
             const now = new Date();
