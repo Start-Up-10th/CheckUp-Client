@@ -137,7 +137,7 @@ function DiagnosticLogs({ logs }: { logs: DiagnosticLog[] }) {
       {logs.length === 0 ? (
         <p className="pt-2">기록된 오류가 없어요.</p>
       ) : (
-        <ul className="max-h-32 overflow-y-auto break-words pt-2 font-mono md:max-h-40">
+        <ul className="max-h-[88px] overflow-y-auto break-words pt-2 font-mono [scrollbar-color:rgb(var(--admin-border))_transparent] [scrollbar-width:thin]">
           {logs.map(({ id, time, message }) => (
             <li key={id}>
               {time} {message}
