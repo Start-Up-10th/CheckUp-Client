@@ -40,7 +40,7 @@ export type FaceSessionStatus = "starting" | "running" | "error";
 
 // shortcut: 서버 오류를 화면에서 확인하려는 임시 진단 로그다. 서버 쪽 오류 기록이 생기면 없앤다.
 /** 진단 로그 최대 개수. 넘으면 오래된 것부터 지운다. */
-export const MAX_DIAGNOSTIC_LOGS = 50;
+export const MAX_DIAGNOSTIC_LOGS = 20;
 /** 이보다 오래 걸린 프레임 응답은 느린 응답으로 남긴다. */
 export const SLOW_RESPONSE_MS = 1000;
 
@@ -147,7 +147,7 @@ export function useFaceRecognition({
       });
 
     function log(message: string) {
-      const time = new Date().toLocaleTimeString("ko-KR", { hour12: false });
+      const time = new Date().toTimeString().slice(0, 8);
       const entry = { id: crypto.randomUUID(), time, message };
       setLogs((list) => [entry, ...list].slice(0, MAX_DIAGNOSTIC_LOGS));
     }

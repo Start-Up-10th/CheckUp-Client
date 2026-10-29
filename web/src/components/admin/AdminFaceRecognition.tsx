@@ -130,14 +130,14 @@ function FaceRecognitionView({
 /** 임시 진단 로그(서버 오류·느린 응답). 평소에는 접어 두고 문제가 있을 때 펼쳐 본다. */
 function DiagnosticLogs({ logs }: { logs: DiagnosticLog[] }) {
   return (
-    <details className="shrink-0 rounded-xl bg-admin-surface px-4 py-2.5 text-xs text-admin-textSecondary">
+    <details className="w-fit shrink-0 self-end rounded-xl bg-admin-surface px-4 py-2.5 text-xs text-admin-textSecondary open:w-full">
       <summary className="cursor-pointer select-none font-medium">
         진단 로그 ({logs.length})
       </summary>
       {logs.length === 0 ? (
         <p className="pt-2">기록된 오류가 없어요.</p>
       ) : (
-        <ul className="max-h-40 overflow-y-auto pt-2 font-mono">
+        <ul className="max-h-32 overflow-y-auto break-words pt-2 font-mono md:max-h-40">
           {logs.map(({ id, time, message }) => (
             <li key={id}>
               {time} {message}
