@@ -58,6 +58,9 @@ export function VolunteerRosterRow({
         </p>
         <p className="truncate text-[10px] leading-3 text-admin-textMuted md:text-[11px] md:leading-[13px] xl:text-[13px] xl:leading-4">
           최근 활동 {student.lastActivityDate ?? "-"}
+          {student.consecutiveCount
+            ? ` · 연속 ${student.consecutiveCount}회 남음`
+            : null}
         </p>
       </div>
 

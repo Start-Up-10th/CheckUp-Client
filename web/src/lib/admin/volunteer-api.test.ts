@@ -52,7 +52,20 @@ describe("toRosterStudent", () => {
       count: 3,
       lastActivityDate: "10/02",
       duty: "designated",
+      consecutiveCount: 0,
+      consecutiveDuty: false,
     });
+  });
+
+  it("연속 봉사 남은 횟수와 자동 지정 여부를 옮긴다", () => {
+    const student = toRosterStudent({
+      ...BODY,
+      consecutiveVolunteerCount: 4,
+      consecutiveDuty: true,
+    });
+
+    expect(student.consecutiveCount).toBe(4);
+    expect(student.consecutiveDuty).toBe(true);
   });
 
   it("활동 시각과 오늘 지정이 없으면 날짜 없음·지정 없음이다", () => {

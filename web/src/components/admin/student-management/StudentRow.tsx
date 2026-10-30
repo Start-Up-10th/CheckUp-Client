@@ -36,6 +36,9 @@ export function StudentRow({ student, onSelect }: StudentRowProps) {
         </span>
         <span className="text-[10px] leading-3 text-admin-textMuted md:text-[11px] md:leading-[13px] xl:text-[13px] xl:leading-4">
           최근 활동 {student.lastActivityDate ?? "-"}
+          {student.consecutiveCount
+            ? ` · 연속 ${student.consecutiveCount}회 남음`
+            : null}
         </span>
       </span>
 
