@@ -17,6 +17,10 @@ export type VolunteerApiResponse = {
   volunteerCount: number;
   lastActivityAt?: string | null;
   todayDuty?: "ASSIGNED" | "COMPLETED" | "MISSED" | null;
+  /** 일반 봉사와 별도로 남은 연속 봉사 횟수. */
+  consecutiveVolunteerCount?: number;
+  /** 오늘 지정이 연속 봉사 자동 지정인지. */
+  consecutiveDuty?: boolean;
 };
 
 /** 서버가 준 오류. `code`는 서버 ErrorCode 이름(예: `NO_VOLUNTEER_LEFT`)이고 본문이 없으면 null이다. */
@@ -99,6 +103,8 @@ export function toRosterStudent(body: VolunteerApiResponse): RosterStudent {
     count: body.volunteerCount,
     lastActivityDate: toMonthDay(body.lastActivityAt),
     duty: body.todayDuty ? DUTY_FROM_API[body.todayDuty] : "none",
+    consecutiveCount: body.consecutiveVolunteerCount ?? 0,
+    consecutiveDuty: body.consecutiveDuty === true,
   };
 }
 
@@ -111,7 +117,13 @@ type VolunteerAdjustmentApiResponse = {
   /** 실제로 바뀐 횟수. 양수는 추가, 음수는 차감(당일 봉사 완료 포함). */
   delta: number;
   reason?: string | null;
-  kind?: "ADMIN" | "DUTY_COMPLETION" | "DUTY_MISSED" | null;
+  kind?:
+    | "ADMIN"
+    | "DUTY_COMPLETION"
+    | "DUTY_MISSED"
+    | "CONSECUTIVE_ADMIN"
+    | "CONSECUTIVE_COMPLETION"
+    | null;
 };
 
 /** 봉사 이력 한 줄. 날짜는 `MM/DD`, 변화는 실제로 바뀐 횟수(1이 아닐 수 있다)다. */
@@ -128,6 +140,10 @@ function adjustmentTitle(item: VolunteerAdjustmentApiResponse): string {
   if (reason) return reason;
   if (item.kind === "DUTY_COMPLETION") return "당일 봉사 완료";
   if (item.kind === "DUTY_MISSED") return "당일 봉사 미이행";
+  if (item.kind === "CONSECUTIVE_COMPLETION") return "연속 봉사 완료";
+  if (item.kind === "CONSECUTIVE_ADMIN") {
+    return item.delta > 0 ? "연속 봉사 추가" : "연속 봉사 감면";
+  }
   return item.delta > 0 ? "봉사 횟수 추가" : "봉사 횟수 감면";
 }
 
@@ -189,8 +205,30 @@ export function adjustVolunteerCountBy(
   reason: string,
   idempotencyKey: string = crypto.randomUUID(),
 ): Promise<RosterStudent> {
+  return adjustBy(`/${id}/count`, delta, reason, idempotencyKey);
+}
+
+/**
+ * 연속 봉사 남은 횟수를 일반 봉사와 따로 바꾼다(`PATCH /api/v1/volunteer/{id}/consecutive/count`, DEC-114). 본문·한도·
+ * 재시도 키 규칙은 `adjustVolunteerCountBy`와 같고, 같은 키를 일반 조정에 다시 쓰면 서버가 거절한다.
+ */
+export function adjustConsecutiveCountBy(
+  id: number,
+  delta: number,
+  reason: string,
+  idempotencyKey: string = crypto.randomUUID(),
+): Promise<RosterStudent> {
+  return adjustBy(`/${id}/consecutive/count`, delta, reason, idempotencyKey);
+}
+
+function adjustBy(
+  path: string,
+  delta: number,
+  reason: string,
+  idempotencyKey: string,
+): Promise<RosterStudent> {
   const trimmed = reason.trim().slice(0, MAX_REASON_LENGTH);
-  return requestStudent(`/${id}/count`, {
+  return requestStudent(path, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

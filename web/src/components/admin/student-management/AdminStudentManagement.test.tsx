@@ -9,6 +9,7 @@ import {
 import type { ReactElement } from "react";
 import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
 import {
+  PartialSaveError,
   StudentManagementGatewayProvider,
   type StudentManagementGateway,
 } from "@/lib/admin/student-management-gateway";
@@ -157,6 +158,78 @@ describe("AdminStudentManagement", () => {
 
     expect(saveCount).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("바꾼 칸만 넘기고 바꾸지 않은 연속 봉사 횟수는 넘기지 않는다", async () => {
+    const saveCount = vi
+      .fn()
+      .mockImplementation(async (student) => ({ ...student, count: 4 }));
+    render(<AdminStudentManagement />, { saveCount });
+
+    fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+    fireEvent.click(screen.getByRole("button", { name: "봉사 횟수 늘리기" }));
+    fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    await waitFor(() => expect(saveCount).toHaveBeenCalledTimes(1));
+    expect(saveCount.mock.calls[0][1]).toEqual({ count: 4, reason: "" });
+  });
+
+  it("연속 봉사 횟수만 바꾸면 그 칸만 넘기고 연속 문구를 보인다", async () => {
+    const saveCount = vi.fn().mockImplementation(async (student) => ({
+      ...student,
+      consecutiveCount: 1,
+    }));
+    render(<AdminStudentManagement />, { saveCount });
+
+    fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "연속 봉사 횟수 늘리기" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    expect(
+      await screen.findByText("연속 봉사 횟수를 변경했습니다."),
+    ).toBeInTheDocument();
+    expect(saveCount.mock.calls[0][1]).toEqual({
+      consecutiveCount: 1,
+      reason: "",
+    });
+  });
+
+  it("일반만 저장되고 연속이 실패하면 연속 실패 문구를 보이고, 다시 저장하면 연속만 넘긴다", async () => {
+    const saveCount = vi
+      .fn()
+      .mockImplementationOnce(async (student) => {
+        const saved = { ...student, count: 4 };
+        throw new PartialSaveError(saved, saved, "consecutive", new Error());
+      })
+      .mockImplementationOnce(async (student) => ({
+        ...student,
+        consecutiveCount: 1,
+      }));
+    render(<AdminStudentManagement />, { saveCount });
+
+    fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+    fireEvent.click(screen.getByRole("button", { name: "봉사 횟수 늘리기" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "연속 봉사 횟수 늘리기" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    expect(
+      await screen.findByText(
+        "연속 봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "김도현" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    await waitFor(() => expect(saveCount).toHaveBeenCalledTimes(2));
+    expect(saveCount.mock.calls[1][1]).toEqual({
+      consecutiveCount: 1,
+      reason: "",
+    });
   });
 
   it("저장에 실패하면 실패 메시지를 보여 주고 다이얼로그를 유지한다", async () => {
