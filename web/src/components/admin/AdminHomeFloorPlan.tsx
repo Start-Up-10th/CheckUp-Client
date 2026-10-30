@@ -296,7 +296,18 @@ export function AdminHomeFloorPlan() {
         ...prev,
         [savedKey]: floorRooms.map((room) =>
           room.number === roomNumber
-            ? { ...room, present: presentCount }
+            ? {
+                ...room,
+                present: presentCount,
+                // 카드 이름의 출석 표시도 저장한 상태로 바꾼다.
+                students: room.students?.map((student) => ({
+                  ...student,
+                  present:
+                    students.find(
+                      (item) => item.studentId === student.studentId,
+                    )?.present ?? student.present,
+                })),
+              }
             : room,
         ),
       };

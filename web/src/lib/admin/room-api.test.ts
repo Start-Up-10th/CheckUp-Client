@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { RateLimitedError } from "@/lib/rate-limit";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import {
+  fetchFloorPlan,
   fetchFloorRooms,
+  fetchFloorStudents,
   fetchRoomStudents,
   RoomApiError,
   saveRoomAttendance,
@@ -19,6 +21,76 @@ function respond(status: number, body?: unknown) {
 }
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe("fetchFloorStudents", () => {
+  it("층 명단을 호실 번호별 학생으로 바꾸고 날짜를 붙인다", async () => {
+    const fetchMock = respond(200, {
+      floor: 3,
+      purpose: "DORMITORY",
+      rooms: [
+        {
+          dormitoryRoom: 301,
+          students: [
+            { student_id: 7, student_name: "김도현", attended: true },
+            { student_id: 8, student_name: "박서연", attended: false },
+          ],
+        },
+      ],
+    });
+
+    const rooms = await fetchFloorStudents(3, "2026-10-29");
+
+    expect(rooms.get("301")).toEqual([
+      { studentId: "7", name: "김도현", present: true },
+      { studentId: "8", name: "박서연", present: false },
+    ]);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/room/floor/students?floor=3&purpose=DORMITORY&date=2026-10-29",
+      expect.objectContaining({ credentials: "include" }),
+    );
+  });
+
+  it("응답이 계약과 다르면 오류를 던진다", async () => {
+    respond(200, { rooms: [{ dormitoryRoom: 301, students: [{}] }] });
+
+    await expect(fetchFloorStudents(3)).rejects.toThrow("unexpected");
+  });
+});
+
+describe("fetchFloorPlan", () => {
+  it("층 현황에 명단을 붙이고 명단이 없는 호실은 빈 배열이다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => ({
+        ok: true,
+        status: 200,
+        json: async () =>
+          url.includes("/floor/students")
+            ? {
+                rooms: [
+                  {
+                    dormitoryRoom: 301,
+                    students: [
+                      { student_id: 7, student_name: "김도현", attended: true },
+                    ],
+                  },
+                ],
+              }
+            : { rooms: [{ dormitoryRoom: 301, attended: 1, assigned: 1 }] },
+      })),
+    );
+
+    const rooms = await fetchFloorPlan(3);
+
+    expect(rooms[0]).toEqual({
+      number: "301",
+      assigned: 1,
+      present: 1,
+      students: [{ studentId: "7", name: "김도현", present: true }],
+    });
+    expect(rooms[1]).toMatchObject({ number: "302", students: [] });
+  });
+});
 
 describe("fetchFloorRooms", () => {
   it("층 현황을 호실 카드 값으로 바꾼다", async () => {

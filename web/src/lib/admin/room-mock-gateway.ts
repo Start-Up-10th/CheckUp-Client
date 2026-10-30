@@ -83,6 +83,7 @@ export function createMockRoomGateway(): RoomGateway {
           number,
           assigned: students.length,
           present: students.filter((student) => student.present).length,
+          students: students.map((student) => ({ ...student })),
         };
       });
     },

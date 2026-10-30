@@ -29,3 +29,31 @@ describe("RoomCard 색", () => {
     expect(card()).not.toHaveClass("border-admin-attendance-border");
   });
 });
+
+describe("RoomCard 학생 이름", () => {
+  it("학생 이름과 출석 여부를 카드에 보인다", () => {
+    render(
+      <RoomCard
+        room={{
+          number: "301",
+          assigned: 2,
+          present: 1,
+          students: [
+            { studentId: "1", name: "김도현", present: true },
+            { studentId: "2", name: "박서연", present: false },
+          ],
+        }}
+      />,
+    );
+
+    expect(card()).toHaveTextContent("김도현 출석");
+    expect(card()).toHaveTextContent("박서연 미출석");
+  });
+
+  it("명단이 없으면 이름 칸을 만들지 않는다", () => {
+    render(<RoomCard room={{ number: "302", assigned: 0, present: 0 }} />);
+
+    expect(card()).toHaveTextContent(/^302/);
+    expect(card()).not.toHaveTextContent("출석");
+  });
+});
