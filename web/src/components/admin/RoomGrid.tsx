@@ -17,7 +17,7 @@ type RoomGridProps = {
  * 데스크톱(xl, 7열)에서는 방이 몇 개든 항상 3행이라 남은 세로 공간에 꽉 차게 채워서 스크롤이 생기지 않는다.
  * 카드 영역과 하단 여백은 Figma 1920 기준 비율(650:62)로 함께 늘었다 줄었다 한다 — 여백만 고정폭으로
  * 두면 화면이 커질수록 카드만 계속 커지고 여백 비율은 안 맞아 보인다.
- * 패드(md~xl, 3열)는 남은 세로 공간에 맞춰 행 높이가 92px(Figma)에서 52px까지 줄어 가로 화면에서도 스크롤이 필요 없다(DEC-066).
+ * 패드(md~xl, 3열)는 남은 세로 공간에 맞춰 행 높이가 92px(Figma)에서 72px까지 줄어든다. 카드의 이름 2줄이 잘리지 않는 최소 높이라 키가 낮은 가로 화면은 약간 스크롤된다(DEC-114, DEC-066 일부 대체).
  */
 export function RoomGrid({ rooms, onRoomClick, action, busy }: RoomGridProps) {
   return (
@@ -44,7 +44,7 @@ export function RoomGrid({ rooms, onRoomClick, action, busy }: RoomGridProps) {
       <div
         className={`flex min-h-0 w-full flex-1 flex-col transition-opacity xl:min-h-0 ${busy ? "opacity-50" : ""}`}
       >
-        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 [@media(max-height:620px)]:auto-rows-[minmax(28px,1fr)] [@media(max-height:620px)]:gap-1 md:[@media(max-height:620px)]:gap-2 md:min-h-0 md:flex-1 md:auto-rows-[minmax(52px,92px)] md:grid-cols-3 md:gap-[8px] xl:gap-[10px] xl:auto-rows-auto xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
+        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 [@media(max-height:620px)]:auto-rows-[minmax(28px,1fr)] [@media(max-height:620px)]:gap-1 md:[@media(max-height:620px)]:gap-2 md:min-h-0 md:flex-1 md:auto-rows-[minmax(72px,92px)] md:grid-cols-3 md:gap-[8px] xl:gap-[10px] xl:auto-rows-auto xl:grid-cols-7 xl:min-h-0 xl:flex-[650] xl:grid-rows-3">
           {rooms.map((room) => (
             <RoomCard key={room.number} room={room} onClick={onRoomClick} />
           ))}

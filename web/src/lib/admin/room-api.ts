@@ -139,19 +139,30 @@ export async function fetchFloorStudents(
   );
 }
 
-/** 전개도 한 층: 호실별 인원(`/room/floor`)에 학생 명단(`/room/floor/students`)을 붙인다. 명단이 없는 호실은 빈 배열이다. */
+/**
+ * 전개도 한 층: 호실별 인원(`/room/floor`)에 학생 명단(`/room/floor/students`)을 붙인다. 명단이 없는 호실은 빈 배열이다.
+ * 명단은 덧붙이는 정보라 명단 요청만 실패하면 이름 없이 인원만 돌려준다(새 API가 배포 전이어도 전개도는 보인다).
+ * 명단이 있는 호실은 인원도 명단에서 세어, 두 요청 사이에 출석이 바뀌어도 카드 색·인원과 이름 점이 어긋나지 않는다.
+ */
 export async function fetchFloorPlan(
   floor: Floor,
   date?: string,
 ): Promise<Room[]> {
   const [rooms, students] = await Promise.all([
     fetchFloorRooms(floor, date),
-    fetchFloorStudents(floor, date),
+    fetchFloorStudents(floor, date).catch(() => null),
   ]);
-  return rooms.map((room) => ({
-    ...room,
-    students: students.get(room.number) ?? [],
-  }));
+  if (!students) return rooms;
+  return rooms.map((room) => {
+    const list = students.get(room.number) ?? [];
+    if (list.length === 0) return { ...room, students: list };
+    return {
+      number: room.number,
+      assigned: list.length,
+      present: list.filter((student) => student.present).length,
+      students: list,
+    };
+  });
 }
 
 /**

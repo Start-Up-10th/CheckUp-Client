@@ -224,6 +224,12 @@ export function AdminHomeFloorPlan() {
 
   async function openRoomDetail(room: Room) {
     const request = (roomRequest.current += 1);
+    // 층 명단으로 받은 학생이 있으면 다시 요청하지 않고, 누른 카드와 같은 날짜·내용으로 바로 연다.
+    if (room.students) {
+      setDialogRoom({ number: room.number, students: room.students });
+      setDialogStage("view");
+      return;
+    }
     try {
       const students = await gateway.students(room.number, queryDate);
       if (request !== roomRequest.current) return;
@@ -349,7 +355,9 @@ export function AdminHomeFloorPlan() {
       ) : (
         <RoomGrid
           rooms={rooms}
-          onRoomClick={openRoomDetail}
+          // 고른 날짜·층이 아직 오지 않아(받는 중·실패) 이전 화면이 남아 있으면 누를 수 없다. 이전 날짜 명단에 오늘의 `수정`이
+          // 붙거나 저장 결과가 다른 날짜 화면에 들어가는 것을 막는다.
+          onRoomClick={selectedRooms ? openRoomDetail : undefined}
           busy={!selectedRooms && !loadFailed}
           action={
             <DutyCalendar

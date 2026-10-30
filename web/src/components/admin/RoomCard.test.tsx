@@ -57,3 +57,23 @@ describe("RoomCard 학생 이름", () => {
     expect(card()).not.toHaveTextContent("출석");
   });
 });
+
+describe("RoomCard 이름 순서", () => {
+  it("호실 상세와 같은 이름순으로 보인다", () => {
+    render(
+      <RoomCard
+        room={{
+          number: "303",
+          assigned: 2,
+          present: 2,
+          students: [
+            { studentId: "1", name: "최유진", present: true },
+            { studentId: "2", name: "강태민", present: true },
+          ],
+        }}
+      />,
+    );
+
+    expect(card().textContent).toMatch(/강태민.*최유진/);
+  });
+});

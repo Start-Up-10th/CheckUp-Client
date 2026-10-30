@@ -90,6 +90,55 @@ describe("fetchFloorPlan", () => {
     });
     expect(rooms[1]).toMatchObject({ number: "302", students: [] });
   });
+
+  it("명단 요청만 실패하면 이름 없이 층 현황을 돌려준다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) =>
+        url.includes("/floor/students")
+          ? { ok: false, status: 404, json: async () => null }
+          : {
+              ok: true,
+              status: 200,
+              json: async () => ({
+                rooms: [{ dormitoryRoom: 301, attended: 1, assigned: 2 }],
+              }),
+            },
+      ),
+    );
+
+    const rooms = await fetchFloorPlan(3);
+
+    expect(rooms[0]).toEqual({ number: "301", assigned: 2, present: 1 });
+  });
+
+  it("명단이 있는 호실은 인원도 명단에서 세어 이름 점과 맞춘다", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => ({
+        ok: true,
+        status: 200,
+        json: async () =>
+          url.includes("/floor/students")
+            ? {
+                rooms: [
+                  {
+                    dormitoryRoom: 301,
+                    students: [
+                      { student_id: 7, student_name: "김도현", attended: true },
+                      { student_id: 8, student_name: "박서연", attended: true },
+                    ],
+                  },
+                ],
+              }
+            : { rooms: [{ dormitoryRoom: 301, attended: 1, assigned: 2 }] },
+      })),
+    );
+
+    const rooms = await fetchFloorPlan(3);
+
+    expect(rooms[0]).toMatchObject({ assigned: 2, present: 2 });
+  });
 });
 
 describe("fetchFloorRooms", () => {
