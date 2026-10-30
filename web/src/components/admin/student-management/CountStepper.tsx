@@ -2,6 +2,8 @@ type CountStepperProps = {
   count: number;
   onDecrease: () => void;
   onIncrease: () => void;
+  /** 버튼 접근성 이름에 쓰는 이름. 기본은 `봉사 횟수`다. */
+  label?: string;
 };
 
 const STEP_BUTTON =
@@ -15,12 +17,13 @@ export function CountStepper({
   count,
   onDecrease,
   onIncrease,
+  label = "봉사 횟수",
 }: CountStepperProps) {
   return (
     <div className="flex items-center gap-3.5">
       <button
         type="button"
-        aria-label="봉사 횟수 줄이기"
+        aria-label={`${label} 줄이기`}
         disabled={count === 0}
         onClick={onDecrease}
         className={STEP_BUTTON}
@@ -35,7 +38,7 @@ export function CountStepper({
       </p>
       <button
         type="button"
-        aria-label="봉사 횟수 늘리기"
+        aria-label={`${label} 늘리기`}
         onClick={onIncrease}
         className={STEP_BUTTON}
       >
