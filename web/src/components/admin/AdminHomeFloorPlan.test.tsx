@@ -26,6 +26,18 @@ afterEach(() => {
   redirectToAdminLogin.mockClear();
 });
 
+/** 층 명단 없이 인원만 주는 게이트웨이(명단 API 실패·이전 서버). 호실을 누르면 호실 명단을 따로 받는다. */
+function withoutRoster(gateway: RoomGateway): RoomGateway {
+  const floor = gateway.floor;
+  gateway.floor = async (floorNumber, date) =>
+    (await floor(floorNumber, date)).map((room) => ({
+      number: room.number,
+      assigned: room.assigned,
+      present: room.present,
+    }));
+  return gateway;
+}
+
 function renderWith(gateway: RoomGateway = createMockRoomGateway()) {
   return render(
     <RoomGatewayProvider value={gateway}>
@@ -42,6 +54,23 @@ async function renderOnFloorFour(
   fireEvent.click(await screen.findByRole("button", { name: "4층" }));
   await screen.findByText("4층 전개도");
 }
+
+describe("AdminHomeFloorPlan 이전 화면", () => {
+  it("새 층을 받는 동안 남아 있는 이전 층 호실은 누를 수 없다", async () => {
+    const gateway = createMockRoomGateway();
+    const floor = gateway.floor;
+    gateway.floor = (floorNumber, date) =>
+      floorNumber === 5 ? new Promise(() => {}) : floor(floorNumber, date);
+    await renderOnFloorFour(gateway);
+
+    fireEvent.click(screen.getByRole("button", { name: "5층" }));
+    const staleRoom = screen.getByRole("button", { name: /^402/ });
+    fireEvent.click(staleRoom);
+
+    expect(staleRoom).toBeDisabled();
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});
 
 /** 전원 출석인 402호를 열어 수동 수정에서 첫 학생을 미출석으로 바꾼 뒤 저장한다. */
 async function changeFirstRoomAndSave() {
@@ -271,8 +300,20 @@ describe("AdminHomeFloorPlan 층 현황", () => {
 });
 
 describe("AdminHomeFloorPlan 호실 상세", () => {
-  it("호실을 누르면 서버 명단을 받아 상세를 연다", async () => {
+  it("층 명단이 있으면 다시 요청하지 않고 카드의 명단으로 상세를 연다", async () => {
     const gateway = createMockRoomGateway();
+    const students = vi.spyOn(gateway, "students");
+    await renderOnFloorFour(gateway);
+
+    fireEvent.click(await screen.findByRole("button", { name: /^402/ }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(students).not.toHaveBeenCalled();
+    expect(screen.getByText("402호")).toBeInTheDocument();
+  });
+
+  it("호실을 누르면 서버 명단을 받아 상세를 연다", async () => {
+    const gateway = withoutRoster(createMockRoomGateway());
     const students = vi.spyOn(gateway, "students");
     await renderOnFloorFour(gateway);
 
@@ -284,7 +325,7 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
   });
 
   it("상세·수정 다이얼로그는 N인실 대신 배정·출석 인원으로 표기한다", async () => {
-    const gateway = createMockRoomGateway();
+    const gateway = withoutRoster(createMockRoomGateway());
     gateway.students = vi.fn().mockResolvedValue([
       { studentId: "1", name: "김도현", present: true },
       { studentId: "2", name: "박서연", present: false },
@@ -304,7 +345,7 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
   });
 
   it("명단 조회가 429로 막히면 잠시 후 다시 시도 안내를 보이고 상세는 열지 않는다", async () => {
-    const gateway = createMockRoomGateway();
+    const gateway = withoutRoster(createMockRoomGateway());
     gateway.students = vi.fn().mockRejectedValue(new RateLimitedError(2000));
     await renderOnFloorFour(gateway);
 
@@ -317,7 +358,7 @@ describe("AdminHomeFloorPlan 호실 상세", () => {
   });
 
   it("명단을 못 받으면 실패 문구를 보이고 상세는 열지 않는다", async () => {
-    const gateway = createMockRoomGateway();
+    const gateway = withoutRoster(createMockRoomGateway());
     gateway.students = vi.fn().mockRejectedValue(new Error("fail"));
     await renderOnFloorFour(gateway);
 

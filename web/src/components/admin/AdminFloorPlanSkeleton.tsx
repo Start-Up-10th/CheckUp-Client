@@ -67,7 +67,7 @@ export function RoomGridSkeleton({ pulse = true }: { pulse?: boolean }) {
 
       {/* 그리드 래퍼 — RoomGrid와 동일 */}
       <div className="flex w-full flex-1 flex-col xl:min-h-0">
-        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:flex-none md:auto-rows-[92px] md:gap-[8px] xl:auto-rows-auto xl:min-h-0 xl:flex-[650] xl:grid-cols-7 xl:grid-rows-3">
+        <div className="grid w-full flex-1 auto-rows-[minmax(40px,1fr)] grid-cols-3 gap-2 md:min-h-0 md:flex-1 md:auto-rows-[minmax(72px,92px)] md:gap-[8px] xl:auto-rows-auto xl:min-h-0 xl:flex-[650] xl:grid-cols-7 xl:grid-rows-3">
           {Array.from({ length: 21 }, (_, i) => (
             <div
               key={i}

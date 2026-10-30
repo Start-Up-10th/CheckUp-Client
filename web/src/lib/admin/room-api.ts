@@ -30,6 +30,25 @@ type RoomStudentApiBody = {
   attended?: unknown;
 };
 
+type FloorStudentsApiBody = {
+  rooms?: Array<{ dormitoryRoom?: unknown; students?: unknown }>;
+};
+
+function parseStudent(student: RoomStudentApiBody): Student {
+  if (
+    typeof student?.student_id !== "number" ||
+    typeof student.student_name !== "string" ||
+    typeof student.attended !== "boolean"
+  ) {
+    throw new Error("room students: unexpected student");
+  }
+  return {
+    studentId: String(student.student_id),
+    name: student.student_name,
+    present: student.attended,
+  };
+}
+
 async function request(path: string, init?: RequestInit): Promise<Response> {
   const res = await fetch(`/api/v1/room${path}`, {
     ...init,
@@ -93,18 +112,55 @@ export async function fetchRoomStudents(
   );
   const body = (await res.json()) as RoomStudentApiBody[];
   if (!Array.isArray(body)) throw new Error("room students: unexpected");
-  return body.map((student) => {
-    if (
-      typeof student.student_id !== "number" ||
-      typeof student.student_name !== "string" ||
-      typeof student.attended !== "boolean"
-    ) {
-      throw new Error("room students: unexpected student");
-    }
+  return body.map(parseStudent);
+}
+
+/**
+ * `GET /api/v1/room/floor/students`(CheckUp-server#271): 한 층의 호실별 학생 명단과 출석 여부를 한 번에 받는다.
+ * 학생 필드는 `/room/attendance`와 같다. 호실 번호 문자열을 키로 돌려준다.
+ */
+export async function fetchFloorStudents(
+  floor: Floor,
+  date?: string,
+): Promise<Map<string, Student[]>> {
+  const res = await request(
+    `/floor/students?floor=${floor}&purpose=DORMITORY${date ? `&date=${date}` : ""}`,
+  );
+  const body = (await res.json()) as FloorStudentsApiBody;
+  if (!Array.isArray(body.rooms))
+    throw new Error("room floor students: unexpected");
+  return new Map(
+    body.rooms.map((room) => {
+      if (!isCount(room.dormitoryRoom) || !Array.isArray(room.students)) {
+        throw new Error("room floor students: unexpected room");
+      }
+      return [String(room.dormitoryRoom), room.students.map(parseStudent)];
+    }),
+  );
+}
+
+/**
+ * 전개도 한 층: 호실별 인원(`/room/floor`)에 학생 명단(`/room/floor/students`)을 붙인다. 명단이 없는 호실은 빈 배열이다.
+ * 명단은 덧붙이는 정보라 명단 요청만 실패하면 이름 없이 인원만 돌려준다(새 API가 배포 전이어도 전개도는 보인다).
+ * 명단이 있는 호실은 인원도 명단에서 세어, 두 요청 사이에 출석이 바뀌어도 카드 색·인원과 이름 점이 어긋나지 않는다.
+ */
+export async function fetchFloorPlan(
+  floor: Floor,
+  date?: string,
+): Promise<Room[]> {
+  const [rooms, students] = await Promise.all([
+    fetchFloorRooms(floor, date),
+    fetchFloorStudents(floor, date).catch(() => null),
+  ]);
+  if (!students) return rooms;
+  return rooms.map((room) => {
+    const list = students.get(room.number) ?? [];
+    if (list.length === 0) return { ...room, students: list };
     return {
-      studentId: String(student.student_id),
-      name: student.student_name,
-      present: student.attended,
+      number: room.number,
+      assigned: list.length,
+      present: list.filter((student) => student.present).length,
+      students: list,
     };
   });
 }
