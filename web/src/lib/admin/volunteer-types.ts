@@ -15,6 +15,10 @@ export type RosterStudent = {
   /** 마지막 조정 날짜 `MM/DD`. 아직 없으면 undefined로 `-`를 표시한다. */
   lastActivityDate?: string;
   duty: DutyStatus;
+  /** 일반 봉사와 별도로 남은 연속 봉사 횟수(DEC-114). 없으면 0으로 본다. */
+  consecutiveCount?: number;
+  /** 오늘 지정이 기숙사 얼굴·QR 출석으로 자동 지정된 연속 봉사인지. */
+  consecutiveDuty?: boolean;
 };
 
 /** 지난 날짜 당일 봉사자 기록의 결과. 미이행은 봉사 없이 사라져 횟수가 추가된 지정이다(#334). */

@@ -7,9 +7,10 @@ import type { StudentManagementGateway } from "@/lib/admin/student-management-ga
  */
 export function createMockStudentManagementGateway(): StudentManagementGateway {
   return {
-    saveCount: async (student, { count }) => ({
+    saveCount: async (student, { count, consecutiveCount }) => ({
       ...student,
-      count,
+      count: count ?? student.count,
+      consecutiveCount: consecutiveCount ?? student.consecutiveCount,
       lastActivityDate: operatingDayLabel(new Date()),
     }),
   };

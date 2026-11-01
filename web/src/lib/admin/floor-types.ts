@@ -7,11 +7,13 @@ export type Student = {
   present: boolean;
 };
 
-/** 전개도 호실 카드 한 칸. 서버 층 현황이 주는 호실별 배정·출석 인원이다. 학생 명단은 호실을 열 때 따로 받는다. */
+/** 전개도 호실 카드 한 칸. 서버 층 현황이 주는 호실별 배정·출석 인원과, 카드에 보일 학생 명단(DEC-115). */
 export type Room = {
   number: string;
   assigned: number;
   present: number;
+  /** 층 단위로 받은 학생 이름·출석. 없으면 카드에 이름을 보이지 않는다. 상세 다이얼로그는 호실 명단을 따로 받는다. */
+  students?: Student[];
 };
 
 /** 호실 상세·수정 다이얼로그가 보는 호실: 번호와 서버에서 받은 학생 명단. */

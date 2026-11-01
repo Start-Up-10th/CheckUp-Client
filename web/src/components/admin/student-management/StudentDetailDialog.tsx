@@ -6,14 +6,23 @@ import { roomLabel } from "@/lib/admin/volunteer-roster";
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
 import { useModalDialog } from "@/lib/admin/use-modal-dialog";
 
+/** 다이얼로그가 저장할 때 넘기는 값. 연속 봉사 횟수는 `withConsecutive`일 때만 있다. */
+export type StudentDialogValue = {
+  count: number;
+  reason: string;
+  consecutiveCount?: number;
+};
+
 type StudentDetailDialogProps = {
   student: RosterStudent;
   onClose: () => void;
-  onSave: (change: { count: number; reason: string }) => void;
+  onSave: (value: StudentDialogValue) => void;
   /** 열 때 스테퍼에 놓을 횟수. 없으면 학생의 현재 횟수다(미이행 처리는 현재 횟수 + 1로 연다, #334). */
   initialCount?: number;
   /** 열 때 사유 칸에 채울 문구. 없으면 비어 있다. */
   initialReason?: string;
+  /** 연속 봉사 스테퍼를 보일지. 학생 관리(08)에서만 켠다(DEC-114). */
+  withConsecutive?: boolean;
 };
 
 /**
@@ -26,8 +35,12 @@ export function StudentDetailDialog({
   onSave,
   initialCount,
   initialReason = "",
+  withConsecutive = false,
 }: StudentDetailDialogProps) {
   const [count, setCount] = useState(initialCount ?? student.count);
+  const [consecutiveCount, setConsecutiveCount] = useState(
+    student.consecutiveCount ?? 0,
+  );
   const [reason, setReason] = useState(initialReason);
   const titleId = useId();
   const reasonId = useId();
@@ -70,6 +83,22 @@ export function StudentDetailDialog({
           />
         </div>
 
+        {withConsecutive ? (
+          <div className="mt-1.5 flex w-full items-center justify-between rounded-card border border-admin-border bg-admin-rowSurface py-3 pl-4 pr-3">
+            <p className="text-[13px] font-medium leading-4 text-admin-text xl:text-sm xl:leading-[17px]">
+              연속 봉사
+            </p>
+            <CountStepper
+              label="연속 봉사 횟수"
+              count={consecutiveCount}
+              onDecrease={() =>
+                setConsecutiveCount((value) => Math.max(0, value - 1))
+              }
+              onIncrease={() => setConsecutiveCount((value) => value + 1)}
+            />
+          </div>
+        ) : null}
+
         <div className="flex w-full flex-col gap-1.5 pt-3.5">
           <label
             htmlFor={reasonId}
@@ -96,7 +125,13 @@ export function StudentDetailDialog({
           </button>
           <button
             type="button"
-            onClick={() => onSave({ count, reason: reason.trim() })}
+            onClick={() =>
+              onSave(
+                withConsecutive
+                  ? { count, consecutiveCount, reason: reason.trim() }
+                  : { count, reason: reason.trim() },
+              )
+            }
             className="rounded-[13px] bg-admin-accent-bg transition hover:brightness-95 px-5 py-3 text-[13px] font-bold leading-4 text-admin-accent-text xl:text-sm xl:leading-[17px]"
           >
             저장

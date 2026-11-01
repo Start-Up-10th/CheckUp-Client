@@ -28,6 +28,10 @@ export function VolunteerDutyRow({
         </p>
         <p className="font-mono text-[10px] leading-[13px] text-admin-textMuted md:text-[11px] md:leading-[15px] xl:text-xs xl:leading-4">
           {student.studentId} · {roomLabel(student.roomNumber)}
+          {/* 완료해야 남은 횟수가 줄어서, 오늘 지정 중에는 이 숫자가 오늘 것을 포함한다. */}
+          {student.consecutiveDuty && student.consecutiveCount
+            ? ` · 연속 ${student.consecutiveCount}회 남음`
+            : null}
         </p>
       </div>
       <p className="hidden text-xs leading-[14px] text-admin-textSecondary md:block xl:hidden">
