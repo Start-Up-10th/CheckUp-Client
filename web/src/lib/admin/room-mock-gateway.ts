@@ -2,23 +2,58 @@ import type { Floor, Room, Student } from "@/lib/admin/floor-types";
 import { RoomApiError } from "@/lib/admin/room-api";
 import type { RoomGateway } from "@/lib/admin/room-gateway";
 
-const NAME_POOL = [
-  "김도현",
-  "박서연",
-  "이지후",
-  "정민수",
-  "최유진",
-  "한소율",
-  "윤지호",
-  "임하은",
-  "강태민",
-  "오서준",
-  "배지원",
-  "조은서",
-  "신동욱",
-  "권나윤",
-  "황시우",
+// 성 12개 × 이름 20개로 세 층 전체(약 230명)에서 이름이 겹치지 않게 한다. 2·4글자 이름도 일부 넣었다.
+const SURNAMES = [
+  "김",
+  "이",
+  "박",
+  "최",
+  "정",
+  "강",
+  "조",
+  "윤",
+  "장",
+  "임",
+  "한",
+  "오",
 ];
+const GIVEN_NAMES = [
+  "도현",
+  "서연",
+  "지후",
+  "민수",
+  "유진",
+  "소율",
+  "지호",
+  "하은",
+  "태민",
+  "서준",
+  "지원",
+  "은서",
+  "동욱",
+  "나윤",
+  "시우",
+  "솔",
+  "결",
+  "하늘별",
+  "예린",
+  "준혁",
+];
+// 성 × 이름의 모든 조합이라 겹치지 않고, 고정 시드로 섞어 이웃한 학생 이름이 비슷하지 않게 한다(매번 같은 순서).
+const NAME_POOL = shuffled(
+  SURNAMES.flatMap((surname) => GIVEN_NAMES.map((given) => surname + given)),
+);
+
+function shuffled<T>(items: T[]): T[] {
+  const result = [...items];
+  let seed = 1;
+  for (let i = result.length - 1; i > 0; i -= 1) {
+    seed = (seed * 16807) % 2147483647;
+    const j = seed % (i + 1);
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
 
 const FLOOR_ROOMS: Record<Floor, { start: number; count: number }> = {
   3: { start: 301, count: 20 },
@@ -83,6 +118,7 @@ export function createMockRoomGateway(): RoomGateway {
           number,
           assigned: students.length,
           present: students.filter((student) => student.present).length,
+          students: students.map((student) => ({ ...student })),
         };
       });
     },
