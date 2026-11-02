@@ -13,7 +13,7 @@ const REFUSAL_MESSAGE: Record<string, string> = {
   NO_VOLUNTEER_LEFT: "봉사가 없습니다.",
   DUTY_ALREADY_COMPLETED: "이미 봉사를 완료했습니다.",
   DUTY_ALREADY_ADJUSTED:
-    "이미 횟수를 처리한 미이행입니다. 학생 관리에서 조정해 주세요.",
+    "이미 횟수를 처리한 미이행입니다. 봉사자 명단에서 조정해 주세요.",
   DUTY_NOT_FOUND: "그날의 당일 봉사자 지정을 찾지 못했습니다.",
 };
 
