@@ -7,8 +7,17 @@ import { FloorTabs } from "@/components/admin/FloorTabs";
 import { ToastLayer, useToast } from "@/components/admin/Toast";
 import { VolunteerDesignatedBar } from "@/components/admin/VolunteerDesignatedBar";
 import { VolunteerRosterRow } from "@/components/admin/VolunteerRosterRow";
-import { VolunteerStudentDialog } from "@/components/admin/VolunteerStudentDialog";
+import { VolunteerHistory } from "@/components/admin/VolunteerHistory";
+import {
+  StudentDetailDialog,
+  type StudentDialogValue,
+} from "@/components/admin/student-management/StudentDetailDialog";
 import type { Floor } from "@/lib/admin/floor-types";
+import {
+  PartialSaveError,
+  type StudentCountChange,
+  useStudentManagementGateway,
+} from "@/lib/admin/student-management-gateway";
 import {
   failureToast,
   listFailureToast,
@@ -17,6 +26,7 @@ import {
 import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
 import { groupByRoom } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
+import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 const DEFAULT_FLOOR: Floor = 3;
 
@@ -28,9 +38,20 @@ const LIST_FAILURE_MESSAGE =
 const DESIGNATE_FAILURE_MESSAGE =
   "당일 봉사자 지정에 실패했습니다. 다시 시도해 주세요.";
 
+/** 횟수 저장 문구(Figma 08 state messages, DEC-114). */
+const COUNT_SUCCESS_MESSAGE = "봉사 횟수를 변경했습니다.";
+const COUNT_FAILURE_MESSAGE =
+  "봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.";
+const CONSECUTIVE_SUCCESS_MESSAGE = "연속 봉사 횟수를 변경했습니다.";
+const CONSECUTIVE_FAILURE_MESSAGE =
+  "연속 봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.";
+
 /**
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.
- * 학생 행을 누르면 남은 횟수와 봉사 이력을 보는 상세 다이얼로그가 열리고, 횟수 조정은 학생 관리에서 한다.
+ * 학생 행(횟수 칩 `N회 ✎`)을 누르면 상세 다이얼로그에서 봉사·연속 봉사 횟수와 사유를 정해 저장하고 봉사 이력을 본다
+ * (학생 관리(08)를 합침, DEC-116). 저장은 서버의 지금 횟수에서 변화를 계산해 일반은 `PATCH /api/v1/volunteer/{id}/count`,
+ * 연속은 `PATCH /consecutive/count`로 따로 보낸다. 다이얼로그를 연 때와 달라진 칸만, 관리자가 바꾼 만큼 보낸다. 일부만
+ * 반영되고 실패하면 반영된 값을 기준으로 삼아 다시 저장해도 같은 변화를 두 번 보내지 않는다.
  * 아래 `당일 지정 N명 · 봉사자 관리 →` 바는 이 화면에서 `봉사자 지정`을 한 뒤에만 뜬다(처음 들어오면 없고, 봉사자 관리에
  * 다녀와서 다시 들어오면 지정하기 전까지 숨는다). 명단에 학생을 추가·제외하는 단계는 없다.
  */
@@ -39,14 +60,21 @@ export function AdminVolunteerRoster() {
     useVolunteerRoster();
   const [floor, setFloor] = useState<Floor>(DEFAULT_FLOOR);
   const [query, setQuery] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // 다이얼로그를 연 때의 학생 상태. 저장은 이 값에서 바꾼 만큼만 보내 그사이 다른 곳의 변경(`완료` 등)을 지우지
+  // 않는다. 명단을 다시 받아도 바꾸지 않고, 일부만 저장되고 실패하면 반영된 만큼 옮긴다.
+  const [selected, setSelected] = useState<RosterStudent | null>(null);
   // 이 방문에서 `봉사자 지정`을 한 번이라도 성공했는지. 화면을 떠났다 돌아오면 다시 false다.
   const [designatedHere, setDesignatedHere] = useState(false);
   const gateway = useVolunteerGateway();
+  const countGateway = useStudentManagementGateway();
   const singleFlight = useSingleFlight();
   const { showToast } = useToast();
-  const selected =
-    roster.find((student) => student.studentId === selectedId) ?? null;
+  // 다시 받은 명단에 학생이 없으면(삭제 등) 다이얼로그를 보이지 않는다.
+  const dialogStudent =
+    selected &&
+    (status !== "ready" || roster.some((student) => student.id === selected.id))
+      ? selected
+      : null;
   // 봉사자 관리(06)가 보여 주는 사람과 같게, 완료한 학생은 빼고 아직 완료하지 않은 지정만 센다.
   const designatedCount = roster.filter(
     (student) => student.duty === "designated",
@@ -64,6 +92,63 @@ export function AdminVolunteerRoster() {
       showToast(listFailureToast(rateLimited, LIST_FAILURE_MESSAGE));
     }
   }, [status, rateLimited, showToast]);
+
+  function openStudent(studentId: string) {
+    setSelected(
+      roster.find((student) => student.studentId === studentId) ?? null,
+    );
+  }
+
+  function handleSave(dialogValue: StudentDialogValue) {
+    if (!selected) return;
+    const countChanged = dialogValue.count !== selected.count;
+    const consecutiveChanged =
+      (dialogValue.consecutiveCount ?? 0) !== (selected.consecutiveCount ?? 0);
+    if (!countChanged && !consecutiveChanged) {
+      setSelected(null);
+      return;
+    }
+    const change: StudentCountChange = {
+      reason: dialogValue.reason,
+      ...(countChanged ? { count: dialogValue.count } : {}),
+      ...(consecutiveChanged
+        ? { consecutiveCount: dialogValue.consecutiveCount }
+        : {}),
+    };
+    // 연속 횟수만 바꿨을 때만 연속 문구를 쓴다. 둘 다 바꿨으면 일반 문구다.
+    const onlyConsecutive = consecutiveChanged && !countChanged;
+    return singleFlight(selected.id, async () => {
+      try {
+        const updated = await countGateway.saveCount(selected, change);
+        updateStudent(updated);
+        setSelected(null);
+        showToast({
+          variant: "success",
+          message: onlyConsecutive
+            ? CONSECUTIVE_SUCCESS_MESSAGE
+            : COUNT_SUCCESS_MESSAGE,
+        });
+      } catch (error) {
+        let failedConsecutive = onlyConsecutive;
+        let cause = error;
+        if (error instanceof PartialSaveError) {
+          // 반영된 만큼을 명단과 기준값에 넣어, 다시 저장하면 남은 변화만 보낸다.
+          updateStudent(error.latest);
+          setSelected(error.saved);
+          failedConsecutive = error.failed === "consecutive";
+          cause = error.cause;
+        }
+        const failure = failureToast(
+          cause,
+          failedConsecutive
+            ? CONSECUTIVE_FAILURE_MESSAGE
+            : COUNT_FAILURE_MESSAGE,
+          reload,
+        );
+        if (failure) showToast(failure);
+      }
+    });
+  }
 
   function handleDesignate(studentId: string) {
     const target = roster.find((student) => student.studentId === studentId);
@@ -153,7 +238,7 @@ export function AdminVolunteerRoster() {
                   <VolunteerRosterRow
                     key={student.studentId}
                     student={student}
-                    onSelect={setSelectedId}
+                    onSelect={openStudent}
                     onDesignate={handleDesignate}
                   />
                 ))}
@@ -164,12 +249,16 @@ export function AdminVolunteerRoster() {
       </div>
 
       <VolunteerDesignatedBar count={barVisible ? designatedCount : 0} />
-      {selected ? (
-        <VolunteerStudentDialog
-          key={selected.studentId}
-          student={selected}
-          onClose={() => setSelectedId(null)}
-        />
+      {dialogStudent ? (
+        <StudentDetailDialog
+          key={dialogStudent.studentId}
+          student={dialogStudent}
+          onClose={() => setSelected(null)}
+          onSave={handleSave}
+          withConsecutive
+        >
+          <VolunteerHistory student={dialogStudent} />
+        </StudentDetailDialog>
       ) : null}
     </div>
   );

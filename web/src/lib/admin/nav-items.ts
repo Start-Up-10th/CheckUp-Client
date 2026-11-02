@@ -3,7 +3,6 @@ import {
   FaceScanIcon,
   HomeIcon,
   MyPageIcon,
-  PeopleIcon,
   QrCodeIcon,
   VolunteerIcon,
 } from "@/components/icons/AdminNavIcons";
@@ -20,7 +19,7 @@ export type AdminNavItem = {
 };
 
 /**
- * REQ-UI-005: 메뉴는 홈/QR 코드 생성/얼굴 인식 생성/봉사자 관리/학생 관리/마이페이지이며, 반응형 3단계에서 메뉴 구성은 동일하다.
+ * REQ-UI-005: 메뉴는 홈/QR 코드 생성/얼굴 인식 생성/봉사자 관리/마이페이지이며(학생 관리는 봉사자 명단으로 합침, DEC-116), 반응형 3단계에서 메뉴 구성은 동일하다.
  * 핸드폰은 홈과 메뉴 시트로 나눠 보여 준다.
  */
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
@@ -46,12 +45,6 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: "봉사자 관리",
     icon: VolunteerIcon,
     sheetIcon: { src: "/icons/menu/volunteer.svg", size: 20.8291 },
-  },
-  {
-    href: "/admin/students",
-    label: "학생 관리",
-    icon: PeopleIcon,
-    sheetIcon: { src: "/icons/menu/students.svg", size: 20 },
   },
   {
     href: "/admin/mypage",

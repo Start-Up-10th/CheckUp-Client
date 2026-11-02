@@ -298,7 +298,7 @@ describe("AdminVolunteerDuty", () => {
     fireEvent.click(screen.getByRole("button", { name: "저장" }));
 
     expect(await screen.findByRole("status")).toHaveTextContent(
-      "이미 횟수를 처리한 미이행입니다. 학생 관리에서 조정해 주세요.",
+      "이미 횟수를 처리한 미이행입니다. 봉사자 명단에서 조정해 주세요.",
     );
     await waitFor(() => expect(list).toHaveBeenCalledTimes(1));
   });
