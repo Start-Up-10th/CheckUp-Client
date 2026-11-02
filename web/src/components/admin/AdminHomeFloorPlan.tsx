@@ -322,6 +322,15 @@ export function AdminHomeFloorPlan() {
     showToast({ variant: "success", message: "출석 상태를 저장했습니다." });
   }
 
+  const calendar = (
+    <DutyCalendar
+      todayKey={todayKey}
+      selectedKey={date}
+      onSelect={handleSelectDate}
+      closeOnSelect
+    />
+  );
+
   return (
     <div className="flex min-h-full w-full flex-col gap-3.5 md:h-full md:min-h-0 px-4 py-3.5 md:gap-4 md:px-[22px] md:py-6 xl:gap-5 xl:px-8 xl:py-7">
       <ToastLayer />
@@ -345,12 +354,16 @@ export function AdminHomeFloorPlan() {
         <RoomGridSkeleton />
       ) : showError || rooms.length === 0 ? (
         // 조회 실패는 다시 시도, 배정된 호실이 하나도 없는 층은 빈 상태(REQ-UI-006)를 본문 자리에 보인다.
-        <div className="flex w-full flex-1 items-center justify-center rounded-[16px] bg-admin-surface px-3.5 py-4 md:rounded-[18px] md:p-[20px] xl:rounded-panel">
-          {showError ? (
-            <AdminContentState variant="error" onRetry={retryLoad} />
-          ) : (
-            <AdminContentState variant="empty" />
-          )}
+        // 날짜 선택은 남긴다. 없으면 지난 날짜에서 실패·빈 상태가 됐을 때 오늘로 돌아올 수 없다(#404).
+        <div className="flex w-full flex-1 flex-col rounded-[16px] bg-admin-surface px-3.5 py-4 md:rounded-[18px] md:p-[20px] xl:rounded-panel">
+          <div className="flex w-full justify-end">{calendar}</div>
+          <div className="flex flex-1 items-center justify-center">
+            {showError ? (
+              <AdminContentState variant="error" onRetry={retryLoad} />
+            ) : (
+              <AdminContentState variant="empty" />
+            )}
+          </div>
         </div>
       ) : (
         <RoomGrid
@@ -359,14 +372,7 @@ export function AdminHomeFloorPlan() {
           // 붙거나 저장 결과가 다른 날짜 화면에 들어가는 것을 막는다.
           onRoomClick={selectedRooms ? openRoomDetail : undefined}
           busy={!selectedRooms && !loadFailed}
-          action={
-            <DutyCalendar
-              todayKey={todayKey}
-              selectedKey={date}
-              onSelect={handleSelectDate}
-              closeOnSelect
-            />
-          }
+          action={calendar}
         />
       )}
 
