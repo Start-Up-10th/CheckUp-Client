@@ -605,6 +605,34 @@ describe("AdminHomeFloorPlan 날짜 선택", () => {
     }
   });
 
+  it("지난 날짜 조회가 실패해도 날짜 선택이 남아 오늘로 돌아올 수 있다", async () => {
+    const gateway = createMockRoomGateway();
+    const base = gateway.floor;
+    gateway.floor = vi.fn((floor, date) =>
+      date ? Promise.reject(new Error("boom")) : base(floor, date),
+    );
+    renderWith(gateway);
+    fireEvent.click(await screen.findByRole("button", { name: /^날짜 선택/ }));
+    fireEvent.click(screen.getByRole("button", { name: "이전 달" }));
+    fireEvent.click(screen.getByRole("button", { name: /^\d+년 \d+월 1일$/ }));
+    expect(
+      await screen.findByText("전개도를 불러오지 못했습니다."),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /^날짜 선택/ }));
+    fireEvent.click(screen.getByRole("button", { name: "다음 달" }));
+    // 고를 수 있는 마지막 날이 오늘 운영일이다.
+    const today = screen
+      .getAllByRole("button", { name: /^\d+년 \d+월 \d+일$/ })
+      .filter((button) => !(button as HTMLButtonElement).disabled)
+      .at(-1)!;
+    fireEvent.click(today);
+    expect(
+      await screen.findByRole("button", { name: /^302/ }),
+    ).toBeInTheDocument();
+    expect(gateway.floor).toHaveBeenLastCalledWith(3, undefined);
+  });
+
   it("날짜를 바꾸면 새 현황이 올 때까지 이전 격자를 그대로 두고 스켈레톤·빈 상태로 깜빡이지 않는다", async () => {
     const gateway = createMockRoomGateway();
     const base = gateway.floor;
