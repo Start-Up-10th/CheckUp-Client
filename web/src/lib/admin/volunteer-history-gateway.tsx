@@ -12,12 +12,16 @@ export type VolunteerHistoryItem = VolunteerAdjustment;
 
 /** 학생 상세 다이얼로그가 서버에서 받는 봉사 이력. */
 export type VolunteerHistoryGateway = {
-  list: (student: RosterStudent) => Promise<VolunteerHistoryItem[]>;
+  /** `limit`이 없으면 서버 기본(50건)이다. */
+  list: (
+    student: RosterStudent,
+    limit?: number,
+  ) => Promise<VolunteerHistoryItem[]>;
 };
 
 /** 실제 서버 API다(`GET /api/v1/volunteer/{id}/adjustments`, 최신순). */
 export const apiVolunteerHistoryGateway: VolunteerHistoryGateway = {
-  list: (student) => fetchVolunteerAdjustments(student.id),
+  list: (student, limit) => fetchVolunteerAdjustments(student.id, limit),
 };
 
 const VolunteerHistoryGatewayContext = createContext<VolunteerHistoryGateway>(

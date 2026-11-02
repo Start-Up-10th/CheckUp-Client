@@ -18,7 +18,10 @@ import {
 import { createMockStudentManagementGateway } from "@/lib/admin/student-management-mock-gateway";
 import { VolunteerApiError } from "@/lib/admin/volunteer-api";
 import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
-import { VolunteerHistoryGatewayProvider } from "@/lib/admin/volunteer-history-gateway";
+import {
+  VolunteerHistoryGatewayProvider,
+  type VolunteerHistoryGateway,
+} from "@/lib/admin/volunteer-history-gateway";
 import { createMockVolunteerHistoryGateway } from "@/lib/admin/volunteer-history-mock-gateway";
 import { createMockVolunteerGateway } from "@/lib/admin/volunteer-mock-gateway";
 import { resetRoster, setRoster } from "@/lib/admin/volunteer-roster-store";
@@ -768,6 +771,54 @@ describe("AdminVolunteerRoster", () => {
       expect(
         screen.getByRole("button", { name: "박서연 당일 봉사자로 지정됨" }),
       ).toBeInTheDocument();
+    });
+  });
+
+  describe("이력 엑셀 받기 (#409)", () => {
+    function renderWithHistory(list: VolunteerHistoryGateway["list"]) {
+      return renderPlain(
+        <VolunteerGatewayProvider value={mockGateway}>
+          <VolunteerHistoryGatewayProvider value={{ list }}>
+            <AdminVolunteerRoster />
+          </VolunteerHistoryGatewayProvider>
+        </VolunteerGatewayProvider>,
+      );
+    }
+
+    afterEach(() => vi.restoreAllMocks());
+
+    it("층과 무관하게 전체 학생의 이력을 받아 CSV 파일을 내려받는다", async () => {
+      const list = vi.fn(async () => []);
+      const createObjectURL = vi.fn<(blob: Blob) => string>(() => "blob:x");
+      Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() });
+      const click = vi
+        .spyOn(HTMLAnchorElement.prototype, "click")
+        .mockImplementation(() => {});
+      renderWithHistory(list);
+
+      fireEvent.click(screen.getByRole("button", { name: "이력 엑셀 받기" }));
+
+      await waitFor(() => expect(click).toHaveBeenCalledTimes(1));
+      expect(list).toHaveBeenCalledTimes(MOCK_VOLUNTEER_ROSTER.length);
+      const link = click.mock.contexts[0] as HTMLAnchorElement;
+      expect(link.download).toMatch(/^봉사이력_\d{4}-\d{2}-\d{2}\.csv$/);
+      const text = await createObjectURL.mock.calls[0][0].text();
+      expect(text).toContain("이름,학번,호실,받은 횟수,한 횟수,남은 횟수");
+    });
+
+    it("이력을 받지 못하면 실패 안내를 띄운다", async () => {
+      renderWithHistory(async () => {
+        throw new Error("network");
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: "이력 엑셀 받기" }));
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "봉사 이력을 내려받지 못했습니다. 다시 시도해 주세요.",
+      );
+      expect(
+        screen.getByRole("button", { name: "이력 엑셀 받기" }),
+      ).toBeEnabled();
     });
   });
 });
