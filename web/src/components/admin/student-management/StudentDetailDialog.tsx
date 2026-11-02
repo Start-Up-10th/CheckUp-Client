@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { CountStepper } from "@/components/admin/student-management/CountStepper";
 import { roomLabel } from "@/lib/admin/volunteer-roster";
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
@@ -21,13 +21,15 @@ type StudentDetailDialogProps = {
   initialCount?: number;
   /** 열 때 사유 칸에 채울 문구. 없으면 비어 있다. */
   initialReason?: string;
-  /** 연속 봉사 스테퍼를 보일지. 학생 관리(08)에서만 켠다(DEC-114). */
+  /** 연속 봉사 스테퍼를 보일지. 봉사자 명단(07)에서만 켠다(DEC-114). */
   withConsecutive?: boolean;
+  /** 사유 아래·버튼 위에 둘 내용(07은 봉사 이력, DEC-116). */
+  children?: ReactNode;
 };
 
 /**
- * Figma 08 학생 관리의 학생 상세 다이얼로그(`학생 상세 다이얼로그`). 학생 이름·`학번 · 호실`, 봉사 횟수 스테퍼, 사유
- * 입력, 닫기/저장이다. 횟수는 저장해야만 반영되고 닫기는 바꾸지 않는다. 너비는 핸드폰 310·패드 400·컴퓨터 460이다.
+ * 봉사 횟수 조정 다이얼로그(Figma 08 `학생 상세 다이얼로그`에서 옴). 학생 이름·`학번 · 호실`, 봉사 횟수 스테퍼, 사유
+ * 입력, 닫기/저장이다. 봉사자 명단(07)의 학생 상세와 봉사자 관리(06)의 미이행·조정이 쓴다(DEC-116). 횟수는 저장해야만 반영되고 닫기는 바꾸지 않는다. 너비는 핸드폰 310·패드 400·컴퓨터 460이다.
  */
 export function StudentDetailDialog({
   student,
@@ -36,6 +38,7 @@ export function StudentDetailDialog({
   initialCount,
   initialReason = "",
   withConsecutive = false,
+  children,
 }: StudentDetailDialogProps) {
   const [count, setCount] = useState(initialCount ?? student.count);
   const [consecutiveCount, setConsecutiveCount] = useState(
@@ -114,6 +117,8 @@ export function StudentDetailDialog({
             className="h-[72px] w-full resize-none rounded-xl border border-admin-border bg-admin-rowSurface px-3.5 py-3 text-[13px] leading-4 text-admin-text placeholder:text-admin-textMuted [@media(pointer:coarse)]:text-base [@media(pointer:coarse)]:leading-5 transition-colors focus:border-admin-textMuted focus:bg-admin-surface focus:outline-none motion-reduce:transition-none md:h-[76px] xl:h-20 xl:text-sm xl:leading-[17px]"
           />
         </div>
+
+        {children}
 
         <div className="flex w-full items-start justify-end gap-2 pt-3.5">
           <button

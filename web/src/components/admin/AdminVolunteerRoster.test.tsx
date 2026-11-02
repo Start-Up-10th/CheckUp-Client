@@ -10,6 +10,12 @@ import type { ReactElement } from "react";
 import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
 import { AdminUnauthorizedError } from "@/lib/admin/qr-api";
 import { RateLimitedError } from "@/lib/rate-limit";
+import {
+  PartialSaveError,
+  StudentManagementGatewayProvider,
+  type StudentManagementGateway,
+} from "@/lib/admin/student-management-gateway";
+import { createMockStudentManagementGateway } from "@/lib/admin/student-management-mock-gateway";
 import { VolunteerApiError } from "@/lib/admin/volunteer-api";
 import { VolunteerGatewayProvider } from "@/lib/admin/volunteer-gateway";
 import { VolunteerHistoryGatewayProvider } from "@/lib/admin/volunteer-history-gateway";
@@ -25,19 +31,24 @@ const mockGateway = createMockVolunteerGateway();
 const mockHistoryGateway = createMockVolunteerHistoryGateway();
 
 /** 서버 대신 목업 게이트웨이를 쓰는 화면. 기본 층(3층) 그대로다. */
-function renderDefaultFloor(ui: ReactElement) {
+function renderDefaultFloor(
+  ui: ReactElement,
+  countGateway: StudentManagementGateway = createMockStudentManagementGateway(),
+) {
   return renderPlain(
     <VolunteerGatewayProvider value={mockGateway}>
-      <VolunteerHistoryGatewayProvider value={mockHistoryGateway}>
-        {ui}
-      </VolunteerHistoryGatewayProvider>
+      <StudentManagementGatewayProvider value={countGateway}>
+        <VolunteerHistoryGatewayProvider value={mockHistoryGateway}>
+          {ui}
+        </VolunteerHistoryGatewayProvider>
+      </StudentManagementGatewayProvider>
     </VolunteerGatewayProvider>,
   );
 }
 
 /** 목업 4층(412호 등) 명단을 쓰는 테스트가 많아 기본 3층에서 4층 탭을 눌러 둔 화면이다. */
-function render(ui: ReactElement) {
-  const result = renderDefaultFloor(ui);
+function render(ui: ReactElement, countGateway?: StudentManagementGateway) {
+  const result = renderDefaultFloor(ui, countGateway);
   fireEvent.click(screen.getByRole("button", { name: "4층" }));
   return result;
 }
@@ -97,13 +108,15 @@ describe("AdminVolunteerRoster", () => {
     ).toHaveTextContent("봉사자 지정");
   });
 
-  it("행에는 횟수 글자만 있고 −/+ 버튼은 없다", () => {
+  it("행의 횟수는 연필 칩이고 −/+는 행에 없다(상세에서 조정한다)", () => {
     render(<AdminVolunteerRoster />);
 
     const row = screen.getByRole("group", { name: "박서연" });
-    expect(within(row).getByText("1회")).toBeInTheDocument();
+    const chip = within(row).getByText("1회");
+    expect(chip).toHaveClass("border", "rounded-lg");
+    expect(chip.querySelector("svg")).not.toBeNull();
     expect(
-      screen.queryByRole("button", { name: /봉사 1회 (차감|추가)/ }),
+      within(row).queryByRole("button", { name: /봉사 횟수 (늘리기|줄이기)/ }),
     ).not.toBeInTheDocument();
   });
 
@@ -194,15 +207,22 @@ describe("AdminVolunteerRoster", () => {
   });
 
   describe("학생 상세", () => {
-    it("학생 행을 누르면 남은 횟수와 봉사 이력을 보여 준다", async () => {
+    it("학생 행을 누르면 횟수 조정과 봉사 이력을 함께 보여 준다", async () => {
       render(<AdminVolunteerRoster />);
 
       fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
 
       const dialog = screen.getByRole("dialog", { name: "김도현" });
       expect(within(dialog).getByText("2405 · 412호")).toBeInTheDocument();
-      expect(within(dialog).getByText("남은 봉사 횟수")).toBeInTheDocument();
+      expect(within(dialog).getByText("봉사 횟수")).toBeInTheDocument();
       expect(within(dialog).getByText("3회")).toBeInTheDocument();
+      expect(
+        within(dialog).getByRole("button", { name: "봉사 횟수 늘리기" }),
+      ).toBeInTheDocument();
+      expect(
+        within(dialog).getByRole("button", { name: "연속 봉사 횟수 늘리기" }),
+      ).toBeInTheDocument();
+      expect(within(dialog).getByLabelText("사유")).toBeInTheDocument();
       expect(await within(dialog).findByText("도서관 정리 봉사")).toBeVisible();
       expect(within(dialog).getAllByText("+1회").length).toBeGreaterThan(0);
       expect(within(dialog).getByText("−1회")).toBeInTheDocument();
@@ -334,6 +354,175 @@ describe("AdminVolunteerRoster", () => {
       await waitFor(() =>
         expect(redirectToAdminLogin).toHaveBeenCalledTimes(1),
       );
+    });
+  });
+
+  describe("횟수 조정", () => {
+    it("닫기는 값을 바꾸지 않는다", () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+      const dialog = screen.getByRole("dialog", { name: "김도현" });
+      fireEvent.click(
+        within(dialog).getByRole("button", { name: "봉사 횟수 늘리기" }),
+      );
+      expect(within(dialog).getByText("4회")).toBeInTheDocument();
+      fireEvent.click(within(dialog).getByRole("button", { name: "닫기" }));
+
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      const row = screen.getByRole("group", { name: "김도현" });
+      expect(within(row).getByText("3회")).toBeInTheDocument();
+    });
+
+    it("횟수는 0 아래로 내려가지 않는다", () => {
+      renderDefaultFloor(<AdminVolunteerRoster />);
+      fireEvent.click(screen.getByRole("button", { name: "서지안 학생 상세" }));
+
+      const dialog = screen.getByRole("dialog", { name: "서지안" });
+      expect(
+        within(dialog).getByRole("button", { name: "봉사 횟수 줄이기" }),
+      ).toBeDisabled();
+    });
+
+    it("저장하면 횟수를 바꾸고 성공 메시지를 보여 준다", async () => {
+      render(<AdminVolunteerRoster />);
+
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+      const dialog = screen.getByRole("dialog", { name: "김도현" });
+      fireEvent.click(
+        within(dialog).getByRole("button", { name: "봉사 횟수 줄이기" }),
+      );
+      fireEvent.change(within(dialog).getByLabelText("사유"), {
+        target: { value: "특별 감면" },
+      });
+      fireEvent.click(within(dialog).getByRole("button", { name: "저장" }));
+
+      expect(
+        await screen.findByText("봉사 횟수를 변경했습니다."),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      const row = screen.getByRole("group", { name: "김도현" });
+      expect(within(row).getByText("2회")).toBeInTheDocument();
+    });
+
+    it("0회 학생에게 횟수를 더하면 봉사자 지정 버튼이 켜진다", async () => {
+      render(<AdminVolunteerRoster />);
+      expect(
+        screen.getByRole("button", { name: "이지후 당일 봉사자로 지정" }),
+      ).toBeDisabled();
+
+      fireEvent.click(screen.getByRole("button", { name: "이지후 학생 상세" }));
+      fireEvent.click(screen.getByRole("button", { name: "봉사 횟수 늘리기" }));
+      fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "이지후 당일 봉사자로 지정" }),
+        ).toBeEnabled(),
+      );
+    });
+
+    it("횟수를 바꾸지 않고 저장하면 서버를 부르지 않고 닫는다", () => {
+      const saveCount = vi.fn();
+      render(<AdminVolunteerRoster />, { saveCount });
+
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+      fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+      expect(saveCount).not.toHaveBeenCalled();
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+
+    it("바꾼 칸만 넘기고 바꾸지 않은 연속 봉사 횟수는 넘기지 않는다", async () => {
+      const saveCount = vi
+        .fn()
+        .mockImplementation(async (student) => ({ ...student, count: 4 }));
+      render(<AdminVolunteerRoster />, { saveCount });
+
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+      fireEvent.click(screen.getByRole("button", { name: "봉사 횟수 늘리기" }));
+      fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+      await waitFor(() => expect(saveCount).toHaveBeenCalledTimes(1));
+      expect(saveCount.mock.calls[0][1]).toEqual({ count: 4, reason: "" });
+    });
+
+    it("연속 봉사 횟수만 바꾸면 그 칸만 넘기고 연속 문구를 보인다", async () => {
+      const saveCount = vi.fn().mockImplementation(async (student) => ({
+        ...student,
+        consecutiveCount: 1,
+      }));
+      render(<AdminVolunteerRoster />, { saveCount });
+
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "연속 봉사 횟수 늘리기" }),
+      );
+      fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+      expect(
+        await screen.findByText("연속 봉사 횟수를 변경했습니다."),
+      ).toBeInTheDocument();
+      expect(saveCount.mock.calls[0][1]).toEqual({
+        consecutiveCount: 1,
+        reason: "",
+      });
+    });
+
+    it("일반만 저장되고 연속이 실패하면 연속 실패 문구를 보이고, 다시 저장하면 연속만 넘긴다", async () => {
+      const saveCount = vi
+        .fn()
+        .mockImplementationOnce(async (student) => {
+          const saved = { ...student, count: 4 };
+          throw new PartialSaveError(saved, saved, "consecutive", new Error());
+        })
+        .mockImplementationOnce(async (student) => ({
+          ...student,
+          consecutiveCount: 1,
+        }));
+      render(<AdminVolunteerRoster />, { saveCount });
+
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+      fireEvent.click(screen.getByRole("button", { name: "봉사 횟수 늘리기" }));
+      fireEvent.click(
+        screen.getByRole("button", { name: "연속 봉사 횟수 늘리기" }),
+      );
+      fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+      expect(
+        await screen.findByText(
+          "연속 봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("dialog", { name: "김도현" }),
+      ).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+      await waitFor(() => expect(saveCount).toHaveBeenCalledTimes(2));
+      expect(saveCount.mock.calls[1][1]).toEqual({
+        consecutiveCount: 1,
+        reason: "",
+      });
+    });
+
+    it("저장에 실패하면 실패 메시지를 보여 주고 다이얼로그를 유지한다", async () => {
+      const saveCount = vi.fn().mockRejectedValue(new Error("fail"));
+      render(<AdminVolunteerRoster />, { saveCount });
+
+      fireEvent.click(screen.getByRole("button", { name: "김도현 학생 상세" }));
+      fireEvent.click(screen.getByRole("button", { name: "봉사 횟수 늘리기" }));
+      fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+      expect(
+        await screen.findByText(
+          "봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.",
+        ),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("dialog", { name: "김도현" }),
+      ).toBeInTheDocument();
     });
   });
 

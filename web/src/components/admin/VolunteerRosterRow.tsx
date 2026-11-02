@@ -2,14 +2,14 @@ import type { RosterStudent } from "@/lib/admin/volunteer-types";
 
 type VolunteerRosterRowProps = {
   student: RosterStudent;
-  /** 행을 누르면 학생 상세 다이얼로그를 연다. */
+  /** 행을 누르면 학생 상세(횟수 조정·이력) 다이얼로그를 연다. */
   onSelect?: (studentId: string) => void;
   onDesignate?: (studentId: string) => void;
 };
 
 /**
  * REQ-COM-001·006: 봉사자 명단 편집(Figma 07)의 학생 한 줄. 오늘 지정된 행은 라임 테두리·배경이다.
- * 행을 누르면 학생 상세 다이얼로그가 열리고, 횟수는 글자만 보인다(−/+는 학생 관리에서만 한다).
+ * 행을 누르면 학생 상세 다이얼로그가 열려 횟수를 조정한다. 횟수는 연필 칩(`N회 ✎`)으로 보여 누를 수 있음을 알린다(DEC-116).
  * 폭별 구성이 다르다.
  * - 컴퓨터(xl): 이름·학번·최근 활동이 한 줄, 오른쪽에 횟수와 지정 버튼.
  * - 패드(md~xl): 왼쪽에 이름·학번 위, 최근 활동 아래, 오른쪽에 횟수와 지정 버튼.
@@ -23,7 +23,7 @@ export function VolunteerRosterRow({
   onDesignate,
 }: VolunteerRosterRowProps) {
   const designated = student.duty !== "none";
-  // 남은 봉사 횟수가 0회면 봉사할 일이 없어 지정할 수 없다(Figma `당일 봉사자 지정 (비활성)`). 학생 관리에서 횟수를
+  // 남은 봉사 횟수가 0회면 봉사할 일이 없어 지정할 수 없다(Figma `당일 봉사자 지정 (비활성)`). 행을 눌러 횟수를
   // 추가하면 다시 활성이 된다.
   const noCount = !designated && student.count === 0;
 
@@ -65,9 +65,22 @@ export function VolunteerRosterRow({
       </div>
 
       <div className="flex shrink-0 items-center justify-between md:justify-start md:gap-4 xl:gap-5">
-        <p className="text-[13px] font-bold leading-4 text-admin-text xl:text-sm xl:leading-[17px]">
+        {/* 횟수를 바꿀 수 있다는 표시(연필 칩). 누르는 것은 행 전체 버튼이라 같은 상세(횟수 조정)가 열린다(DEC-116). */}
+        <span className="pointer-events-none relative flex items-center gap-1 rounded-lg border border-admin-border bg-admin-surface px-2 py-[3px] text-[13px] font-bold leading-4 text-admin-text md:px-2.5 md:py-1 xl:gap-1.5 xl:px-3 xl:py-1.5 xl:text-sm xl:leading-[17px]">
           {student.count}회
-        </p>
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 16 16"
+            className="size-3 text-admin-textMuted xl:size-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.6}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M10.5 2.5l3 3L6 13H3v-3z" />
+          </svg>
+        </span>
         <button
           type="button"
           aria-label={

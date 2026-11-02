@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 import { MOCK_VOLUNTEER_ROSTER } from "@/lib/admin/mock-volunteer-roster";
 import { AdminVolunteerRoster } from "./AdminVolunteerRoster";
 import { StudentDetailDialog } from "./student-management/StudentDetailDialog";
-import { StudentSearchField } from "./student-management/StudentSearchField";
 
 vi.mock("@/lib/admin/admin-session", () => ({ redirectToAdminLogin: vi.fn() }));
 
@@ -17,14 +16,6 @@ describe("터치 기기 입력칸 글자 크기(확대 방지)", () => {
     render(<AdminVolunteerRoster />);
 
     expect(screen.getByLabelText("봉사자 검색")).toHaveClass(
-      "[@media(pointer:coarse)]:text-base",
-    );
-  });
-
-  it("학생 검색창은 터치 기기에서 16px이다", () => {
-    render(<StudentSearchField value="" onChange={() => {}} />);
-
-    expect(screen.getByRole("searchbox")).toHaveClass(
       "[@media(pointer:coarse)]:text-base",
     );
   });

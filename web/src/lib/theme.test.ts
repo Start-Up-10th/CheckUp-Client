@@ -56,7 +56,7 @@ describe("관리자 화면도 학생 화면과 같은 모드", () => {
   it("다크를 골랐으면 관리자 주소에서도 첫 화면이 다크다", () => {
     mockSystemDark(false);
     window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
-    window.history.replaceState(null, "", "/admin/students");
+    window.history.replaceState(null, "", "/admin/volunteers");
     runInitScript();
     expect(document.documentElement.dataset.theme).toBe("dark");
   });
