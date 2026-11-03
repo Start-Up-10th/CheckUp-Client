@@ -23,7 +23,13 @@ import {
   listFailureToast,
   useSingleFlight,
 } from "@/lib/admin/volunteer-action";
+import {
+  buildVolunteerHistoryCsv,
+  collectVolunteerHistory,
+  downloadCsv,
+} from "@/lib/admin/volunteer-export";
 import { useVolunteerGateway } from "@/lib/admin/volunteer-gateway";
+import { useVolunteerHistoryGateway } from "@/lib/admin/volunteer-history-gateway";
 import { groupByRoom } from "@/lib/admin/volunteer-roster";
 import { useVolunteerRoster } from "@/lib/admin/volunteer-roster-store";
 import type { RosterStudent } from "@/lib/admin/volunteer-types";
@@ -45,6 +51,8 @@ const COUNT_FAILURE_MESSAGE =
 const CONSECUTIVE_SUCCESS_MESSAGE = "연속 봉사 횟수를 변경했습니다.";
 const CONSECUTIVE_FAILURE_MESSAGE =
   "연속 봉사 횟수 변경에 실패했습니다. 다시 시도해 주세요.";
+const EXPORT_FAILURE_MESSAGE =
+  "봉사 이력을 내려받지 못했습니다. 다시 시도해 주세요.";
 
 /**
  * REQ-COM-001: 봉사자 명단 편집(Figma 07). 전체 학생을 층 탭·검색으로 거르고 호실별로 묶어 보여 준다.
@@ -65,7 +73,9 @@ export function AdminVolunteerRoster() {
   const [selected, setSelected] = useState<RosterStudent | null>(null);
   // 이 방문에서 `봉사자 지정`을 한 번이라도 성공했는지. 화면을 떠났다 돌아오면 다시 false다.
   const [designatedHere, setDesignatedHere] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const gateway = useVolunteerGateway();
+  const historyGateway = useVolunteerHistoryGateway();
   const countGateway = useStudentManagementGateway();
   const singleFlight = useSingleFlight();
   const { showToast } = useToast();
@@ -150,6 +160,23 @@ export function AdminVolunteerRoster() {
     });
   }
 
+  // #409: 전체 학생(층·검색과 무관)의 이력을 모아 엑셀(CSV)로 내려받는다.
+  async function handleExport() {
+    setExporting(true);
+    try {
+      downloadCsv(
+        buildVolunteerHistoryCsv(
+          await collectVolunteerHistory(roster, historyGateway),
+        ),
+      );
+    } catch (error) {
+      const failure = failureToast(error, EXPORT_FAILURE_MESSAGE, reload);
+      if (failure) showToast(failure);
+    } finally {
+      setExporting(false);
+    }
+  }
+
   function handleDesignate(studentId: string) {
     const target = roster.find((student) => student.studentId === studentId);
     if (!target) return;
@@ -182,8 +209,8 @@ export function AdminVolunteerRoster() {
         <FloorTabs selected={floor} onSelect={setFloor} />
       </div>
 
-      <div className="w-full xl:flex xl:h-[49px] xl:items-center">
-        <label className="flex h-11 w-full items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 md:w-[290px] md:px-4 transition-colors focus-within:border-admin-textMuted focus-within:bg-admin-surface motion-reduce:transition-none xl:h-[46px] xl:w-[420px] xl:gap-2.5">
+      <div className="flex w-full items-center gap-2 xl:h-[49px]">
+        <label className="flex h-11 min-w-0 flex-1 md:flex-none items-center gap-2 rounded-control border border-admin-border bg-admin-rowSurface px-3.5 md:w-[290px] md:px-4 transition-colors focus-within:border-admin-textMuted focus-within:bg-admin-surface motion-reduce:transition-none xl:h-[46px] xl:w-[420px] xl:gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element -- Figma 검색 아이콘 원본 SVG */}
           <img
             src="/icons/admin/search.svg"
@@ -202,6 +229,23 @@ export function AdminVolunteerRoster() {
             className="min-w-0 flex-1 bg-transparent text-sm leading-[17px] text-admin-text placeholder:text-admin-textMuted focus:outline-none [@media(pointer:coarse)]:text-base [@media(pointer:coarse)]:leading-5"
           />
         </label>
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={status !== "ready" || exporting}
+          aria-label="이력 엑셀 받기"
+          aria-busy={exporting}
+          className="ml-auto shrink-0 rounded-[10px] bg-admin-surface px-3 py-2 text-xs font-bold leading-[14px] text-admin-text shadow-[inset_0_0_0_1px_rgb(var(--admin-border))] transition-colors hover:bg-admin-rowSurface disabled:opacity-50 disabled:hover:bg-admin-surface md:text-[13px] md:leading-4 xl:px-3.5 xl:py-[9px]"
+        >
+          {exporting ? (
+            "받는 중…"
+          ) : (
+            <>
+              <span className="md:hidden">엑셀</span>
+              <span className="hidden md:inline">이력 엑셀 받기</span>
+            </>
+          )}
+        </button>
       </div>
 
       <div className="flex min-h-0 w-full flex-1 flex-col gap-2.5 overflow-y-auto [scrollbar-gutter:stable] md:gap-3.5 xl:gap-0 rounded-[16px] bg-admin-surface p-3.5 pt-4 md:rounded-[18px] md:p-5 xl:rounded-panel xl:p-[22px]">

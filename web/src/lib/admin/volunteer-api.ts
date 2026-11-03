@@ -132,7 +132,15 @@ export type VolunteerAdjustment = {
   date: string;
   title: string;
   delta: number;
+  /** 엑셀 출력용 원본(#409). 조정 시각(ISO), 종류, 관리자가 적은 사유. */
+  createdAt?: string;
+  kind?: VolunteerAdjustmentKind;
+  reason?: string;
 };
+
+export type VolunteerAdjustmentKind = NonNullable<
+  VolunteerAdjustmentApiResponse["kind"]
+>;
 
 /** 사유를 남기지 않은 조정의 활동명. 서버가 종류별 기본 문구를 화면이 정하게 한다. */
 function adjustmentTitle(item: VolunteerAdjustmentApiResponse): string {
@@ -338,8 +346,11 @@ export async function fetchMissedSummary(
  */
 export async function fetchVolunteerAdjustments(
   id: number,
+  limit?: number,
 ): Promise<VolunteerAdjustment[]> {
-  const res = await request(`/${id}/adjustments`);
+  const res = await request(
+    `/${id}/adjustments${limit ? `?limit=${limit}` : ""}`,
+  );
   const body = (await res.json()) as VolunteerAdjustmentApiResponse[];
   if (!Array.isArray(body)) throw new Error("adjustments: unexpected response");
   return body.map((item, index) => {
@@ -351,6 +362,9 @@ export async function fetchVolunteerAdjustments(
       date: toMonthDay(item.createdAt) ?? "-",
       title: adjustmentTitle(item),
       delta: item.delta,
+      createdAt: item.createdAt ?? undefined,
+      kind: item.kind ?? undefined,
+      reason: item.reason?.trim() || undefined,
     };
   });
 }

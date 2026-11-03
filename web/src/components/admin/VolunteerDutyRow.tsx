@@ -50,7 +50,8 @@ export function VolunteerDutyRow({
           type="button"
           aria-label={`${student.name} 봉사 미이행`}
           onClick={() => onMissed(student.studentId)}
-          className="rounded-[10px] bg-admin-ghost-bg transition-colors hover:bg-admin-border px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-ghost-text xl:px-[18px] xl:py-[9px] xl:text-[13px] xl:leading-4"
+          // 회색 행 위라 ghost 배경은 묻힌다. 두 모드 모두 행보다 어두운 배경으로 구분한다.
+          className="rounded-[10px] bg-admin-border dark:bg-admin-bg transition hover:brightness-95 dark:hover:brightness-125 px-3.5 py-2 text-xs font-bold leading-[14px] text-admin-text xl:px-[18px] xl:py-[9px] xl:text-[13px] xl:leading-4"
         >
           미이행
         </button>

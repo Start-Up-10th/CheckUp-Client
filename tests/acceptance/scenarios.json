@@ -723,7 +723,8 @@
         "같은 호실끼리 `412호 3명`처럼 묶어 호실→이름→학번 순으로 보여 준다",
         "숫자 검색은 호실·학번이 정확히 같은 학생만, 이름 검색은 포함·초성 일치로 찾는다",
         "결과가 없으면 `검색 결과가 없습니다.`를 보여 준다",
-        "행의 횟수는 연필 칩(`N회 ✎`)이고 행을 누르면 횟수 조정과 봉사 이력이 있는 학생 상세가 열린다(DEC-116)"
+        "행의 횟수는 연필 칩(`N회 ✎`)이고 행을 누르면 횟수 조정과 봉사 이력이 있는 학생 상세가 열린다(DEC-116)",
+        "`이력 엑셀 받기`는 층·검색과 무관하게 전체 학생을 학생별로 묶은 CSV(이름·학번·호실·받은/한/남은 횟수, 위반 일시·사유·횟수)로 내려받는다(DEC-117)"
       ],
       "status": "implemented",
       "implementation": [
@@ -731,12 +732,14 @@
         "web/src/components/admin/VolunteerHistory.tsx",
         "web/src/lib/admin/volunteer-roster.ts",
         "web/src/lib/admin/volunteer-api.ts",
-        "web/src/lib/admin/volunteer-history-gateway.tsx"
+        "web/src/lib/admin/volunteer-history-gateway.tsx",
+        "web/src/lib/admin/volunteer-export.ts"
       ],
       "evidence": [
         "web/src/components/admin/AdminVolunteerRoster.test.tsx",
         "web/src/lib/admin/volunteer-roster.test.ts",
-        "web/src/lib/admin/volunteer-api.test.ts"
+        "web/src/lib/admin/volunteer-api.test.ts",
+        "web/src/lib/admin/volunteer-export.test.ts"
       ]
     },
     {
